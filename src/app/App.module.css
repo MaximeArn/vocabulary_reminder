@@ -1,0 +1,15 @@
+/*
+ * L'app occupe exactement la hauteur de l'écran : la zone de contenu défile,
+ * la barre d'onglets reste fixe en bas (au-dessus de la barre d'accueil iOS).
+ */
+.app {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

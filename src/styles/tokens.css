@@ -1,0 +1,85 @@
+/*
+ * Tokens de la direction artistique « carnet de lecture ».
+ * Papier crème et encre bleu nuit ; un rouge brique pour le marque-page.
+ * Toutes les couleurs de l'app passent par ces variables.
+ */
+:root {
+  color-scheme: light;
+
+  /* Couleurs */
+  --paper: #f5f0e6;          /* fond de page */
+  --paper-raised: #fbf8f2;   /* surfaces légèrement surélevées (champs, feuilles) */
+  --ink: #1d1a16;            /* texte principal */
+  --ink-soft: #5a5147;       /* texte secondaire */
+  --ink-faint: #8c8274;      /* métadonnées, libellés discrets */
+  --rule: #e3d9c8;           /* filets et séparateurs */
+  --accent: #1f3350;         /* encre bleu nuit : actions principales */
+  --accent-contrast: #f5f0e6;
+  --bookmark: #a8452c;       /* rouge brique : touches ponctuelles */
+  --success: #3f6a45;
+  --success-soft: #e4ecdf;
+  --error: #a3402b;
+  --error-soft: #f3e0d9;
+
+  /* Typographie */
+  --font-serif: "Literata", "Iowan Old Style", Georgia, serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --text-xs: 0.8125rem;   /* 13px */
+  --text-sm: 0.9375rem;   /* 15px */
+  --text-md: 1.0625rem;   /* 17px, taille de lecture iOS */
+  --text-lg: 1.375rem;    /* 22px */
+  --text-xl: 1.875rem;    /* 30px */
+  --text-2xl: 2.5rem;     /* 40px */
+
+  /* Espacements */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Formes et mouvements */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --duration-fast: 150ms;
+  --duration-base: 240ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Zones sûres iOS (encoche, barre d'accueil) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --tab-bar-height: 56px;
+}
+
+/* Thème sombre : papier sombre et chaud, pour lire le soir */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #18160f;
+    --paper-raised: #222019;
+    --ink: #ece5d8;
+    --ink-soft: #b4aa9b;
+    --ink-faint: #7f7667;
+    --rule: #34302a;
+    --accent: #a9c1e0;
+    --accent-contrast: #18160f;
+    --bookmark: #d0775c;
+    --success: #9cc59f;
+    --success-soft: #24301f;
+    --error: #e59a85;
+    --error-soft: #3a231c;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}

@@ -1,0 +1,20 @@
+/*
+ * Literata (licence OFL), hébergée avec l'app pour fonctionner hors ligne.
+ * On ne charge que le sous-ensemble « latin » (il couvre tout le français,
+ * y compris œ, « » et les accents) avec l'axe de taille optique (opsz).
+ */
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url("@fontsource-variable/literata/files/literata-latin-opsz-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url("@fontsource-variable/literata/files/literata-latin-opsz-italic.woff2") format("woff2");
+}

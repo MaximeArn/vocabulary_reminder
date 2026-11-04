@@ -1,0 +1,19 @@
+.hint {
+  margin-bottom: var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  border-left: 3px solid var(--bookmark);
+  background: var(--paper-raised);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.title {
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--space-1);
+}
+
+.warning {
+  margin-top: var(--space-2);
+}

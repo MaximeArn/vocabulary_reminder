@@ -1,0 +1,12 @@
+.lead {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  line-height: 1.4;
+  color: var(--ink);
+  margin-bottom: var(--space-2);
+}
+
+.text {
+  color: var(--ink-soft);
+  margin-bottom: var(--space-5);
+}

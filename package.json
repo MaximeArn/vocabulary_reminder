@@ -1,7 +1,7 @@
 {
   "name": "lexique",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "icons": "node scripts/icons/generate-icons.mjs",
-    "check:ios": "node scripts/ios/check-words.mjs"
+    "check:ios": "node scripts/ios/check-words.mjs && node scripts/ios/check-review.mjs"
   },
   "dependencies": {
     "@fontsource-variable/literata": "^5.3.0",

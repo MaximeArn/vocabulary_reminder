@@ -8,24 +8,14 @@
 //
 // Attention : le scénario efface les données de l'app à cette adresse.
 
-import { execFileSync } from "node:child_process";
 import { IosSafari } from "./webdriver.mjs";
+import { chooseBackupFile as chooseFile, createStepper, makeBackup, resetApp, screenshot } from "./helpers.mjs";
 
 const appUrl = process.argv[2] ?? "http://localhost:4173/";
-const screenshotDir = process.env.SCREENSHOT_DIR;
 const safari = new IosSafari("http://localhost:4444");
 
-let stepCount = 0;
-async function step(name, action) {
-  await action();
-  stepCount += 1;
-  console.log(`✓ ${name}`);
-}
-
-function screenshot(name) {
-  if (!screenshotDir) return;
-  execFileSync("xcrun", ["simctl", "io", "booted", "screenshot", `${screenshotDir}/${name}.png`], { stdio: "ignore" });
-}
+const stepper = createStepper();
+const step = (name, action) => stepper.step(name, action);
 
 /** Champs du formulaire ouvert : mot, définition, exemple. */
 async function formFields() {
@@ -34,60 +24,20 @@ async function formFields() {
   return { term, definition, example };
 }
 
-/** Simule le choix d'un fichier dans le sélecteur iOS (non pilotable par WebDriver). */
-async function chooseBackupFile(content) {
-  await safari.script(
-    `const input = document.querySelector("input[type=file]");
-     const transfer = new DataTransfer();
-     transfer.items.add(new File([arguments[0]], "test.backup.json", { type: "application/json" }));
-     input.files = transfer.files;
-     input.dispatchEvent(new Event("change", { bubbles: true }));`,
-    [content],
-  );
-}
+const chooseBackupFile = (content) => chooseFile(safari, content);
 
-const sampleBackup = JSON.stringify({
-  app: "lexique",
-  schemaVersion: 1,
-  exportedAt: new Date().toISOString(),
-  words: ["Dextre", "Senestre", "Fruste"].map((term, index) => ({
-    id: `test-${index}`,
-    term,
-    termKey: term.toLowerCase(),
-    definition: `Définition de ${term}.`,
-    createdAt: 1000 + index,
-    updatedAt: 1000 + index,
-    box: 0,
-    dueDay: "2026-11-04",
-    lapses: 0,
-  })),
-  reviews: [],
-  settings: [],
-});
+const sampleBackup = makeBackup([
+  ["Dextre", "Définition de Dextre."],
+  ["Senestre", "Définition de Senestre."],
+  ["Fruste", "Définition de Fruste."],
+]);
 
 try {
   const capabilities = await safari.start();
   console.log(`Safari ${capabilities.browserVersion} sur ${capabilities["safari:deviceName"]} (iOS ${capabilities["safari:platformVersion"]})\n`);
 
   await step("Données de test et cache effacés", async () => {
-    await safari.open(appUrl);
-    // Sans cela, le service worker pourrait servir un build précédent.
-    await safari.scriptAsync(
-      `Promise.all([
-         navigator.serviceWorker.getRegistrations().then((all) => Promise.all(all.map((r) => r.unregister()))),
-         caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))),
-       ]).then(() => done("ok"), (error) => done(String(error)));`,
-    );
-    // L'app ferme sa connexion quand on demande l'effacement (comportement de Dexie) ;
-    // on attend la fin réelle de l'effacement avant de recharger.
-    const outcome = await safari.scriptAsync(
-      `const request = indexedDB.deleteDatabase("lexique");
-       request.onsuccess = () => done("ok");
-       request.onerror = () => done("erreur : " + request.error);
-       request.onblocked = () => done("bloqué");`,
-    );
-    if (outcome !== "ok") throw new Error(`Effacement de la base : ${outcome}`);
-    await safari.open(`${appUrl}?test=${Date.now()}#collection`);
+    await resetApp(safari, appUrl, "#collection");
     await safari.waitForText("Ta collection est vide");
   });
 
@@ -247,10 +197,10 @@ try {
     if (!canShare) throw new Error("navigator.canShare refuse un fichier JSON");
   });
 
-  console.log(`\n${stepCount} vérifications réussies.`);
+  console.log(`\n${stepper.count} vérifications réussies.`);
 } catch (error) {
   screenshot("echec");
-  console.error(`\n✗ Échec après ${stepCount} étape(s) : ${error.message}`);
+  console.error(`\n✗ Échec après ${stepper.count} étape(s) : ${error.message}`);
   process.exitCode = 1;
 } finally {
   await safari.stop().catch(() => {});

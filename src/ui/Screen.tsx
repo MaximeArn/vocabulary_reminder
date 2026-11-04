@@ -4,7 +4,7 @@ interface ScreenProps {
   title: string;
   /** Petite ligne au-dessus du titre (date, contexte…). */
   eyebrow?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 /** Mise en page commune à tous les écrans : marges, zones sûres, titre. */

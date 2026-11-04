@@ -17,10 +17,18 @@
   margin-bottom: var(--space-4);
 }
 
-.actions {
-  display: flex;
-  flex-direction: column;
+/* Une ligne par action (Exporter, Importer), avec ses deux moyens côte à côte. */
+.row {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr 1fr;
+  align-items: center;
   gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.rowLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .fileInput {

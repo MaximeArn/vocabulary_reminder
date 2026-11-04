@@ -119,6 +119,15 @@ export class IosSafari {
     return this.request("POST", "/alert/accept", {});
   }
 
+  dismissAlert() {
+    return this.request("POST", "/alert/dismiss", {});
+  }
+
+  /** Valeur d'un champ de saisie. */
+  value(css) {
+    return this.script("return document.querySelector(arguments[0])?.value ?? null;", [css]);
+  }
+
   /** Attend qu'une condition devienne vraie (l'interface est asynchrone). */
   async waitFor(description, condition, timeoutMs = 4000) {
     const start = Date.now();

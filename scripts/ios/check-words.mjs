@@ -149,8 +149,17 @@ try {
     await safari.waitForText("Vivacité joyeuse.");
   });
 
-  await step("Suppression puis annulation", async () => {
+  await step("Suppression refusée à la confirmation", async () => {
     await safari.clickButton("Supprimer");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await safari.dismissAlert(); // « Supprimer « alacrité » de ta collection ? » → Annuler
+    await safari.waitForText("Vivacité joyeuse.");
+  });
+
+  await step("Suppression confirmée puis annulée", async () => {
+    await safari.clickButton("Supprimer");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await safari.acceptAlert();
     await safari.waitForText("« alacrité » supprimé");
     await safari.waitForText("Ta collection est vide");
     await safari.clickButton("Annuler");
@@ -171,6 +180,45 @@ try {
   await step("Fichier invalide refusé avec un message clair", async () => {
     await chooseBackupFile('{"pas":"une sauvegarde"}');
     await safari.waitForText("Ce fichier n’est pas une sauvegarde de Lexique.");
+  });
+
+  await step("Export en texte : JSON complet affiché", async () => {
+    await safari.clickButton("Exporter en texte");
+    await safari.waitFor("JSON prêt", async () => {
+      const json = await safari.value("[role=dialog] textarea");
+      return json?.includes('"app": "lexique"') && JSON.parse(json).words.length === 3;
+    });
+    await safari.clickButton("Copier");
+    // Sans vrai toucher (limite du simulateur), Safari refuse le presse-papiers :
+    // on vérifie alors le repli (texte sélectionné). Sur l'iPhone, la copie aboutit.
+    await safari.waitFor("copie ou repli", async () => {
+      const text = await safari.bodyText();
+      return text.includes("Sauvegarde copiée") || text.includes("le texte est sélectionné");
+    });
+    if (await safari.script(`return !!document.querySelector("[role=dialog]")`)) await safari.clickButton("Fermer");
+    await safari.waitForNoText("Export en texte");
+  });
+
+  await step("Import en texte : erreur claire puis restauration", async () => {
+    await safari.clickButton("Importer du texte");
+    const area = await safari.find("[role=dialog] textarea");
+    await safari.type(area, "pas du json");
+    await safari.clickButton("Importer");
+    await safari.waitForText("Ce fichier n’est pas un fichier JSON valide.");
+    await safari.clear(area);
+    const twoWords = JSON.parse(sampleBackup);
+    twoWords.words = twoWords.words.slice(0, 2);
+    await safari.type(area, JSON.stringify(twoWords));
+    await safari.clickButton("Importer");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await safari.acceptAlert(); // remplacer les 3 mots actuels
+    await safari.waitForText("2 mots restaurés");
+    await safari.waitForNoText("Import en texte");
+    // On revient aux 3 mots pour la suite du scénario.
+    await chooseBackupFile(sampleBackup);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await safari.acceptAlert();
+    await safari.waitForText("3 mots restaurés");
   });
 
   await step("Recherche sans accents et tri alphabétique", async () => {

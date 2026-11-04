@@ -1,10 +1,22 @@
-import { readAllData, replaceAllData } from "../../data/backupRepository";
+import { readAllData } from "../../data/backupRepository";
 import { writeSetting } from "../../data/settingsRepository";
 import { backupFileName, createBackup, parseBackup, type BackupFile } from "../../domain/backup";
 
-/** Actions de sauvegarde côté appareil : création du fichier, partage, lecture. */
+/** Actions de sauvegarde côté appareil : création du JSON, fichier, lecture. */
 
 export const LAST_EXPORT_KEY = "backup.lastExportAt";
+
+/** Sauvegarde complète, sous forme de texte JSON lisible. */
+export async function createBackupJson(): Promise<{ json: string; fileName: string }> {
+  const now = new Date();
+  const backup = createBackup(await readAllData(), now);
+  return { json: JSON.stringify(backup, null, 2), fileName: backupFileName(now) };
+}
+
+/** Mémorise la date du dernier export (affichée dans les Réglages). */
+export async function markExported(): Promise<void> {
+  await writeSetting(LAST_EXPORT_KEY, Date.now());
+}
 
 export type ExportOutcome = "shared" | "downloaded" | "cancelled";
 
@@ -15,10 +27,9 @@ export type ExportOutcome = "shared" | "downloaded" | "cancelled";
  * Fichiers » ou iCloud Drive ; le lien de téléchargement est peu fiable en mode
  * installé. Ailleurs, on retombe sur un téléchargement classique.
  */
-export async function exportBackup(): Promise<ExportOutcome> {
-  const now = new Date();
-  const backup = createBackup(await readAllData(), now);
-  const file = new File([JSON.stringify(backup, null, 2)], backupFileName(now), { type: "application/json" });
+export async function exportBackupFile(): Promise<ExportOutcome> {
+  const { json, fileName } = await createBackupJson();
+  const file = new File([json], fileName, { type: "application/json" });
 
   let outcome: ExportOutcome;
   if (navigator.canShare?.({ files: [file] })) {
@@ -35,7 +46,7 @@ export async function exportBackup(): Promise<ExportOutcome> {
     outcome = "downloaded";
   }
 
-  await writeSetting(LAST_EXPORT_KEY, now.getTime());
+  await markExported();
   return outcome;
 }
 
@@ -48,13 +59,15 @@ function downloadFile(file: File): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** Lit un fichier choisi par l'utilisateur ; lève une erreur lisible s'il est invalide. */
-export async function readBackupFile(file: File): Promise<BackupFile> {
-  const result = parseBackup(await file.text());
+/** Lit une sauvegarde collée sous forme de texte ; lève une erreur lisible si elle est invalide. */
+export function parseBackupText(text: string): BackupFile {
+  if (text.trim() === "") throw new Error("Colle d’abord le contenu d’une sauvegarde.");
+  const result = parseBackup(text);
   if (!result.ok) throw new Error(result.error);
   return result.backup;
 }
 
-export async function restoreBackup(backup: BackupFile): Promise<void> {
-  await replaceAllData(backup);
+/** Lit un fichier de sauvegarde ; lève une erreur lisible s'il est invalide. */
+export async function readBackupFile(file: File): Promise<BackupFile> {
+  return parseBackupText(await file.text());
 }

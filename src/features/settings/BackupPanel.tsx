@@ -2,15 +2,19 @@ import { useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button } from "../../ui/Button";
 import { useToast } from "../../ui/Toast";
-import { formatLongDate, formatWordCount } from "../../ui/format";
+import { formatLongDate } from "../../ui/format";
 import { readSetting } from "../../data/settingsRepository";
-import { readAllData, replaceAllData } from "../../data/backupRepository";
 import { useWords } from "../words/useWords";
-import { LAST_EXPORT_KEY, exportBackup, readBackupFile, restoreBackup } from "./backupActions";
+import { LAST_EXPORT_KEY, exportBackupFile, readBackupFile } from "./backupActions";
+import { useRestoreBackup } from "./useRestoreBackup";
+import { ExportTextSheet } from "./ExportTextSheet";
+import { ImportTextSheet } from "./ImportTextSheet";
 import styles from "./BackupPanel.module.css";
 
+type OpenSheet = "export-text" | "import-text" | null;
+
 /**
- * Sauvegarde et restauration.
+ * Sauvegarde et restauration, par fichier ou par texte (copier / coller).
  * Les données ne vivent que sur l'iPhone : exporter régulièrement est la seule
  * protection contre une perte (suppression de l'icône, changement d'appareil…).
  */
@@ -18,15 +22,17 @@ export function BackupPanel() {
   const words = useWords() ?? [];
   const lastExportAt = useLiveQuery(() => readSetting<number>(LAST_EXPORT_KEY), []);
   const showToast = useToast();
+  const restore = useRestoreBackup();
   const fileInput = useRef<HTMLInputElement>(null);
+  const [openSheet, setOpenSheet] = useState<OpenSheet>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const exportWords = async () => {
+  const exportFile = async () => {
     setError(null);
     setBusy(true);
     try {
-      const outcome = await exportBackup();
+      const outcome = await exportBackupFile();
       if (outcome !== "cancelled") showToast({ message: "Sauvegarde créée" });
     } catch {
       setError("L’export a échoué. Réessaie.");
@@ -35,29 +41,11 @@ export function BackupPanel() {
     }
   };
 
-  const restoreFromFile = async (file: File) => {
+  const importFile = async (file: File) => {
     setError(null);
     setBusy(true);
     try {
-      const backup = await readBackupFile(file);
-      // Lu dans la base au moment même : sert à la confirmation et à l'annulation.
-      const previous = await readAllData();
-      const currentCount = previous.words.length;
-      const confirmed =
-        currentCount === 0 ||
-        window.confirm(
-          `Remplacer tes ${formatWordCount(currentCount).toLowerCase()} par les ${formatWordCount(backup.words.length).toLowerCase()} de cette sauvegarde ?`,
-        );
-      if (!confirmed) return;
-
-      await restoreBackup(backup);
-      showToast({
-        message: `${formatWordCount(backup.words.length)} restauré${backup.words.length > 1 ? "s" : ""}`,
-        actionLabel: currentCount > 0 ? "Annuler" : undefined,
-        onAction: () => {
-          replaceAllData(previous).catch(() => showToast({ message: "Impossible d’annuler la restauration." }));
-        },
-      });
+      await restore(await readBackupFile(file));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "La restauration a échoué.");
     } finally {
@@ -65,22 +53,42 @@ export function BackupPanel() {
     }
   };
 
+  const nothingToExport = words.length === 0;
+
   return (
     <section className={styles.panel}>
       <h2 className={styles.heading}>Sauvegarde</h2>
       <p className={styles.text}>
-        Tes mots ne sont enregistrés que sur cet appareil. Exporte-les régulièrement dans Fichiers ou iCloud Drive.
+        Tes mots ne sont enregistrés que sur cet appareil. Exporte-les régulièrement : en fichier (Fichiers, iCloud
+        Drive) ou en texte à coller où tu veux.
         <br />
         {lastExportAt ? `Dernière sauvegarde : ${formatLongDate(lastExportAt)}.` : "Aucune sauvegarde pour l’instant."}
       </p>
-      <div className={styles.actions}>
-        <Button variant="secondary" fullWidth onClick={exportWords} disabled={busy || words.length === 0}>
-          Exporter mes mots
+
+      <div className={styles.row}>
+        <span className={styles.rowLabel}>Exporter</span>
+        <Button variant="secondary" onClick={exportFile} disabled={busy || nothingToExport} aria-label="Exporter dans un fichier">
+          Fichier
         </Button>
-        <Button variant="quiet" fullWidth onClick={() => fileInput.current?.click()} disabled={busy}>
-          Restaurer une sauvegarde
+        <Button
+          variant="secondary"
+          onClick={() => setOpenSheet("export-text")}
+          disabled={busy || nothingToExport}
+          aria-label="Exporter en texte"
+        >
+          Texte
         </Button>
       </div>
+      <div className={styles.row}>
+        <span className={styles.rowLabel}>Importer</span>
+        <Button variant="secondary" onClick={() => fileInput.current?.click()} disabled={busy} aria-label="Importer un fichier">
+          Fichier
+        </Button>
+        <Button variant="secondary" onClick={() => setOpenSheet("import-text")} disabled={busy} aria-label="Importer du texte">
+          Texte
+        </Button>
+      </div>
+
       <input
         ref={fileInput}
         className={styles.fileInput}
@@ -89,7 +97,7 @@ export function BackupPanel() {
         onChange={(event) => {
           const file = event.target.files?.[0];
           event.target.value = ""; // permet de rechoisir le même fichier
-          if (file) restoreFromFile(file);
+          if (file) importFile(file);
         }}
       />
       {error && (
@@ -97,6 +105,9 @@ export function BackupPanel() {
           {error}
         </p>
       )}
+
+      {openSheet === "export-text" && <ExportTextSheet onClose={() => setOpenSheet(null)} />}
+      {openSheet === "import-text" && <ImportTextSheet onClose={() => setOpenSheet(null)} />}
     </section>
   );
 }

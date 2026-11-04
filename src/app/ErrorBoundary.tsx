@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "../ui/Button";
-import { exportBackup } from "../features/settings/backupActions";
+import { exportBackupFile } from "../features/settings/backupActions";
 import styles from "./ErrorBoundary.module.css";
 
 interface State {
@@ -30,7 +30,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
         <p className={styles.text}>Tes mots ne sont pas perdus : ils restent enregistrés sur l’appareil.</p>
         <pre className={styles.detail}>{this.state.error.message}</pre>
         <Button onClick={() => window.location.reload()}>Relancer l’app</Button>
-        <Button variant="secondary" onClick={() => exportBackup().catch(() => alert("L’export a échoué."))}>
+        <Button variant="secondary" onClick={() => exportBackupFile().catch(() => alert("L’export a échoué."))}>
           Exporter mes données
         </Button>
       </div>

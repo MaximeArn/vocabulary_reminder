@@ -1,0 +1,13 @@
+.tools {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.message {
+  padding: var(--space-5) 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--ink-faint);
+}

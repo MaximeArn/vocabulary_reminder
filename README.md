@@ -10,6 +10,7 @@ Carnet de vocabulaire personnel : une PWA installable sur iPhone, hors ligne, sa
 | `npm run build`     | Vérification des types + build de production dans `dist/`   |
 | `npm run preview`   | Sert le build de production (service worker actif)          |
 | `npm test`          | Tests unitaires (Vitest) de la logique métier               |
+| `npm run check:ios` | Parcours de bout en bout dans Safari iOS (simulateur)        |
 | `npm run icons`     | Régénère les icônes depuis `scripts/icons/icon.html`        |
 
 Le service worker n'est actif qu'avec `build` + `preview` (pas en `dev`).
@@ -34,8 +35,13 @@ Conventions :
 
 ## Tester sur iOS
 
-- Simulateur : `npm run build && npm run preview`, puis
+- Simulateur, à la main : `npm run build && npm run preview`, puis
   `xcrun simctl openurl booted http://localhost:4173/`.
+- Simulateur, automatisé : avec un iPhone démarré, `safaridriver -p 4444` et
+  `npm run preview` lancés, `npm run check:ios` pilote le vrai Safari iOS via
+  WebDriver (voir `scripts/ios/`). Limite connue du simulateur iOS 26.5 : le tap et
+  la saisie natifs de safaridriver ne fonctionnent pas, ils sont simulés en
+  JavaScript ; les gestes tactiles eux-mêmes se valident sur l'iPhone.
 - iPhone : utiliser l'URL publiée (HTTPS obligatoire pour le service worker).
   Débogage depuis le Mac : Safari > Développement > [iPhone] (activer « Inspecteur web »
   dans Réglages > Apps > Safari > Avancé sur l'iPhone).

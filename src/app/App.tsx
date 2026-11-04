@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { TabBar } from "./TabBar";
 import { saveTabInLocation, tabFromLocation, type TabId } from "./tabs";
+import { ToastProvider } from "../ui/Toast";
 import { UpdateBanner } from "../pwa/UpdateBanner";
 import { TodayScreen } from "../features/today/TodayScreen";
 import { CollectionScreen } from "../features/words/CollectionScreen";
+import { WordFormSheet } from "../features/words/WordFormSheet";
 import { ProgressScreen } from "../features/progress/ProgressScreen";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
 import styles from "./App.module.css";
@@ -23,6 +25,7 @@ function CurrentScreen({ tab }: { tab: TabId }) {
 
 export function App() {
   const [tab, setTab] = useState<TabId>(tabFromLocation);
+  const [adding, setAdding] = useState(false);
 
   const selectTab = (next: TabId) => {
     setTab(next);
@@ -30,13 +33,16 @@ export function App() {
   };
 
   return (
-    <div className={styles.app}>
-      <UpdateBanner />
-      {/* La clé force le remontage : chaque écran repart en haut, avec son animation d'entrée. */}
-      <main className={styles.content} key={tab}>
-        <CurrentScreen tab={tab} />
-      </main>
-      <TabBar current={tab} onSelect={selectTab} />
-    </div>
+    <ToastProvider>
+      <div className={styles.app}>
+        <UpdateBanner />
+        {/* La clé force le remontage : chaque écran repart en haut, avec son animation d'entrée. */}
+        <main className={styles.content} key={tab}>
+          <CurrentScreen tab={tab} />
+        </main>
+        <TabBar current={tab} onSelect={selectTab} onAdd={() => setAdding(true)} />
+      </div>
+      {adding && <WordFormSheet onClose={() => setAdding(false)} />}
+    </ToastProvider>
   );
 }

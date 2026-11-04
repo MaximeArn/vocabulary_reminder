@@ -1,0 +1,76 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgb(0 0 0 / 0.25);
+  animation: fade var(--duration-base) var(--ease-out);
+}
+
+/*
+ * La feuille occupe presque tout l'écran : avec le clavier iOS ouvert,
+ * les champs restent en haut, visibles, et les actions dans l'en-tête.
+ */
+.sheet {
+  position: fixed;
+  z-index: 31;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: calc(var(--safe-top) + var(--space-3));
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: 0 -8px 40px rgb(0 0 0 / 0.12);
+  animation: slide-up var(--duration-base) var(--ease-out);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--rule);
+}
+
+.title {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.cancel {
+  justify-self: start;
+  padding: var(--space-2);
+  color: var(--ink-soft);
+}
+
+.confirm {
+  justify-self: end;
+  padding: var(--space-2);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.confirm:disabled {
+  opacity: 0.4;
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-5) calc(var(--safe-right) + var(--space-5))
+    calc(var(--safe-bottom) + var(--space-6)) calc(var(--safe-left) + var(--space-5));
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+}

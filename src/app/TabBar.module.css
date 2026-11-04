@@ -25,3 +25,25 @@
 .active {
   color: var(--accent);
 }
+
+.addSlot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.add:active {
+  transform: scale(0.92);
+}

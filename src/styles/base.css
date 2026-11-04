@@ -32,6 +32,18 @@ p {
   margin: 0;
 }
 
+/*
+ * Éléments d'interface : pas de sélection de texte ni de menu contextuel
+ * à l'appui long (comportement d'une app native). Le contenu reste sélectionnable.
+ */
+button,
+nav,
+label {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 button {
   font: inherit;
   color: inherit;

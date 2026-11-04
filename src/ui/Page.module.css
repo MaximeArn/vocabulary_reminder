@@ -1,0 +1,42 @@
+/* Page superposée, qui glisse depuis la droite (comme une navigation iOS). */
+.page {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--paper);
+  animation: slide-in var(--duration-base) var(--ease-out);
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--safe-top) var(--safe-right) 0 var(--safe-left);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 0 var(--space-4) 0 var(--space-3);
+  color: var(--accent);
+}
+
+.content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-4) calc(var(--safe-right) + var(--space-5)) calc(var(--safe-bottom) + var(--space-7))
+    calc(var(--safe-left) + var(--space-5));
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+}

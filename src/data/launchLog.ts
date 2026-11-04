@@ -15,7 +15,15 @@ export interface LaunchInfo {
   launchCount: number;
 }
 
-export async function recordLaunch(): Promise<void> {
+/** Écriture du lancement en cours : la lecture l'attend pour ne pas afficher un état incomplet. */
+let pendingRecord: Promise<void> = Promise.resolve();
+
+export function recordLaunch(): Promise<void> {
+  pendingRecord = writeLaunch();
+  return pendingRecord;
+}
+
+async function writeLaunch(): Promise<void> {
   await db.transaction("rw", db.settings, async () => {
     const firstLaunchAt = await readSetting<number>(FIRST_LAUNCH_KEY);
     if (firstLaunchAt === undefined) {
@@ -27,6 +35,7 @@ export async function recordLaunch(): Promise<void> {
 }
 
 export async function readLaunchInfo(): Promise<LaunchInfo | undefined> {
+  await pendingRecord.catch(() => {});
   const firstLaunchAt = await readSetting<number>(FIRST_LAUNCH_KEY);
   const launchCount = await readSetting<number>(LAUNCH_COUNT_KEY);
   if (firstLaunchAt === undefined || launchCount === undefined) return undefined;

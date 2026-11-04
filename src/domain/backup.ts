@@ -109,7 +109,6 @@ function readWord(value: unknown, index: number): Word {
     termKey: comparisonKey(term),
     definition: expectString(record, "definition", where),
     example: optionalString(record, "example", where),
-    source: optionalString(record, "source", where),
     createdAt: expectNumber(record, "createdAt", where),
     updatedAt: expectNumber(record, "updatedAt", where),
     box: expectNumber(record, "box", where),

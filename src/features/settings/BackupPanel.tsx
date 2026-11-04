@@ -40,19 +40,20 @@ export function BackupPanel() {
     setBusy(true);
     try {
       const backup = await readBackupFile(file);
+      // Lu dans la base au moment même : sert à la confirmation et à l'annulation.
+      const previous = await readAllData();
+      const currentCount = previous.words.length;
       const confirmed =
-        words.length === 0 ||
+        currentCount === 0 ||
         window.confirm(
-          `Remplacer tes ${formatWordCount(words.length).toLowerCase()} par les ${formatWordCount(backup.words.length).toLowerCase()} de cette sauvegarde ?`,
+          `Remplacer tes ${formatWordCount(currentCount).toLowerCase()} par les ${formatWordCount(backup.words.length).toLowerCase()} de cette sauvegarde ?`,
         );
       if (!confirmed) return;
 
-      // Copie des données actuelles, pour pouvoir annuler juste après.
-      const previous = await readAllData();
       await restoreBackup(backup);
       showToast({
         message: `${formatWordCount(backup.words.length)} restauré${backup.words.length > 1 ? "s" : ""}`,
-        actionLabel: words.length > 0 ? "Annuler" : undefined,
+        actionLabel: currentCount > 0 ? "Annuler" : undefined,
         onAction: () => {
           replaceAllData(previous).catch(() => showToast({ message: "Impossible d’annuler la restauration." }));
         },

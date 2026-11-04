@@ -5,13 +5,12 @@ const draft: WordDraft = {
   term: " Alacrité ",
   definition: "Vivacité et enjouement.",
   example: "",
-  source: "  Le Rouge et le Noir ",
 };
 const now = new Date(2026, 10, 4, 15, 0).getTime();
 
 describe("validateDraft", () => {
   it("exige le mot et la définition", () => {
-    expect(validateDraft({ term: " ", definition: "", example: "", source: "" })).toEqual({
+    expect(validateDraft({ term: " ", definition: "", example: "" })).toEqual({
       term: "Indique le mot.",
       definition: "Indique sa définition.",
     });
@@ -26,7 +25,6 @@ describe("createWord", () => {
       id: "id-1",
       term: "Alacrité",
       termKey: "alacrite",
-      source: "Le Rouge et le Noir",
       box: 0,
       lapses: 0,
       dueDay: "2026-11-04",

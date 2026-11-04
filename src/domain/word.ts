@@ -7,17 +7,15 @@ export interface WordDraft {
   term: string;
   definition: string;
   example: string;
-  source: string;
 }
 
-export const EMPTY_DRAFT: WordDraft = { term: "", definition: "", example: "", source: "" };
+export const EMPTY_DRAFT: WordDraft = { term: "", definition: "", example: "" };
 
 export function draftFromWord(word: Word): WordDraft {
   return {
     term: word.term,
     definition: word.definition,
     example: word.example ?? "",
-    source: word.source ?? "",
   };
 }
 
@@ -46,7 +44,6 @@ function contentFromDraft(draft: WordDraft) {
     termKey: comparisonKey(term),
     definition: cleanText(draft.definition),
     example: stripSurroundingQuotes(cleanOptionalText(draft.example)),
-    source: cleanOptionalText(draft.source),
   };
 }
 

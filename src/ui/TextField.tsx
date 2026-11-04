@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useLayoutEffect, useRef } from "react";
 import styles from "./TextField.module.css";
 
 interface TextFieldProps {
@@ -12,10 +12,9 @@ interface TextFieldProps {
   serif?: boolean;
   error?: string;
   hint?: string;
+  /** Donne le focus au champ à son apparition (le clavier s'ouvre sur iPhone). */
   autoFocus?: boolean;
-  /** Identifiant d'une <datalist> de suggestions. */
-  suggestionsId?: string;
-  autoCapitalize?: "off" | "sentences" | "words";
+  autoCapitalize?: "off" | "sentences";
 }
 
 export function TextField({
@@ -27,18 +26,25 @@ export function TextField({
   serif = false,
   error,
   hint,
-  autoFocus,
-  suggestionsId,
+  autoFocus = false,
   autoCapitalize = "sentences",
 }: TextFieldProps) {
   const id = useId();
+  const fieldRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
+
+  // Plutôt que l'attribut autoFocus : `preventScroll` évite que Safari fasse
+  // défiler l'écran vers le champ. Le focus est donné pendant le rendu
+  // déclenché par le toucher, condition pour qu'iOS ouvre le clavier.
+  useLayoutEffect(() => {
+    if (autoFocus) fieldRef.current?.focus({ preventScroll: true });
+  }, [autoFocus]);
+
   const messageId = `${id}-message`;
   const className = [styles.input, serif && styles.serif, error && styles.invalid].filter(Boolean).join(" ");
   const common = {
     id,
     className,
     value,
-    autoFocus,
     autoCapitalize,
     "aria-invalid": error ? true : undefined,
     "aria-describedby": error || hint ? messageId : undefined,
@@ -58,11 +64,18 @@ export function TextField({
             onChange(event.target.value);
           }}
           ref={(element) => {
+            fieldRef.current = element as (HTMLInputElement & HTMLTextAreaElement) | null;
             if (element) growToContent(element);
           }}
         />
       ) : (
-        <input {...common} type="text" list={suggestionsId} autoComplete="off" onChange={(event) => onChange(event.target.value)} />
+        <input
+          {...common}
+          ref={fieldRef}
+          type="text"
+          autoComplete="off"
+          onChange={(event) => onChange(event.target.value)}
+        />
       )}
       {error ? (
         <p id={messageId} className={styles.error}>

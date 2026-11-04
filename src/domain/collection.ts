@@ -11,15 +11,12 @@ export const SORT_LABELS: Record<WordSort, string> = {
   alphabetical: "A → Z",
 };
 
-/** Garde les mots dont le terme, la définition ou la source contient la recherche. */
+/** Garde les mots dont le terme ou la définition contient la recherche. */
 export function searchWords(words: Word[], query: string): Word[] {
   const key = comparisonKey(query);
   if (key === "") return words;
   return words.filter(
-    (word) =>
-      word.termKey.includes(key) ||
-      comparisonKey(word.definition).includes(key) ||
-      (word.source !== undefined && comparisonKey(word.source).includes(key)),
+    (word) => word.termKey.includes(key) || comparisonKey(word.definition).includes(key),
   );
 }
 
@@ -35,12 +32,6 @@ export function sortWords(words: Word[], sort: WordSort): Word[] {
     case "alphabetical":
       return sorted.sort((a, b) => frenchCollator.compare(a.term, b.term));
   }
-}
-
-/** Sources distinctes déjà utilisées, pour l'autocomplétion. */
-export function distinctSources(words: Word[]): string[] {
-  const sources = new Set(words.map((word) => word.source).filter((source) => source !== undefined));
-  return [...sources].sort(frenchCollator.compare);
 }
 
 /** Autre mot de la collection portant déjà ce terme (doublon ou autre sens). */

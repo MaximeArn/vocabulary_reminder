@@ -27,11 +27,11 @@ function screenshot(name) {
   execFileSync("xcrun", ["simctl", "io", "booted", "screenshot", `${screenshotDir}/${name}.png`], { stdio: "ignore" });
 }
 
-/** Champs du formulaire ouvert, dans l'ordre : mot, définition, exemple, source. */
+/** Champs du formulaire ouvert : mot, définition, exemple. */
 async function formFields() {
-  const [term, source] = await safari.findAll("[role=dialog] input[type=text]");
+  const term = await safari.find("[role=dialog] input[type=text]");
   const [definition, example] = await safari.findAll("[role=dialog] textarea");
-  return { term, definition, example, source };
+  return { term, definition, example };
 }
 
 /** Simule le choix d'un fichier dans le sélecteur iOS (non pilotable par WebDriver). */
@@ -91,9 +91,19 @@ try {
     await safari.waitForText("Ta collection est vide");
   });
 
-  await step("Ajout refusé sans mot ni définition", async () => {
+  await step("Formulaire ouvert sans défilement, focus sur le mot", async () => {
     await safari.clickButton("Ajouter un mot");
     await safari.waitForText("Nouveau mot");
+    await new Promise((resolve) => setTimeout(resolve, 400)); // fin de l'animation
+    const state = await safari.script(
+      `const field = document.querySelector("[role=dialog] input");
+       return { focused: document.activeElement === field, scrollY: window.scrollY, top: field.getBoundingClientRect().top };`,
+    );
+    if (!state.focused) throw new Error("Le champ « Mot » n’a pas le focus");
+    if (state.scrollY !== 0 || state.top > 250) throw new Error(`Formulaire décalé : ${JSON.stringify(state)}`);
+  });
+
+  await step("Ajout refusé sans mot ni définition", async () => {
     await safari.clickButton("Ajouter");
     await safari.waitForText("Indique le mot.");
     await safari.waitForText("Indique sa définition.");
@@ -104,7 +114,6 @@ try {
     await safari.type(fields.term, "alacrité");
     await safari.type(fields.definition, "Vivacité et enjouement.");
     await safari.type(fields.example, "« Il répondit avec alacrité. »");
-    await safari.type(fields.source, "Le Rouge et le Noir");
     screenshot("1-formulaire");
     await safari.clickButton("Ajouter");
     await safari.waitForText("« alacrité » ajouté à ta collection");
@@ -123,7 +132,7 @@ try {
 
   await step("Fiche du mot (exemple sans guillemets doublés)", async () => {
     await safari.click(await safari.find("li button"));
-    await safari.waitForText("Rencontré dans Le Rouge et le Noir");
+    await safari.waitForText("Ajouté le");
     const text = await safari.bodyText();
     if (!text.includes("« Il répondit avec alacrité. »")) throw new Error("Exemple mal affiché");
     if (text.includes("« «")) throw new Error("Guillemets doublés");

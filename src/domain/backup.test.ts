@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { backupFileName, createBackup, parseBackup } from "./backup";
 import { createWord } from "./word";
 
-const word = createWord({ term: "Alacrité", definition: "Vivacité.", example: "", source: "" }, "w1", 1000);
+const word = createWord({ term: "Alacrité", definition: "Vivacité.", example: "" }, "w1", 1000);
 const review = {
   id: "r1",
   wordId: "w1",

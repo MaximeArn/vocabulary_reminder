@@ -24,3 +24,8 @@ db.version(1).stores({
   reviews: "id, wordId, answeredAt",
   settings: "key",
 });
+
+// v2 : la notion de source (livre d'origine) est abandonnée, son index est supprimé.
+db.version(2).stores({
+  words: "id, termKey, createdAt, dueDay, box",
+});

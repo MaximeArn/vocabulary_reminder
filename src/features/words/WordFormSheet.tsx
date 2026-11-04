@@ -1,9 +1,9 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import { Sheet } from "../../ui/Sheet";
 import { TextField } from "../../ui/TextField";
 import { useToast } from "../../ui/Toast";
 import { addWord, updateWord } from "../../data/wordsRepository";
-import { distinctSources, findSameTerm } from "../../domain/collection";
+import { findSameTerm } from "../../domain/collection";
 import {
   EMPTY_DRAFT,
   draftFromWord,
@@ -29,7 +29,6 @@ export function WordFormSheet({ word, onClose }: WordFormSheetProps) {
 
   const words = useWords() ?? [];
   const showToast = useToast();
-  const sourcesListId = useId();
   const [draft, setDraft] = useState<WordDraft>(initialDraft);
   const [errors, setErrors] = useState<DraftErrors>({});
   const [saving, setSaving] = useState(false);
@@ -97,20 +96,6 @@ export function WordFormSheet({ word, onClose }: WordFormSheetProps) {
           error={errors.definition}
         />
         <TextField label="Exemple" value={draft.example} onChange={updateField("example")} multiline optional />
-        <TextField
-          label="Source"
-          value={draft.source}
-          onChange={updateField("source")}
-          optional
-          autoCapitalize="words"
-          suggestionsId={sourcesListId}
-          hint="Le livre où tu l’as rencontré."
-        />
-        <datalist id={sourcesListId}>
-          {distinctSources(words).map((source) => (
-            <option key={source} value={source} />
-          ))}
-        </datalist>
       </div>
     </Sheet>
   );

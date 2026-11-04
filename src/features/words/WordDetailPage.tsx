@@ -30,15 +30,7 @@ export function WordDetailPage({ wordId, onClose }: WordDetailPageProps) {
         <h1 className={styles.term}>{word.term}</h1>
         <p className={styles.definition}>{word.definition}</p>
         {word.example && <p className={styles.example}>« {word.example} »</p>}
-        <p className={styles.meta}>
-          {word.source && (
-            <>
-              Rencontré dans <em>{word.source}</em>
-              <br />
-            </>
-          )}
-          Ajouté le {formatLongDate(word.createdAt)}
-        </p>
+        <p className={styles.meta}>Ajouté le {formatLongDate(word.createdAt)}</p>
       </article>
 
       <div className={styles.actions}>

@@ -22,7 +22,12 @@
   background: var(--paper);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: 0 -8px 40px rgb(0 0 0 / 0.12);
-  animation: slide-up var(--duration-base) var(--ease-out);
+  /*
+   * Entrée discrète (fondu + léger glissement) plutôt qu'un glissement depuis
+   * le bas de l'écran : le premier champ reçoit le focus dès l'ouverture, et
+   * s'il était encore hors de l'écran, iOS ferait défiler la page pour l'atteindre.
+   */
+  animation: enter var(--duration-base) var(--ease-out);
 }
 
 .header {
@@ -69,8 +74,9 @@
   }
 }
 
-@keyframes slide-up {
+@keyframes enter {
   from {
-    transform: translateY(100%);
+    opacity: 0;
+    transform: translateY(24px);
   }
 }

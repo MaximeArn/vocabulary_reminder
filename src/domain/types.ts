@@ -11,7 +11,6 @@ export interface Word {
   termKey: string;
   definition: string;
   example?: string;
-  source?: string;
   /** Horodatages en millisecondes (epoch). */
   createdAt: number;
   updatedAt: number;

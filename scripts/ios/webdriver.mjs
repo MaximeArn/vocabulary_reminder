@@ -23,7 +23,13 @@ export class IosSafari {
   async start() {
     const value = await this.request("POST", "/session", {
       capabilities: {
-        alwaysMatch: { browserName: "safari", platformName: "iOS", "safari:useSimulator": true },
+        alwaysMatch: {
+          browserName: "safari",
+          platformName: "iOS",
+          "safari:useSimulator": true,
+          // Simulateur précis (facultatif) : IOS_DEVICE_UDID=… npm run check:ios
+          ...(process.env.IOS_DEVICE_UDID ? { "safari:deviceUDID": process.env.IOS_DEVICE_UDID } : {}),
+        },
       },
     });
     this.sessionUrl = `${this.driverUrl}/session/${value.sessionId}`;

@@ -19,7 +19,11 @@ export function createStepper() {
 export function screenshot(name) {
   const dir = process.env.SCREENSHOT_DIR;
   if (!dir) return;
-  execFileSync("xcrun", ["simctl", "io", "booted", "screenshot", `${dir}/${name}.png`], { stdio: "ignore" });
+  try {
+    execFileSync("xcrun", ["simctl", "io", "booted", "screenshot", `${dir}/${name}.png`], { stdio: "ignore" });
+  } catch {
+    console.warn(`(capture « ${name} » impossible : simulateur arrêté ?)`);
+  }
 }
 
 export const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

@@ -1,42 +1,39 @@
+import type { Card } from "./card";
 import { comparisonKey } from "./text";
-import type { Word } from "./types";
 
-/** Recherche et tri de la collection, côté affichage. */
+/** Recherche et tri de la collection, côté affichage, quelle que soit la catégorie. */
 
-export type WordSort = "recent" | "oldest" | "alphabetical";
+export type CardSort = "recent" | "oldest" | "alphabetical";
 
-export const SORT_LABELS: Record<WordSort, string> = {
+export const SORT_LABELS: Record<CardSort, string> = {
   recent: "Récents",
   oldest: "Anciens",
   alphabetical: "A → Z",
 };
 
-/** Garde les mots dont le terme ou la définition contient la recherche. */
-export function searchWords(words: Word[], query: string): Word[] {
+/** Ce qu'il faut savoir d'une catégorie pour chercher et trier ses cartes. */
+export interface Describer {
+  title: (card: Card) => string;
+  searchTexts: (card: Card) => string[];
+}
+
+/** Garde les cartes dont l'un des textes contient la recherche (sans accents ni casse). */
+export function searchCards(cards: Card[], query: string, describe: Describer): Card[] {
   const key = comparisonKey(query);
-  if (key === "") return words;
-  return words.filter(
-    (word) => word.termKey.includes(key) || comparisonKey(word.definition).includes(key),
-  );
+  if (key === "") return cards;
+  return cards.filter((card) => describe.searchTexts(card).some((text) => comparisonKey(text).includes(key)));
 }
 
 const frenchCollator = new Intl.Collator("fr", { sensitivity: "base" });
 
-export function sortWords(words: Word[], sort: WordSort): Word[] {
-  const sorted = [...words];
+export function sortCards(cards: Card[], sort: CardSort, describe: Describer): Card[] {
+  const sorted = [...cards];
   switch (sort) {
     case "recent":
-      return sorted.sort((a, b) => b.createdAt - a.createdAt);
+      return sorted.sort((a, b) => b.item.createdAt - a.item.createdAt);
     case "oldest":
-      return sorted.sort((a, b) => a.createdAt - b.createdAt);
+      return sorted.sort((a, b) => a.item.createdAt - b.item.createdAt);
     case "alphabetical":
-      return sorted.sort((a, b) => frenchCollator.compare(a.term, b.term));
+      return sorted.sort((a, b) => frenchCollator.compare(describe.title(a), describe.title(b)));
   }
-}
-
-/** Autre mot de la collection portant déjà ce terme (doublon ou autre sens). */
-export function findSameTerm(words: Word[], term: string, excludedId?: string): Word | undefined {
-  const key = comparisonKey(term);
-  if (key === "") return undefined;
-  return words.find((word) => word.termKey === key && word.id !== excludedId);
 }

@@ -46,17 +46,29 @@ async function chooseAnswer(label) {
   );
 }
 
-/** Lit l'état des mots et de l'historique directement dans IndexedDB. */
+/** Lit les fiches et l'historique directement dans IndexedDB. */
 function readDatabase() {
   return safari.scriptAsync(`
     const request = indexedDB.open("lexique");
     request.onsuccess = () => {
       const db = request.result;
-      const tx = db.transaction(["words", "reviews"]);
-      const words = tx.objectStore("words").getAll();
+      const tx = db.transaction(["items", "reviews"]);
+      const items = tx.objectStore("items").getAll();
       const reviews = tx.objectStore("reviews").getAll();
-      tx.oncomplete = () => { done({ words: words.result, reviews: reviews.result }); db.close(); };
+      tx.oncomplete = () => { done({ items: items.result, reviews: reviews.result }); db.close(); };
     };`);
+}
+
+/** Ouvre la fiche d'un mot dans la Collection et renvoie son texte (niveau, prochaine révision). */
+async function readDetail(term) {
+  await safari.open(`${appUrl}?t=${Date.now()}#collection`);
+  await safari.waitForText(term);
+  await safari.script(
+    `[...document.querySelectorAll("li button")].find((b) => b.querySelector("p").textContent === arguments[0]).click();`,
+    [term],
+  );
+  await safari.waitForText("Ajouté le");
+  return (await safari.bodyText()).replace(/\s+/g, " ");
 }
 
 try {
@@ -125,18 +137,25 @@ try {
     await safari.clickButton("Terminer");
   });
 
-  await step("Planning mis à jour dans la base (Leitner)", async () => {
-    const { words, reviews } = await readDatabase();
+  await step("Historique enregistré (la deuxième chance n’y figure pas)", async () => {
+    const { items, reviews } = await readDatabase();
     if (reviews.length !== 5) throw new Error(`${reviews.length} réponses enregistrées au lieu de 5`);
-    const failed = words.find((word) => word.term === failedTerm);
-    if (failed.box !== 1 || failed.lapses !== 1) throw new Error(`Mot raté mal planifié : ${JSON.stringify(failed)}`);
-    const promoted = words.filter((word) => word.box === 1 && word.lapses === 0);
-    if (promoted.length !== 4) throw new Error(`${promoted.length} mots promus au lieu de 4`);
-    const untouched = words.filter((word) => word.box === 0);
-    if (untouched.length !== 1) throw new Error("Le 6e mot aurait dû rester à réviser");
+    const failed = items.find((item) => item.content.term === failedTerm);
+    const failedReviews = reviews.filter((review) => review.itemId === failed.id);
+    if (failedReviews.length !== 1 || failedReviews[0].correct) throw new Error("Réponse ratée mal enregistrée");
+    if (!reviews.every((review) => review.exercise.startsWith("vocabulary.") && /^\d{4}-\d{2}-\d{2}$/.test(review.studyDay))) {
+      throw new Error(`Réponse mal formée : ${JSON.stringify(reviews[0])}`);
+    }
+  });
+
+  await step("Progression recalculée : le mot raté revient demain", async () => {
+    const text = await readDetail(failedTerm);
+    if (!text.includes("En apprentissage · révision demain")) throw new Error(`Fiche inattendue : ${text}`);
+    await safari.clickButton("Collection");
   });
 
   await step("Aujourd’hui : 1 mot restant, 5 réponses, série d’1 jour", async () => {
+    await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`);
     await safari.waitForText("1 mot à réviser.");
     await safari.waitForText("réponses aujourd’hui");
     const text = (await safari.bodyText()).replace(/\s+/g, " ");
@@ -169,17 +188,18 @@ try {
     await safari.clickButton("Terminer");
     await safari.waitForText("Tout est révisé pour aujourd’hui.");
     await safari.waitForText("Prochaine révision demain");
-    const before = await readDatabase();
     await safari.clickButton("S’entraîner");
     const question = await readQuestion();
-    await chooseAnswer(expectedAnswer(question));
+    const expected = expectedAnswer(question);
+    const trainedTerm = question.instruction.includes("définition") ? question.prompt : expected;
+    await chooseAnswer(expected);
+    await safari.waitForText("Bonne réponse");
     await safari.clickButton("Quitter");
-    const after = await readDatabase();
-    const changed = after.words.filter((word) => {
-      const previous = before.words.find((candidate) => candidate.id === word.id);
-      return previous.box !== word.box || previous.dueDay !== word.dueDay;
-    });
-    if (changed.length > 0) throw new Error("Une bonne réponse en entraînement a modifié le planning");
+    const { reviews } = await readDatabase();
+    if (reviews.length !== 11) throw new Error(`${reviews.length} réponses au lieu de 11`);
+    // Révisé en avance : il ne monte pas de boîte et revient toujours demain.
+    const text = await readDetail(trainedTerm);
+    if (!text.includes("En apprentissage · révision demain")) throw new Error(`Planning modifié par l’entraînement : ${text}`);
   });
 
   console.log(`\n${stepper.count} vérifications réussies.`);

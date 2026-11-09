@@ -1,45 +1,45 @@
 import { describe, expect, it } from "vitest";
-import { findSameTerm, searchWords, sortWords } from "./collection";
-import { createWord } from "./word";
+import { searchCards, sortCards, type Describer } from "./collection";
+import { card } from "../test/factories";
+import type { Card } from "./card";
 
-const make = (term: string, definition: string, createdAt: number) =>
-  createWord({ term, definition, example: "" }, term, createdAt);
+const named = (id: string, term: string, definition: string, createdAt: number): Card => {
+  const base = card(id, {}, createdAt);
+  return { ...base, item: { ...base.item, content: { term, definition } } };
+};
+const describe_: Describer = {
+  title: (c) => (c.item.content as { term: string }).term,
+  searchTexts: (c) => Object.values(c.item.content as Record<string, string>),
+};
 
-const words = [
-  make("Écot", "Quote-part d’une dépense commune.", 2),
-  make("alacrité", "Vivacité et enjouement.", 3),
-  make("Dilection", "Amour pur et spirituel.", 1),
+const cards = [
+  named("1", "Écot", "Quote-part d’une dépense commune.", 2),
+  named("2", "alacrité", "Vivacité et enjouement.", 3),
+  named("3", "Dilection", "Amour pur et spirituel.", 1),
 ];
+const titles = (list: Card[]) => list.map(describe_.title);
 
-describe("searchWords", () => {
+describe("searchCards", () => {
   it("cherche sans tenir compte des accents ni de la casse", () => {
-    expect(searchWords(words, "ALACRITE").map((w) => w.term)).toEqual(["alacrité"]);
+    expect(titles(searchCards(cards, "ALACRITE", describe_))).toEqual(["alacrité"]);
   });
 
-  it("cherche aussi dans la définition", () => {
-    expect(searchWords(words, "spirituel").map((w) => w.term)).toEqual(["Dilection"]);
+  it("cherche dans tous les textes de la fiche", () => {
+    expect(titles(searchCards(cards, "spirituel", describe_))).toEqual(["Dilection"]);
   });
 
   it("renvoie tout pour une recherche vide", () => {
-    expect(searchWords(words, "  ")).toHaveLength(3);
+    expect(searchCards(cards, "  ", describe_)).toHaveLength(3);
   });
 });
 
-describe("sortWords", () => {
+describe("sortCards", () => {
   it("trie par date d'ajout", () => {
-    expect(sortWords(words, "recent").map((w) => w.term)).toEqual(["alacrité", "Écot", "Dilection"]);
-    expect(sortWords(words, "oldest").map((w) => w.term)).toEqual(["Dilection", "Écot", "alacrité"]);
+    expect(titles(sortCards(cards, "recent", describe_))).toEqual(["alacrité", "Écot", "Dilection"]);
+    expect(titles(sortCards(cards, "oldest", describe_))).toEqual(["Dilection", "Écot", "alacrité"]);
   });
 
   it("trie alphabétiquement à la française (accents et casse ignorés)", () => {
-    expect(sortWords(words, "alphabetical").map((w) => w.term)).toEqual(["alacrité", "Dilection", "Écot"]);
-  });
-});
-
-describe("findSameTerm", () => {
-  it("détecte un terme déjà présent, en ignorant le mot en cours de modification", () => {
-    expect(findSameTerm(words, "ecot")?.term).toBe("Écot");
-    expect(findSameTerm(words, "Écot", "Écot")).toBeUndefined();
-    expect(findSameTerm(words, "inconnu")).toBeUndefined();
+    expect(titles(sortCards(cards, "alphabetical", describe_))).toEqual(["alacrité", "Dilection", "Écot"]);
   });
 });

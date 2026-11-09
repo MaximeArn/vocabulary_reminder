@@ -5,8 +5,9 @@ import { dateOfDay } from "../../ui/format";
 import { MASTERY_LABELS, MASTERY_LEVELS, isDue } from "../../domain/srs";
 import { activityByDay, countByLevel, currentStreak, type DayActivity } from "../../domain/progress";
 import { lastDays } from "../../domain/studyDay";
-import type { Word } from "../../domain/types";
-import { useWords } from "../words/useWords";
+import type { Card } from "../../domain/card";
+import { describeCard } from "../../categories/registry";
+import { useCards } from "../collection/useCards";
 import { useReviews } from "../review/useReviews";
 import { useToday } from "../review/useToday";
 import styles from "./ProgressScreen.module.css";
@@ -15,13 +16,13 @@ const HISTORY_DAYS = 14;
 const DIFFICULT_WORDS_SHOWN = 5;
 
 export function ProgressScreen() {
-  const words = useWords();
+  const cards = useCards();
   const reviews = useReviews();
   const today = useToday();
 
-  if (words === undefined || reviews === undefined) return <Screen title="Progrès" />;
+  if (cards === undefined || reviews === undefined) return <Screen title="Progrès" />;
 
-  if (words.length === 0) {
+  if (cards.length === 0) {
     return (
       <Screen title="Progrès">
         <Placeholder>Ta progression apparaîtra ici dès tes premiers mots.</Placeholder>
@@ -29,20 +30,20 @@ export function ProgressScreen() {
     );
   }
 
-  const levels = countByLevel(words);
-  const dueWords = words.filter((word) => isDue(word, today));
+  const levels = countByLevel(cards);
+  const dueCards = cards.filter((card) => isDue(card.progress, today));
   const streak = currentStreak(reviews, today);
-  const difficult = words
-    .filter((word) => word.lapses > 0)
-    .sort((a, b) => b.lapses - a.lapses)
+  const difficult = cards
+    .filter((card) => card.progress.lapses > 0)
+    .sort((a, b) => b.progress.lapses - a.progress.lapses)
     .slice(0, DIFFICULT_WORDS_SHOWN);
 
   return (
     <Screen title="Progrès">
       <div className={styles.tiles}>
-        <Tile value={words.length} label={words.length > 1 ? "mots" : "mot"} />
+        <Tile value={cards.length} label={cards.length > 1 ? "mots" : "mot"} />
         <Tile value={levels.mastered} label={levels.mastered > 1 ? "maîtrisés" : "maîtrisé"} />
-        <Tile value={dueWords.length} label="à réviser aujourd’hui" />
+        <Tile value={dueCards.length} label="à réviser aujourd’hui" />
         <Tile value={streak} label={streak > 1 ? "jours de suite" : "jour de suite"} />
       </div>
 
@@ -53,7 +54,7 @@ export function ProgressScreen() {
             <div key={level} className={styles.levelRow}>
               <span className={styles.levelLabel}>{MASTERY_LABELS[level]}</span>
               <div className={styles.rail} aria-hidden="true">
-                <div className={styles.fill} style={{ width: `${(levels[level] / words.length) * 100}%` }} />
+                <div className={styles.fill} style={{ width: `${(levels[level] / cards.length) * 100}%` }} />
               </div>
               <span className={styles.levelCount}>{levels[level]}</span>
             </div>
@@ -66,8 +67,8 @@ export function ProgressScreen() {
         <ActivityChart activity={activityByDay(reviews, lastDays(today, HISTORY_DAYS))} />
       </section>
 
-      <WordSection title="À réviser aujourd’hui" words={dueWords} empty="Rien à réviser aujourd’hui." />
-      {difficult.length > 0 && <WordSection title="Les plus oubliés" words={difficult} empty="" />}
+      <CardSection title="À réviser aujourd’hui" cards={dueCards} empty="Rien à réviser aujourd’hui." />
+      {difficult.length > 0 && <CardSection title="Les plus oubliés" cards={difficult} empty="" />}
     </Screen>
   );
 }
@@ -128,14 +129,14 @@ function ActivityChart({ activity }: { activity: DayActivity[] }) {
   );
 }
 
-function WordSection({ title, words, empty }: { title: string; words: Word[]; empty: string }) {
+function CardSection({ title, cards, empty }: { title: string; cards: Card[]; empty: string }) {
   return (
     <section className={styles.section}>
       <h2 className={styles.heading}>{title}</h2>
-      {words.length === 0 ? (
+      {cards.length === 0 ? (
         <p className={styles.empty}>{empty}</p>
       ) : (
-        <p className={styles.terms}>{words.map((word) => word.term).join(" · ")}</p>
+        <p className={styles.terms}>{cards.map(describeCard.title).join(" · ")}</p>
       )}
     </section>
   );

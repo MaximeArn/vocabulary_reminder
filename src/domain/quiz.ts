@@ -1,79 +1,79 @@
 import { shuffle, type Random } from "./random";
 import { comparisonKey } from "./text";
-import type { QuizMode, Word } from "./types";
+import type { Item } from "./types";
 
 /**
- * Construction d'une question à choix multiples.
+ * Questions à choix multiples, communes à toutes les catégories.
  *
- * Les mauvaises réponses sont tirées parmi les autres mots de la collection,
- * avec trois garanties :
+ * Garanties :
  * - la bonne réponse est toujours présente, une seule fois ;
- * - aucune proposition n'apparaît en double ;
- * - un homonyme (même mot, autre sens) n'est jamais proposé comme mauvaise
- *   réponse, puisqu'il serait correct lui aussi.
+ * - aucune proposition n'apparaît en double (à la casse et aux accents près) ;
+ * - une proposition « équivalente » à la bonne réponse (homonyme, même date…)
+ *   n'est jamais proposée comme mauvaise réponse.
  */
 
 export const CHOICE_COUNT = 4;
 
 export interface Choice {
-  wordId: string;
+  /** Identifiant de la proposition : celui d'une fiche, ou d'une réponse fabriquée. */
+  id: string;
   label: string;
 }
 
 export interface Question {
-  wordId: string;
-  mode: QuizMode;
-  /** Ce qui est demandé : le mot, ou sa définition (mot masqué). */
+  itemId: string;
+  exercise: string;
+  /** Ce qui est demandé : un mot, une définition, un événement… */
   prompt: string;
   choices: Choice[];
+  correctChoiceId: string;
 }
 
-export function buildQuestion(target: Word, words: Word[], mode: QuizMode, random: Random = Math.random): Question | null {
-  const distractors = pickDistractors(target, words, mode, random);
+interface ChoiceQuestionOptions<Content> {
+  target: Item<Content>;
+  /** Fiches parmi lesquelles tirer les mauvaises réponses. */
+  pool: Item<Content>[];
+  exercise: string;
+  prompt: string;
+  /** Texte affiché pour une fiche proposée. */
+  label: (item: Item<Content>) => string;
+  /** Une fiche qui serait correcte elle aussi (homonyme…) : jamais proposée. */
+  isEquivalent?: (candidate: Item<Content>) => boolean;
+  random?: Random;
+}
+
+/** Question dont les propositions sont des fiches de la collection. */
+export function buildChoiceQuestion<Content>({
+  target,
+  pool,
+  exercise,
+  prompt,
+  label,
+  isEquivalent = () => false,
+  random = Math.random,
+}: ChoiceQuestionOptions<Content>): Question | null {
+  const usedKeys = new Set([comparisonKey(label(target))]);
+  const distractors: Item<Content>[] = [];
+  for (const candidate of shuffle(pool, random)) {
+    if (distractors.length === CHOICE_COUNT - 1) break;
+    if (candidate.id === target.id || isEquivalent(candidate)) continue;
+    const key = comparisonKey(label(candidate));
+    if (usedKeys.has(key)) continue;
+    usedKeys.add(key);
+    distractors.push(candidate);
+  }
   if (distractors.length < CHOICE_COUNT - 1) return null;
 
-  const choices = shuffle([target, ...distractors], random).map((word) => ({
-    wordId: word.id,
-    label: mode === "word-to-definition" ? maskTerm(word.definition, word.term) : word.term,
-  }));
-
   return {
-    wordId: target.id,
-    mode,
-    prompt: mode === "word-to-definition" ? target.term : maskTerm(target.definition, target.term),
-    choices,
+    itemId: target.id,
+    exercise,
+    prompt,
+    choices: shuffle([target, ...distractors], random).map((item) => ({ id: item.id, label: label(item) })),
+    correctChoiceId: target.id,
   };
 }
 
-/** Peut-on poser des questions ? Il faut assez de mots et de définitions distincts. */
-export function canBuildQuestions(words: Word[]): boolean {
-  const terms = new Set(words.map((word) => word.termKey));
-  const definitions = new Set(words.map((word) => comparisonKey(word.definition)));
-  return terms.size >= CHOICE_COUNT && definitions.size >= CHOICE_COUNT;
-}
-
-function pickDistractors(target: Word, words: Word[], mode: QuizMode, random: Random): Word[] {
-  // La « clé » d'une proposition : ce qui est affiché, à la casse et aux accents près.
-  const keyOf = (word: Word) => (mode === "word-to-definition" ? comparisonKey(word.definition) : word.termKey);
-
-  const usedKeys = new Set([keyOf(target)]);
-  const distractors: Word[] = [];
-  for (const word of shuffle(words, random)) {
-    if (distractors.length === CHOICE_COUNT - 1) break;
-    const isHomonym = word.termKey === target.termKey; // inclut le mot lui-même
-    if (isHomonym || usedKeys.has(keyOf(word))) continue;
-    usedKeys.add(keyOf(word));
-    distractors.push(word);
-  }
-  return distractors;
-}
-
-/**
- * Masque le mot dans un texte (sa définition ou son exemple), pour ne pas
- * donner la réponse : « Être sous la férule de… » → « Être sous la … de… ».
- */
-export function maskTerm(text: string, term: string): string {
-  const escaped = term.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  if (escaped === "") return text;
-  return text.replace(new RegExp(escaped, "gi"), "…");
+/** Nombre de libellés distincts : suffit-il pour composer des questions ? */
+export function hasEnoughDistinct(labels: string[]): boolean {
+  return new Set(labels.map(comparisonKey)).size >= CHOICE_COUNT;
 }

@@ -136,7 +136,7 @@ try {
     await safari.clickButton("Exporter en texte");
     await safari.waitFor("JSON prêt", async () => {
       const json = await safari.value("[role=dialog] textarea");
-      return json?.includes('"app": "lexique"') && JSON.parse(json).words.length === 3;
+      return json?.includes('"app": "lexique"') && JSON.parse(json).items.length === 3;
     });
     await safari.clickButton("Copier");
     // Sans vrai toucher (limite du simulateur), Safari refuse le presse-papiers :

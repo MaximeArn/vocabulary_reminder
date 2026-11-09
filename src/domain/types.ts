@@ -1,38 +1,35 @@
 /**
- * Types métier de l'application.
+ * Types du moteur de mémorisation, communs à toutes les catégories.
  * Ce dossier ne dépend ni de React ni de la base de données.
  */
 
-/** Un mot de la collection, avec son état de répétition espacée. */
-export interface Word {
+/** Une fiche de connaissance (un mot, un événement historique…). */
+export interface Item<Content = unknown> {
   id: string;
-  term: string;
-  /** Forme normalisée du mot (minuscules, sans accents) : recherche et doublons. */
-  termKey: string;
-  definition: string;
-  example?: string;
+  /** Catégorie de la fiche : « vocabulary », « historical-event »… */
+  kind: string;
+  /** Contenu propre à la catégorie, validé par celle-ci. */
+  content: Content;
   /** Horodatages en millisecondes (epoch). */
   createdAt: number;
   updatedAt: number;
-  /** Boîte de Leitner : 0 = jamais révisé, puis 1 à 6. */
-  box: number;
-  /** Jour d'étude où le mot doit revenir, au format AAAA-MM-JJ (heure locale). */
-  dueDay: string;
-  /** Nombre de fois où le mot a été oublié. */
-  lapses: number;
+  /**
+   * Suppression « douce » : la fiche est masquée mais conservée, pour que la
+   * suppression puisse être annulée et, plus tard, synchronisée entre appareils.
+   */
+  deletedAt?: number;
 }
 
-export type QuizMode = "word-to-definition" | "definition-to-word";
-
-/** Une réponse donnée pendant une révision. Journal en ajout seul. */
+/** Une réponse donnée en révision. Journal en ajout seul : la progression en découle. */
 export interface Review {
   id: string;
-  wordId: string;
+  itemId: string;
   answeredAt: number;
-  mode: QuizMode;
+  /** Jour d'étude de la réponse (AAAA-MM-JJ), figé : le rejeu est indépendant du fuseau. */
+  studyDay: string;
+  /** Type d'exercice, préfixé par la catégorie : « vocabulary.word-to-definition ». */
+  exercise: string;
   correct: boolean;
-  boxBefore: number;
-  boxAfter: number;
 }
 
 /** Réglage ou information technique, stocké sous forme clé / valeur. */

@@ -16,17 +16,17 @@ export function useRestoreBackup() {
   return async (backup: BackupFile): Promise<RestoreOutcome> => {
     // Lu dans la base au moment même : sert à la confirmation et à l'annulation.
     const previous = await readAllData();
-    const currentCount = previous.words.length;
+    const currentCount = previous.items.length;
     const confirmed =
       currentCount === 0 ||
       window.confirm(
-        `Remplacer tes ${formatWordCount(currentCount).toLowerCase()} par les ${formatWordCount(backup.words.length).toLowerCase()} de cette sauvegarde ?`,
+        `Remplacer tes ${formatWordCount(currentCount).toLowerCase()} par les ${formatWordCount(backup.items.length).toLowerCase()} de cette sauvegarde ?`,
       );
     if (!confirmed) return "cancelled";
 
     await replaceAllData(backup);
     showToast({
-      message: `${formatWordCount(backup.words.length)} restauré${backup.words.length > 1 ? "s" : ""}`,
+      message: `${formatWordCount(backup.items.length)} restauré${backup.items.length > 1 ? "s" : ""}`,
       actionLabel: currentCount > 0 ? "Annuler" : undefined,
       onAction: () => {
         replaceAllData(previous).catch(() => showToast({ message: "Impossible d’annuler la restauration." }));

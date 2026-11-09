@@ -4,8 +4,8 @@ import { saveTabInLocation, tabFromLocation, type TabId } from "./tabs";
 import { ToastProvider } from "../ui/Toast";
 import { UpdateBanner } from "../pwa/UpdateBanner";
 import { TodayScreen } from "../features/today/TodayScreen";
-import { CollectionScreen } from "../features/words/CollectionScreen";
-import { WordFormSheet } from "../features/words/WordFormSheet";
+import { CollectionScreen } from "../features/collection/CollectionScreen";
+import { ItemFormSheet } from "../features/collection/ItemFormSheet";
 import { ProgressScreen } from "../features/progress/ProgressScreen";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
 import styles from "./App.module.css";
@@ -42,7 +42,8 @@ export function App() {
         </main>
         <TabBar current={tab} onSelect={selectTab} onAdd={() => setAdding(true)} />
       </div>
-      {adding && <WordFormSheet onClose={() => setAdding(false)} />}
+      {/* Une seule catégorie pour l'instant ; le choix de la catégorie viendra avec la deuxième. */}
+      {adding && <ItemFormSheet kind="vocabulary" onClose={() => setAdding(false)} />}
     </ToastProvider>
   );
 }

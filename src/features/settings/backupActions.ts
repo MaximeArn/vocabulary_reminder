@@ -1,6 +1,7 @@
 import { readAllData } from "../../data/backupRepository";
 import { writeSetting } from "../../data/settingsRepository";
 import { backupFileName, createBackup, parseBackup, type BackupFile } from "../../domain/backup";
+import { findCategoryModel } from "../../categories/models";
 
 /** Actions de sauvegarde côté appareil : création du JSON, fichier, lecture. */
 
@@ -62,7 +63,7 @@ function downloadFile(file: File): void {
 /** Lit une sauvegarde collée sous forme de texte ; lève une erreur lisible si elle est invalide. */
 export function parseBackupText(text: string): BackupFile {
   if (text.trim() === "") throw new Error("Colle d’abord le contenu d’une sauvegarde.");
-  const result = parseBackup(text);
+  const result = parseBackup(text, (kind, raw) => findCategoryModel(kind)?.validateContent(raw));
   if (!result.ok) throw new Error(result.error);
   return result.backup;
 }

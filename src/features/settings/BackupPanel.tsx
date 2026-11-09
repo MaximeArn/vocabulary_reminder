@@ -4,7 +4,7 @@ import { Button } from "../../ui/Button";
 import { useToast } from "../../ui/Toast";
 import { formatLongDate } from "../../ui/format";
 import { readSetting } from "../../data/settingsRepository";
-import { useWords } from "../words/useWords";
+import { useCards } from "../collection/useCards";
 import { LAST_EXPORT_KEY, exportBackupFile, readBackupFile } from "./backupActions";
 import { useRestoreBackup } from "./useRestoreBackup";
 import { ExportTextSheet } from "./ExportTextSheet";
@@ -19,7 +19,7 @@ type OpenSheet = "export-text" | "import-text" | null;
  * protection contre une perte (suppression de l'icône, changement d'appareil…).
  */
 export function BackupPanel() {
-  const words = useWords() ?? [];
+  const cards = useCards() ?? [];
   const lastExportAt = useLiveQuery(() => readSetting<number>(LAST_EXPORT_KEY), []);
   const showToast = useToast();
   const restore = useRestoreBackup();
@@ -53,7 +53,7 @@ export function BackupPanel() {
     }
   };
 
-  const nothingToExport = words.length === 0;
+  const nothingToExport = cards.length === 0;
 
   return (
     <section className={styles.panel}>

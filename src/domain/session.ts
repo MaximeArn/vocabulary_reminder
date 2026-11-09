@@ -1,72 +1,65 @@
+import type { Card } from "./card";
 import { isDue } from "./srs";
 import { shuffle, type Random } from "./random";
-import type { QuizMode, Word } from "./types";
 
-/** Composition d'une session de révision. */
-
-export type SessionMode = QuizMode | "mixed";
-
-export const SESSION_MODE_LABELS: Record<SessionMode, string> = {
-  mixed: "Les deux",
-  "word-to-definition": "La définition",
-  "definition-to-word": "Le mot",
-};
+/** Composition d'une session de révision, toutes catégories confondues. */
 
 export const DEFAULT_SESSION_SIZE = 5;
 export const SESSION_SIZES = [5, 10, 15, 20];
 
 export interface SessionItem {
-  wordId: string;
-  mode: QuizMode;
+  itemId: string;
+  exercise: string;
 }
 
 /**
- * Choisit les mots d'une session, par priorité :
- * 1. les mots à réviser, du plus en retard au moins en retard (les plus fragiles d'abord) ;
- * 2. les nouveaux mots, du plus ancien au plus récent ;
- * 3. si la session n'est pas pleine, de l'entraînement sur les prochains mots à réviser.
- * L'ordre des questions est ensuite mélangé.
+ * Choisit les cartes d'une session, par priorité :
+ * 1. les cartes à réviser, de la plus en retard à la moins en retard (les plus fragiles d'abord) ;
+ * 2. les nouvelles cartes, de la plus ancienne à la plus récente ;
+ * 3. si la session n'est pas pleine, de l'entraînement sur les prochaines cartes à réviser.
+ * L'ordre des questions est ensuite mélangé, et les types d'exercice alternent.
+ *
+ * `exercisesFor` donne les exercices possibles pour une carte (selon sa catégorie
+ * et les préférences de l'utilisateur).
  */
 export function planSession(
-  words: Word[],
+  cards: Card[],
   today: string,
   size: number,
-  mode: SessionMode,
+  exercisesFor: (card: Card) => string[],
   random: Random = Math.random,
 ): SessionItem[] {
-  const due = words.filter((word) => isDue(word, today) && word.box > 0).sort(byUrgency);
-  const fresh = words.filter((word) => word.box === 0 && isDue(word, today)).sort((a, b) => a.createdAt - b.createdAt);
-  const upcoming = words.filter((word) => !isDue(word, today)).sort(byUrgency);
+  const due = cards.filter((card) => isDue(card.progress, today) && card.progress.box > 0).sort(byUrgency);
+  const fresh = cards
+    .filter((card) => card.progress.box === 0 && isDue(card.progress, today))
+    .sort((a, b) => a.item.createdAt - b.item.createdAt);
+  const upcoming = cards.filter((card) => !isDue(card.progress, today)).sort(byUrgency);
 
   const selected = shuffle([...due, ...fresh, ...upcoming].slice(0, size), random);
-  const startWithDefinition = random() < 0.5;
+  const offset = random() < 0.5 ? 0 : 1;
 
-  return selected.map((word, index) => ({
-    wordId: word.id,
-    mode: modeForQuestion(mode, index, startWithDefinition),
-  }));
+  const items: SessionItem[] = [];
+  selected.forEach((card, index) => {
+    const exercises = exercisesFor(card);
+    const exercise = exercises[(index + offset) % Math.max(exercises.length, 1)];
+    if (exercise) items.push({ itemId: card.item.id, exercise });
+  });
+  return items;
 }
 
-function byUrgency(a: Word, b: Word): number {
-  return a.dueDay.localeCompare(b.dueDay) || a.box - b.box;
+function byUrgency(a: Card, b: Card): number {
+  return a.progress.dueDay.localeCompare(b.progress.dueDay) || a.progress.box - b.progress.box;
 }
 
-/** En mode mixte, les deux sens alternent d'une question à l'autre. */
-function modeForQuestion(mode: SessionMode, index: number, startWithDefinition: boolean): QuizMode {
-  if (mode !== "mixed") return mode;
-  const definitionFirst = index % 2 === 0 ? startWithDefinition : !startWithDefinition;
-  return definitionFirst ? "word-to-definition" : "definition-to-word";
+/** Nombre de cartes à réviser aujourd'hui (nouvelles comprises). */
+export function countDue(cards: Card[], today: string): number {
+  return cards.filter((card) => isDue(card.progress, today)).length;
 }
 
-/** Nombre de mots à réviser aujourd'hui (nouveaux mots compris). */
-export function countDue(words: Word[], today: string): number {
-  return words.filter((word) => isDue(word, today)).length;
-}
-
-/** Prochain jour où des mots seront à réviser, s'il n'y en a pas aujourd'hui. */
-export function nextDueDay(words: Word[], today: string): string | undefined {
-  return words
-    .map((word) => word.dueDay)
+/** Prochain jour où des cartes seront à réviser, s'il n'y en a pas aujourd'hui. */
+export function nextDueDay(cards: Card[], today: string): string | undefined {
+  return cards
+    .map((card) => card.progress.dueDay)
     .filter((day) => day > today)
     .sort()[0];
 }

@@ -1,4 +1,5 @@
-import { db } from "../../data/db";
+import { MIGRATION_V3_KEY, db, type MigrationReport } from "../../data/db";
+import { readSetting } from "../../data/settingsRepository";
 import { readLaunchInfo, type LaunchInfo } from "../../data/launchLog";
 import { isStandalone } from "../../pwa/displayMode";
 import { readServiceWorkerStatus, type ServiceWorkerStatus } from "../../pwa/serviceWorkerStatus";
@@ -15,16 +16,18 @@ export interface DiagnosticReport {
   online: boolean;
   serviceWorker: ServiceWorkerStatus;
   storage: StorageStatus;
-  database: { ok: true; wordCount: number } | { ok: false; error: string };
+  database: { ok: true; itemCount: number } | { ok: false; error: string };
   launches: LaunchInfo | undefined;
+  migration: MigrationReport | undefined;
 }
 
 export async function collectDiagnostic(): Promise<DiagnosticReport> {
-  const [serviceWorker, storage, database, launches] = await Promise.all([
+  const [serviceWorker, storage, database, launches, migration] = await Promise.all([
     readServiceWorkerStatus().catch((): ServiceWorkerStatus => "not-registered"),
     readStorageStatus(),
     checkDatabase(),
     readLaunchInfo().catch(() => undefined),
+    readSetting<MigrationReport>(MIGRATION_V3_KEY).catch(() => undefined),
   ]);
   return {
     standalone: isStandalone(),
@@ -33,12 +36,14 @@ export async function collectDiagnostic(): Promise<DiagnosticReport> {
     storage,
     database,
     launches,
+    migration,
   };
 }
 
 async function checkDatabase(): Promise<DiagnosticReport["database"]> {
   try {
-    return { ok: true, wordCount: await db.words.count() };
+    const items = await db.items.filter((item) => item.deletedAt === undefined).count();
+    return { ok: true, itemCount: items };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
@@ -65,7 +70,7 @@ function formatBytes(bytes: number | null): string {
 }
 
 export function toInfoRows(report: DiagnosticReport): InfoRow[] {
-  const { storage, database, launches } = report;
+  const { storage, database, launches, migration } = report;
   return [
     {
       label: "Mode d’affichage",
@@ -85,12 +90,22 @@ export function toInfoRows(report: DiagnosticReport): InfoRow[] {
     },
     { label: "Espace utilisé", value: `${formatBytes(storage.usageBytes)} / ${formatBytes(storage.quotaBytes)}` },
     database.ok
-      ? { label: "Base de données", value: `OK · ${database.wordCount} mot(s)`, tone: "good" }
+      ? { label: "Base de données", value: `OK · ${database.itemCount} fiche(s)`, tone: "good" }
       : { label: "Base de données", value: `Erreur : ${database.error}`, tone: "bad" },
     { label: "Lancements", value: launches ? String(launches.launchCount) : "—" },
     {
       label: "Premier lancement",
       value: launches ? dateTimeFormatter.format(launches.firstLaunchAt) : "—",
     },
+    ...(migration ? [migrationRow(migration)] : []),
   ];
+}
+
+/** Résultat de la migration vers le modèle générique (v3), si elle a eu lieu sur cet appareil. */
+function migrationRow(migration: MigrationReport): InfoRow {
+  if (migration.mismatches.length === 0) {
+    return { label: "Migration v3", value: `OK · ${migration.checkedItems} fiche(s) vérifiée(s)`, tone: "good" };
+  }
+  const terms = migration.mismatches.map((mismatch) => mismatch.term).join(", ");
+  return { label: "Migration v3", value: `${migration.mismatches.length} écart(s) : ${terms}`, tone: "bad" };
 }

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { recordAnswer } from "../../data/reviewsRepository";
-import { buildQuestion, type Question } from "../../domain/quiz";
+import type { Card } from "../../domain/card";
+import type { Question } from "../../domain/quiz";
 import type { SessionItem } from "../../domain/session";
-import type { Word } from "../../domain/types";
+import { findExercise } from "../../categories/registry";
 import { useToast } from "../../ui/Toast";
 
 /** Une question de la session. */
@@ -14,7 +15,7 @@ interface SessionEntry {
 }
 
 export interface AnswerResult {
-  wordId: string;
+  itemId: string;
   correct: boolean;
   isRetry: boolean;
 }
@@ -23,36 +24,35 @@ export interface AnswerResult {
  * Déroulement d'une session : question courante, réponse, passage à la suivante.
  * Chaque réponse est enregistrée immédiatement : quitter en cours de route ne perd rien.
  */
-export function useReviewSession(words: Word[], plan: SessionItem[], today: string) {
+export function useReviewSession(cards: Card[], plan: SessionItem[], today: string) {
   const showToast = useToast();
-  const [entries, setEntries] = useState<SessionEntry[]>(() => buildEntries(plan, words));
+  const [entries, setEntries] = useState<SessionEntry[]>(() => buildEntries(plan, cards));
   const [position, setPosition] = useState(0);
-  const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
+  const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [results, setResults] = useState<AnswerResult[]>([]);
 
   const current = entries[position];
 
-  const answer = (choiceWordId: string) => {
-    if (!current || selectedWordId !== null) return;
+  const answer = (choiceId: string) => {
+    if (!current || selectedChoiceId !== null) return;
     const { item, question, isRetry } = current;
-    const correct = choiceWordId === question.wordId;
+    const correct = choiceId === question.correctChoiceId;
 
-    setSelectedWordId(choiceWordId);
-    setResults((previous) => [...previous, { wordId: item.wordId, correct, isRetry }]);
+    setSelectedChoiceId(choiceId);
+    setResults((previous) => [...previous, { itemId: item.itemId, correct, isRetry }]);
 
     if (isRetry) return;
-    recordAnswer(item.wordId, item.mode, correct, today).catch(() =>
+    recordAnswer(item.itemId, item.exercise, correct, today).catch(() =>
       showToast({ message: "Cette réponse n’a pas pu être enregistrée." }),
     );
     if (!correct) {
-      const word = words.find((candidate) => candidate.id === item.wordId);
-      const retry = word && buildQuestion(word, words, item.mode);
+      const retry = buildQuestion(item, cards);
       if (retry) setEntries((previous) => [...previous, { item, question: retry, isRetry: true }]);
     }
   };
 
   const next = () => {
-    setSelectedWordId(null);
+    setSelectedChoiceId(null);
     setPosition((previous) => previous + 1);
   };
 
@@ -61,8 +61,8 @@ export function useReviewSession(words: Word[], plan: SessionItem[], today: stri
     isRetry: current?.isRetry ?? false,
     position,
     total: entries.length,
-    selectedWordId,
-    answered: selectedWordId !== null,
+    selectedChoiceId,
+    answered: selectedChoiceId !== null,
     finished: position >= entries.length,
     results,
     answer,
@@ -70,11 +70,19 @@ export function useReviewSession(words: Word[], plan: SessionItem[], today: stri
   };
 }
 
-function buildEntries(plan: SessionItem[], words: Word[]): SessionEntry[] {
+/** Construit la question d'une carte avec l'exercice prévu, parmi les fiches de sa catégorie. */
+function buildQuestion(sessionItem: SessionItem, cards: Card[]): Question | null {
+  const found = findExercise(sessionItem.exercise);
+  const target = cards.find((card) => card.item.id === sessionItem.itemId);
+  if (!found || !target) return null;
+  const pool = cards.filter((card) => card.item.kind === target.item.kind).map((card) => card.item);
+  return found.exercise.build(target.item, pool);
+}
+
+function buildEntries(plan: SessionItem[], cards: Card[]): SessionEntry[] {
   const entries: SessionEntry[] = [];
   for (const item of plan) {
-    const word = words.find((candidate) => candidate.id === item.wordId);
-    const question = word && buildQuestion(word, words, item.mode);
+    const question = buildQuestion(item, cards);
     if (question) entries.push({ item, question, isRetry: false });
   }
   return entries;

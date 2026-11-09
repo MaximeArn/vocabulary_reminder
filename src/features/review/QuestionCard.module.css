@@ -128,29 +128,6 @@
   color: var(--error);
 }
 
-.answerTerm {
-  font-family: var(--font-serif);
-  font-size: var(--text-lg);
-  font-weight: 600;
-}
-
-.answerDefinition {
-  margin-top: var(--space-1);
-  font-family: var(--font-serif);
-  line-height: 1.55;
-  white-space: pre-line;
-}
-
-.example {
-  margin-top: var(--space-3);
-  padding-left: var(--space-4);
-  border-left: 2px solid var(--bookmark);
-  font-family: var(--font-serif);
-  font-style: italic;
-  color: var(--ink-soft);
-  white-space: pre-line;
-}
-
 .next {
   margin-top: var(--space-5);
 }

@@ -1,25 +1,23 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../../data/db";
 import { MASTERY_LABELS, masteryLevel } from "../../domain/srs";
-import type { Word } from "../../domain/types";
+import { findCategory } from "../../categories/registry";
 import { Button } from "../../ui/Button";
 import { CheckIcon, CrossIcon } from "../../ui/icons";
+import { useCards } from "../collection/useCards";
 import type { AnswerResult } from "./useReviewSession";
 import styles from "./SessionSummary.module.css";
 
 interface SessionSummaryProps {
-  words: Word[];
   results: AnswerResult[];
   onRestart: () => void;
   onClose: () => void;
 }
 
-/** Bilan de fin de session : score (premières réponses) et niveau de chaque mot. */
-export function SessionSummary({ words, results, onRestart, onClose }: SessionSummaryProps) {
+/** Bilan de fin de session : score (premières réponses) et niveau de chaque fiche. */
+export function SessionSummary({ results, onRestart, onClose }: SessionSummaryProps) {
   const firstAnswers = results.filter((result) => !result.isRetry);
   const score = firstAnswers.filter((result) => result.correct).length;
-  // Niveaux à jour (après enregistrement des réponses), lus dans la base.
-  const updatedWords = useLiveQuery(() => db.words.bulkGet(firstAnswers.map((result) => result.wordId)), [results]);
+  // Cartes à jour : leur progression tient compte des réponses de la session.
+  const cards = useCards();
 
   if (firstAnswers.length === 0) {
     return (
@@ -44,16 +42,17 @@ export function SessionSummary({ words, results, onRestart, onClose }: SessionSu
       <p className={styles.message}>{encouragement(score, firstAnswers.length)}</p>
 
       <ul className={styles.list}>
-        {firstAnswers.map((result, index) => {
-          const word = updatedWords?.[index] ?? words.find((candidate) => candidate.id === result.wordId);
-          if (!word) return null;
+        {firstAnswers.map((result) => {
+          const card = cards?.find((candidate) => candidate.item.id === result.itemId);
+          const category = card && findCategory(card.item.kind);
+          if (!card || !category) return null;
           return (
-            <li key={result.wordId} className={styles.item}>
+            <li key={result.itemId} className={styles.item}>
               <span className={result.correct ? styles.good : styles.bad}>
                 {result.correct ? <CheckIcon size={18} /> : <CrossIcon size={18} />}
               </span>
-              <span className={styles.term}>{word.term}</span>
-              <span className={styles.level}>{MASTERY_LABELS[masteryLevel(word.box)]}</span>
+              <span className={styles.term}>{category.title(card.item.content)}</span>
+              <span className={styles.level}>{MASTERY_LABELS[masteryLevel(card.progress.box)]}</span>
             </li>
           );
         })}

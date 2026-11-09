@@ -9,7 +9,7 @@
     "preview": "vite preview --host",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "icons": "node scripts/icons/generate-icons.mjs",
+    "icons": "python3 scripts/icons/generate-icons.py",
     "check:ios": "node scripts/ios/check-words.mjs && node scripts/ios/check-review.mjs && node scripts/ios/check-dates.mjs && node scripts/ios/check-sync.mjs"
   },
   "dependencies": {

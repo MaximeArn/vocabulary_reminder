@@ -10,7 +10,6 @@ import packageJson from "./package.json" with { type: "json" };
 const base = process.env.BASE_PATH ?? "/";
 
 const paperLight = "#f5f0e6";
-const ink = "#1f3350"; // fond de l'icône : écran de lancement assorti
 
 export default defineConfig({
   base,
@@ -38,7 +37,7 @@ export default defineConfig({
         scope: base,
         display: "standalone",
         orientation: "portrait",
-        background_color: ink,
+        background_color: "#ffffff", // fond blanc de l'icône : écran de lancement assorti
         theme_color: paperLight,
         icons: [
           { src: "icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

@@ -10,3 +10,5 @@ scripts/icons/*.png
 scripts/icons/candidates/
 # Images d’inspiration (droits non vérifiés) : jamais dans le dépôt public
 scripts/icons/inspirations/
+# Illustration source de l’icône (licence de banque d’images) : hors du dépôt public
+scripts/icons/source/

@@ -26,7 +26,7 @@ export function ImportTextSheet({ onClose }: { onClose: () => void }) {
 
   return (
     <Sheet title="Import en texte" confirmLabel="Importer" onConfirm={submit} onCancel={onClose} confirmDisabled={busy}>
-      <p className={styles.text}>Colle ci-dessous le texte d’une sauvegarde exportée depuis Lexique.</p>
+      <p className={styles.text}>Colle ci-dessous le texte d’une sauvegarde exportée depuis Mnémé (ou Lexique, son ancien nom).</p>
       <textarea
         className={styles.json}
         value={text}

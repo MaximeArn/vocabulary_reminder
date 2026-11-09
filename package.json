@@ -1,5 +1,5 @@
 {
-  "name": "lexique",
+  "name": "mneme",
   "private": true,
   "version": "0.6.0",
   "type": "module",
@@ -10,10 +10,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "icons": "node scripts/icons/generate-icons.mjs",
-    "check:ios": "node scripts/ios/check-words.mjs && node scripts/ios/check-review.mjs && node scripts/ios/check-dates.mjs"
+    "check:ios": "node scripts/ios/check-words.mjs && node scripts/ios/check-review.mjs && node scripts/ios/check-dates.mjs && node scripts/ios/check-sync.mjs"
   },
   "dependencies": {
     "@fontsource-variable/literata": "^5.3.0",
+    "@supabase/supabase-js": "^2.119.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "react": "^19.3.1",

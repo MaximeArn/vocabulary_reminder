@@ -27,7 +27,7 @@ describe("sauvegarde v2", () => {
     expect(parseBackup("pas du json", validate)).toEqual({ ok: false, error: "Ce fichier n’est pas un fichier JSON valide." });
   });
 
-  it("refuse un JSON qui ne vient pas de Lexique, ou d'une version future", () => {
+  it("refuse un JSON qui ne vient pas de Mnémé, ou d'une version future", () => {
     expect(parseBackup(serialized({ items: [] }), validate).ok).toBe(false);
     expect(parseBackup(serialized({ app: "lexique", schemaVersion: 99, items: [] }), validate).ok).toBe(false);
   });
@@ -97,6 +97,6 @@ describe("sauvegarde v1 (vocabulaire seul)", () => {
 
 describe("backupFileName", () => {
   it("contient la date du jour", () => {
-    expect(backupFileName(new Date(2026, 0, 9))).toBe("lexique-2026-01-09.backup.json");
+    expect(backupFileName(new Date(2026, 0, 9))).toBe("mneme-2026-01-09.backup.json");
   });
 });

@@ -36,4 +36,6 @@ export interface Review {
 export interface Setting {
   key: string;
   value: unknown;
+  /** Date de modification (ms) : la plus récente gagne lors de la synchronisation. */
+  updatedAt?: number;
 }

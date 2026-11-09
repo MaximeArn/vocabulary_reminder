@@ -129,7 +129,7 @@ try {
 
   await step("Fichier invalide refusé avec un message clair", async () => {
     await chooseBackupFile('{"pas":"une sauvegarde"}');
-    await safari.waitForText("Ce fichier n’est pas une sauvegarde de Lexique.");
+    await safari.waitForText("Ce fichier n’est pas une sauvegarde de Mnémé.");
   });
 
   await step("Export en texte : JSON complet affiché", async () => {

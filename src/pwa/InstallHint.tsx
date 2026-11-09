@@ -10,7 +10,7 @@ export function InstallHint() {
 
   return (
     <aside className={styles.hint}>
-      <p className={styles.title}>Installe Lexique sur ton iPhone</p>
+      <p className={styles.title}>Installe Mnémé sur ton iPhone</p>
       {isIOS() ? (
         <p>
           Dans Safari, touche le bouton <strong>Partager</strong>, puis <strong>Sur l’écran d’accueil</strong>.

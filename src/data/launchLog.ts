@@ -24,7 +24,7 @@ export function recordLaunch(): Promise<void> {
 }
 
 async function writeLaunch(): Promise<void> {
-  await db.transaction("rw", db.settings, async () => {
+  await db.transaction("rw", db.settings, db.outbox, async () => {
     const firstLaunchAt = await readSetting<number>(FIRST_LAUNCH_KEY);
     if (firstLaunchAt === undefined) {
       await writeSetting(FIRST_LAUNCH_KEY, Date.now());

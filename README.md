@@ -1,4 +1,4 @@
-# Lexique
+# Mnémé
 
 Carnet de mémorisation personnel (vocabulaire, dates historiques…) : une PWA installable sur iPhone,
 hors ligne, sans compte ni serveur, avec un moteur de répétition espacée commun à toutes les catégories.
@@ -12,7 +12,7 @@ hors ligne, sans compte ni serveur, avec un moteur de répétition espacée comm
 | `npm run preview`   | Sert le build de production (service worker actif)          |
 | `npm test`          | Tests unitaires (Vitest) de la logique métier               |
 | `npm run check:ios` | Parcours de bout en bout dans Safari iOS : mots, révision, dates |
-| `npm run icons`     | Régénère les icônes depuis `scripts/icons/icon.html`        |
+| `npm run icons`     | Régénère les icônes depuis `scripts/icons/mneme.html`       |
 
 Le service worker n'est actif qu'avec `build` + `preview` (pas en `dev`).
 

@@ -9,6 +9,7 @@ import type { Item, Review, Setting } from "./types";
  * importables. Un fichier plus récent que l'app est refusé plutôt qu'importé à moitié.
  */
 
+/** Identifiant du format, inchangé depuis le premier nom de l'app (« Lexique ») : les anciennes sauvegardes restent lisibles. */
 export const BACKUP_APP_ID = "lexique";
 export const BACKUP_SCHEMA_VERSION = 2;
 
@@ -33,12 +34,12 @@ export function createBackup(content: BackupContent, now: Date): BackupFile {
   };
 }
 
-/** Nom du fichier exporté, par exemple « lexique-2026-11-04.backup.json ». */
+/** Nom du fichier exporté, par exemple « mneme-2026-11-04.backup.json ». */
 export function backupFileName(now: Date): string {
   const day = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
     .map((part) => String(part).padStart(2, "0"))
     .join("-");
-  return `lexique-${day}.backup.json`;
+  return `mneme-${day}.backup.json`;
 }
 
 /* ---------- Lecture et validation ---------- */
@@ -74,7 +75,7 @@ export function parseBackup(text: string, validateContent: ContentValidator): Pa
 
 function readBackup(json: unknown, validateContent: ContentValidator): BackupFile {
   if (!isRecord(json) || json.app !== BACKUP_APP_ID) {
-    throw new InvalidBackupError("Ce fichier n’est pas une sauvegarde de Lexique.");
+    throw new InvalidBackupError("Ce fichier n’est pas une sauvegarde de Mnémé.");
   }
   const version = json.schemaVersion;
   if (typeof version !== "number" || version < 1) {

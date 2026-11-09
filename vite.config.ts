@@ -10,6 +10,7 @@ import packageJson from "./package.json" with { type: "json" };
 const base = process.env.BASE_PATH ?? "/";
 
 const paperLight = "#f5f0e6";
+const ink = "#1f3350"; // fond de l'icône : écran de lancement assorti
 
 export default defineConfig({
   base,
@@ -25,19 +26,19 @@ export default defineConfig({
       // l'utilisateur choisit quand recharger (voir UpdateBanner).
       registerType: "prompt",
       injectRegister: false,
-      includeAssets: ["icons/apple-touch-icon.png", "icons/favicon.svg"],
+      includeAssets: ["icons/apple-touch-icon.png", "icons/favicon-64.png"],
       manifest: {
         id: base,
-        name: "Lexique",
-        short_name: "Lexique",
-        description: "Mon carnet de vocabulaire, à réviser chaque jour.",
+        name: "Mnémé",
+        short_name: "Mnémé",
+        description: "Mon carnet de mémorisation : mots, dates et connaissances rencontrés en lisant.",
         lang: "fr",
         dir: "ltr",
         start_url: base,
         scope: base,
         display: "standalone",
         orientation: "portrait",
-        background_color: paperLight,
+        background_color: ink,
         theme_color: paperLight,
         icons: [
           { src: "icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

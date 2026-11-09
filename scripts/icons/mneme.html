@@ -1,0 +1,196 @@
+<!doctype html>
+<!--
+  Icône « Mnémé » : la muse de face, d'après la mosaïque de Mnémosyne et la
+  sculpture grecque archaïque (boucles en coquille, longues mèches ondulées),
+  sur l'encre bleu nuit de l'app, dans un médaillon, avec une frise de grecques.
+  ?safe=1 → version « maskable » : motif réduit dans la zone sûre.
+  Rendu en PNG par generate-icons.mjs (Chrome headless).
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="night" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#2a4670"/>
+      <stop offset="1" stop-color="#172840"/>
+    </radialGradient>
+    <radialGradient id="skin" cx="46%" cy="40%" r="62%">
+      <stop offset="0" stop-color="#f8eedf"/>
+      <stop offset="0.7" stop-color="#efdcc2"/>
+      <stop offset="1" stop-color="#ddc09b"/>
+    </radialGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cf7444"/>
+      <stop offset="1" stop-color="#9c4627"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c9913a"/>
+      <stop offset="0.5" stop-color="#f0cc78"/>
+      <stop offset="1" stop-color="#c9913a"/>
+    </linearGradient>
+    <linearGradient id="cloth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#efe1c8"/>
+      <stop offset="1" stop-color="#d9c19c"/>
+    </linearGradient>
+    <linearGradient id="mantle" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b65530"/>
+      <stop offset="1" stop-color="#7f3519"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#night)"/>
+  <!-- Médaillon, en écho à la mosaïque -->
+  <circle cx="512" cy="470" r="396" fill="none" stroke="#e0b866" stroke-opacity="0.6" stroke-width="5"/>
+
+  <g id="portrait">
+    <!-- Masse de la chevelure, derrière le visage -->
+    <ellipse cx="512" cy="420" rx="214" ry="252" fill="url(#hair)"/>
+    <g id="tresses"></g>
+
+    <!-- Buste : tunique et manteau en diagonale -->
+    <path d="M 452 640 L 448 760 C 372 778, 290 820, 262 900 L 762 900 C 734 820, 652 778, 576 760 L 572 640 Z" fill="url(#cloth)"/>
+    <path d="M 448 760 C 500 806, 524 806, 576 760" fill="none" stroke="#c9a77c" stroke-width="5"/>
+    <path d="M 262 900 C 300 820, 380 782, 446 768 C 470 812, 520 850, 600 868 C 640 878, 700 886, 740 900 Z" fill="url(#mantle)"/>
+    <path d="M 330 860 C 380 830, 430 818, 470 822 M 400 900 C 450 870, 520 862, 580 880" fill="none" stroke="#6b2a12" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+    <path d="M 610 800 C 630 840, 650 870, 664 900 M 680 806 C 700 840, 712 870, 720 900" fill="none" stroke="#c9a77c" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Cou et ombre sous le menton -->
+    <path d="M 452 600 L 452 770 C 480 790, 544 790, 572 770 L 572 600 Z" fill="url(#skin)"/>
+    <path d="M 456 680 C 490 700, 534 700, 568 680 L 568 650 C 534 670, 490 670, 456 650 Z" fill="#d9bb94" opacity="0.6"/>
+    <!-- Collier de perles dorées -->
+    <g id="necklace"></g>
+
+    <!-- Visage -->
+    <path d="M 512 270 C 604 270, 664 336, 666 432 C 668 520, 638 598, 588 650 C 560 678, 536 692, 512 692 C 488 692, 464 678, 436 650 C 386 598, 356 520, 358 432 C 360 336, 420 270, 512 270 Z" fill="url(#skin)"/>
+
+    <!-- Sourcils effilés ; nez d'un trait depuis le sourcil gauche, comme sur la mosaïque -->
+    <path d="M 404 408 C 430 388, 470 386, 496 398" fill="none" stroke="#3a2416" stroke-width="7" stroke-linecap="round"/>
+    <path d="M 528 398 C 554 386, 594 388, 620 408" fill="none" stroke="#3a2416" stroke-width="7" stroke-linecap="round"/>
+    <path d="M 496 404 C 503 450, 504 510, 498 556" fill="none" stroke="#8a5a3c" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 478 560 C 486 574, 500 578, 512 574 C 524 578, 538 574, 546 560" fill="none" stroke="#8a5a3c" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Yeux : blanc, iris, paupière supérieure, pli de la paupière -->
+    <g id="eyes"></g>
+
+    <!-- Lèvres, avec l'arc de Cupidon -->
+    <path d="M 466 616 C 482 604, 498 602, 512 610 C 526 602, 542 604, 558 616 C 540 626, 484 626, 466 616 Z" fill="#b5543a"/>
+    <path d="M 466 616 C 484 626, 540 626, 558 616 C 548 642, 476 642, 466 616 Z" fill="#c9694c"/>
+    <path d="M 468 616 C 490 622, 534 622, 556 616" fill="none" stroke="#6e2a1a" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Boucles en coquille sur le front, bandeau doré, seconde rangée -->
+    <g id="curls-back"></g>
+    <g id="curls-front"></g>
+    <!-- Bandeau doré posé sur les boucles, comme un diadème -->
+    <g id="band"></g>
+  </g>
+
+  <!-- Frise de grecques -->
+  <g id="frieze"></g>
+</svg>
+<script>
+  const svgNS = "http://www.w3.org/2000/svg";
+  const add = (parent, tag, attributes) => {
+    const element = document.createElementNS(svgNS, tag);
+    for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
+    document.getElementById(parent).appendChild(element);
+    return element;
+  };
+
+  /** Spirale d'une boucle « en coquille » (archimédienne), du bord vers le centre. */
+  function spiral(cx, cy, radius, turns, clockwise) {
+    const points = [];
+    const steps = 48;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const angle = (clockwise ? 1 : -1) * t * turns * 2 * Math.PI - Math.PI / 2;
+      const r = radius * (1 - t * 0.92);
+      points.push(`${(cx + r * Math.cos(angle)).toFixed(1)} ${(cy + r * Math.sin(angle)).toFixed(1)}`);
+    }
+    return `M ${points.join(" L ")}`;
+  }
+
+  function curl(group, cx, cy, radius, clockwise) {
+    add(group, "circle", { cx, cy, r: radius, fill: "url(#hair)" });
+    add(group, "path", { d: spiral(cx, cy, radius * 0.86, 1.6, clockwise), fill: "none", stroke: "#6e2c14", "stroke-width": 5, "stroke-linecap": "round" });
+  }
+
+  /** Rangée de boucles le long d'un arc d'ellipse, symétrique de part et d'autre du centre. */
+  function curlRow(group, cy, rx, ry, count, radius, from, to) {
+    for (let i = 0; i < count; i++) {
+      const angle = ((from + (to - from) * (i / (count - 1))) * Math.PI) / 180;
+      const x = 512 + rx * Math.cos(angle);
+      const y = cy + ry * Math.sin(angle);
+      curl(group, x, y, radius, x > 512);
+    }
+  }
+
+  // Rangée arrière (sommet de la tête), puis bandeau, puis rangée de boucles sur le front.
+  curlRow("curls-back", 420, 206, 246, 13, 38, 190, 350);
+  curlRow("curls-front", 438, 160, 168, 11, 27, 200, 340);
+  add("band", "path", { d: "M 352 330 C 410 236, 614 236, 672 330", fill: "none", stroke: "#7a4f1c", "stroke-width": 26, "stroke-linecap": "round", opacity: 0.45 });
+  add("band", "path", { d: "M 352 326 C 410 232, 614 232, 672 326", fill: "none", stroke: "url(#gold)", "stroke-width": 20, "stroke-linecap": "round" });
+  // Petites perles le long du bandeau, comme les tesselles dorées de la mosaïque.
+  for (let i = 1; i < 10; i++) {
+    const t = i / 10;
+    const x = (1 - t) ** 3 * 352 + 3 * (1 - t) ** 2 * t * 410 + 3 * (1 - t) * t ** 2 * 614 + t ** 3 * 672;
+    const y = (1 - t) ** 3 * 326 + 3 * (1 - t) ** 2 * t * 232 + 3 * (1 - t) * t ** 2 * 232 + t ** 3 * 326;
+    add("band", "circle", { cx: x, cy: y, r: 4, fill: "#fff1c9" });
+  }
+
+  // Longues mèches ondulées qui tombent sur les épaules : trois fines mèches de chaque côté.
+  for (const side of [-1, 1]) {
+    for (const [offset, width, length] of [[0, 24, 0], [26, 22, 30], [50, 20, -20]]) {
+      const x = 512 + side * (214 - offset);
+      const end = 790 + length;
+      const d = `M ${x} 440 C ${x + side * 26} 510, ${x - side * 22} 570, ${x + side * 10} 630 S ${x + side * 2} ${end - 70}, ${x + side * 30} ${end}`;
+      add("tresses", "path", { d, fill: "none", stroke: "url(#hair)", "stroke-width": width, "stroke-linecap": "round" });
+      add("tresses", "path", { d, fill: "none", stroke: "#6e2c14", "stroke-width": 3, "stroke-linecap": "round", opacity: 0.5 });
+    }
+  }
+
+  // Yeux en amande.
+  for (const side of [-1, 1]) {
+    const cx = 512 + side * 64;
+    const almond = `M ${cx - 40} 456 C ${cx - 22} 432, ${cx + 22} 432, ${cx + 40} 454 C ${cx + 20} 470, ${cx - 20} 472, ${cx - 40} 456 Z`;
+    add("eyes", "path", { d: almond, fill: "#fbf6ee" });
+    add("eyes", "circle", { cx: cx + side * -2, cy: 452, r: 15, fill: "#7a4428" });
+    add("eyes", "circle", { cx: cx + side * -2, cy: 452, r: 7, fill: "#1d1a16" });
+    add("eyes", "circle", { cx: cx + side * -2 + 5, cy: 447, r: 3, fill: "#fbf6ee" });
+    add("eyes", "path", { d: `M ${cx - 42} 457 C ${cx - 22} 430, ${cx + 22} 430, ${cx + 42} 454`, fill: "none", stroke: "#2b1a10", "stroke-width": 6, "stroke-linecap": "round" });
+    add("eyes", "path", { d: `M ${cx - 32} 440 C ${cx - 14} 422, ${cx + 16} 422, ${cx + 34} 438`, fill: "none", stroke: "#a77b5a", "stroke-width": 3, "stroke-linecap": "round" });
+    add("eyes", "path", { d: `M ${cx - 36} 460 C ${cx - 16} 472, ${cx + 16} 472, ${cx + 36} 458`, fill: "none", stroke: "#a77b5a", "stroke-width": 2.5, "stroke-linecap": "round" });
+  }
+
+  // Collier de perles.
+  for (let i = 0; i <= 12; i++) {
+    const t = i / 12;
+    const x = 452 + 120 * t;
+    const y = 760 + 40 * Math.sin(Math.PI * t);
+    add("necklace", "circle", { cx: x, cy: y, r: 6.5, fill: "url(#gold)" });
+  }
+
+  // Frise : deux filets et un méandre continu entre eux.
+  const friezeTop = 910, unit = 64; // (« top » est réservé : window.top)
+  let meander = "";
+  for (let x = 16; x < 1024; x += unit) {
+    meander += `M ${x} ${friezeTop + 64} L ${x} ${friezeTop + 8} L ${x + 48} ${friezeTop + 8} L ${x + 48} ${friezeTop + 48} L ${x + 16} ${friezeTop + 48} L ${x + 16} ${friezeTop + 28} L ${x + 30} ${friezeTop + 28} `;
+  }
+  document.getElementById("frieze").innerHTML = `
+    <rect x="0" y="${friezeTop - 14}" width="1024" height="${1024 - friezeTop + 14}" fill="#172840"/>
+    <path d="M 0 ${friezeTop - 10} H 1024 M 0 ${friezeTop + 80} H 1024" stroke="#e0b866" stroke-width="6" fill="none"/>
+    <path d="${meander}" fill="none" stroke="#e0b866" stroke-width="9" stroke-linecap="square"/>`;
+
+  if (new URLSearchParams(location.search).has("safe")) {
+    document.getElementById("portrait").setAttribute("transform", "translate(512 470) scale(0.8) translate(-512 -470)");
+    document.getElementById("frieze").setAttribute("transform", "translate(102 -120) scale(0.8)");
+  }
+</script>
+</body>
+</html>

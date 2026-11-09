@@ -3,6 +3,19 @@ import { itemFromLegacyWord, reviewFromLegacy, settingFromLegacy, type LegacyRev
 import { progressByItem } from "../domain/srs";
 import type { Item, Review, Setting } from "../domain/types";
 
+/** Table locale en attente d'envoi vers le serveur. */
+export type SyncedTable = "items" | "reviews" | "settings";
+
+/** Une ligne modifiée localement, pas encore envoyée au serveur. */
+export interface PendingChange {
+  /** « items:<id> », « settings:<clé> »… */
+  id: string;
+  table: SyncedTable;
+  key: string;
+  /** Change à chaque nouvelle modification : on ne retire l'entrée que si elle n'a pas bougé pendant l'envoi. */
+  version: number;
+}
+
 /**
  * Base IndexedDB de l'application.
  *
@@ -13,13 +26,15 @@ import type { Item, Review, Setting } from "../domain/types";
  * Seuls les champs indexés sont déclarés ici ; les autres champs sont
  * stockés tels quels avec chaque objet.
  */
-export type LexiqueDatabase = Dexie & {
+export type MnemeDatabase = Dexie & {
   items: EntityTable<Item, "id">;
   reviews: EntityTable<Review, "id">;
   settings: EntityTable<Setting, "key">;
+  outbox: EntityTable<PendingChange, "id">;
 };
 
-export const db = new Dexie("lexique") as LexiqueDatabase;
+// Nom historique (premier nom de l'app) : le changer ferait perdre les données existantes.
+export const db = new Dexie("lexique") as MnemeDatabase;
 
 db.version(1).stores({
   words: "id, termKey, createdAt, dueDay, box, source",
@@ -44,6 +59,11 @@ db.version(3)
 // v4 : suppression de l'ancienne table des mots, une fois la migration faite.
 db.version(4).stores({
   words: null,
+});
+
+// v5 : file d'envoi vers le serveur (synchronisation).
+db.version(5).stores({
+  outbox: "id, table",
 });
 
 /** Résultat de la vérification de la migration v3, affiché dans le Diagnostic. */

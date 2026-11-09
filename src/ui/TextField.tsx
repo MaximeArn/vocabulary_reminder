@@ -15,6 +15,11 @@ interface TextFieldProps {
   /** Donne le focus au champ à son apparition (le clavier s'ouvre sur iPhone). */
   autoFocus?: boolean;
   autoCapitalize?: "off" | "sentences";
+  /** Type de champ (une ligne) : e-mail et mot de passe activent le clavier et le trousseau iOS. */
+  type?: "text" | "email" | "password";
+  /** Indication pour le remplissage automatique (« username », « current-password »…). */
+  autoComplete?: string;
+  name?: string;
 }
 
 export function TextField({
@@ -28,6 +33,9 @@ export function TextField({
   hint,
   autoFocus = false,
   autoCapitalize = "sentences",
+  type = "text",
+  autoComplete = "off",
+  name,
 }: TextFieldProps) {
   const id = useId();
   const fieldRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
@@ -72,8 +80,11 @@ export function TextField({
         <input
           {...common}
           ref={fieldRef}
-          type="text"
-          autoComplete="off"
+          type={type}
+          name={name}
+          autoComplete={autoComplete}
+          autoCorrect={type === "text" ? undefined : "off"}
+          spellCheck={type === "text" ? undefined : false}
           onChange={(event) => onChange(event.target.value)}
         />
       )}

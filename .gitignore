@@ -8,3 +8,5 @@ current_list.md
 *.backup.json
 scripts/icons/*.png
 scripts/icons/candidates/
+# Images d’inspiration (droits non vérifiés) : jamais dans le dépôt public
+scripts/icons/inspirations/

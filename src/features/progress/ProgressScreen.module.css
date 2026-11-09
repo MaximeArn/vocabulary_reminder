@@ -172,23 +172,20 @@
   border-radius: 6px;
 }
 
-/* Les quatre niveaux, alignés sous la barre : légende et valeurs à la fois */
+/* Les quatre niveaux sous la barre (légende et valeurs à la fois) : deux colonnes, une ligne chacun. */
 .levelGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-2);
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2) var(--space-3);
   margin: var(--space-3) 0 0;
 }
 
-/* Le nombre au-dessus du libellé : les nombres restent alignés même si un libellé passe sur deux lignes. */
 .levelCell {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.levelCell .levelCount {
-  order: -1;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .levelEmpty {
@@ -197,26 +194,34 @@
 
 .levelLabel {
   display: flex;
-  align-items: flex-start;
-  gap: 5px;
-  font-size: 0.6875rem;
-  line-height: 1.25;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--text-xs);
   color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .swatch {
   flex-shrink: 0;
   width: 10px;
   height: 10px;
-  margin-top: 1px;
   border-radius: 3px;
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
 }
 
+/* La nuance et le nombre, devant le libellé */
 .levelCount {
+  order: -1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin: 0;
+  min-width: 1.6em;
+  text-align: right;
   font-family: var(--font-serif);
-  font-size: var(--text-lg);
-  font-weight: 500;
+  font-size: var(--text-md);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }

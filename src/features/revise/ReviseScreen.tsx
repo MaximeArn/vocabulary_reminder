@@ -28,7 +28,36 @@ import { useReviewSettings } from "../review/useReviewSettings";
 import { ReviewSession } from "../review/ReviewSession";
 import styles from "./ReviseScreen.module.css";
 
-const dateFormatter = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+/**
+ * Couleurs de l'action principale et des icônes, selon la catégorie révisée :
+ * celles de la catégorie, ou un dégradé de l'une à l'autre pour « Tout ».
+ * (Contrastes vérifiés en clair et en sombre : texte ≥ 4,5:1, icônes ≥ 3:1.)
+ */
+interface ActionColors {
+  background: string;
+  text: string;
+  /** Couleur des icônes ; `undefined` : dégradé (voir `MixGradient`). */
+  icon?: string;
+}
+
+const MIXED_COLORS: ActionColors = {
+  background: "linear-gradient(100deg, var(--mix-from), var(--mix-to))",
+  text: "var(--on-mix)",
+};
+
+/** Dégradé SVG pour le trait des icônes en mode « Tout ». */
+function MixGradient() {
+  return (
+    <svg width="0" height="0" aria-hidden="true" style={{ position: "absolute" }}>
+      <defs>
+        <linearGradient id="category-mix" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" style={{ stopColor: "var(--vocabulary)" }} />
+          <stop offset="1" style={{ stopColor: "var(--dates)" }} />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
 
 interface RunningSession {
   id: number;
@@ -64,7 +93,7 @@ export function ReviseScreen() {
   const [session, setSession] = useState<RunningSession | null>(null);
 
   if (cards === undefined || reviews === undefined) {
-    return <Screen eyebrow={dateFormatter.format(new Date())} title="Réviser" />;
+    return <Screen title="Réviser" />;
   }
 
   // Catégorie révisée : proposée seulement si plusieurs catégories ont des fiches.
@@ -74,6 +103,10 @@ export function ReviseScreen() {
   const reviewable = reviewableCards(selected);
   const dueCount = countDue(reviewable, today);
   const streak = currentStreak(reviews, today);
+  const category = findCategory(kind);
+  const colors: ActionColors = category
+    ? { background: category.fillColor, text: category.onFillColor, icon: category.color }
+    : MIXED_COLORS;
   const answeredToday = activityByDay(reviews, [today])[0]?.answered ?? 0;
 
   // Exercices possibles pour une carte : ceux de sa catégorie, ou celui imposé dans les réglages.
@@ -94,7 +127,8 @@ export function ReviseScreen() {
     start(() => planPractice(reviewable, practice, settings.sessionSize, Date.now(), exercisesFor));
 
   return (
-    <Screen eyebrow={dateFormatter.format(new Date())} title="Réviser">
+    <Screen title="Réviser">
+      <MixGradient />
       <InstallHint />
 
       {categories.length > 1 && (
@@ -120,7 +154,7 @@ export function ReviseScreen() {
         <p className={styles.eyebrow}>Révision du jour</p>
         <DailyMessage cards={selected} reviewable={reviewable} dueCount={dueCount} today={today} />
         {dueCount > 0 && (
-          <Button fullWidth onClick={startDaily}>
+          <Button fullWidth onClick={startDaily} style={{ background: colors.background, color: colors.text }}>
             Commencer · {Math.min(settings.sessionSize, reviewable.length)} questions
           </Button>
         )}
@@ -151,7 +185,7 @@ export function ReviseScreen() {
                   aria-label={title}
                   aria-describedby={`practice-${practice}`}
                 >
-                  <span className={styles.tileIcon}>
+                  <span className={`${styles.tileIcon} ${colors.icon ? "" : styles.mixedIcon}`} style={{ color: colors.icon }}>
                     <Icon size={22} />
                   </span>
                   <span className={styles.tileTitle}>{title}</span>

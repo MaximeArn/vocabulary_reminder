@@ -87,8 +87,12 @@
 
 .tileIcon {
   display: flex;
-  color: var(--accent);
   margin-bottom: var(--space-1);
+}
+
+/* « Tout » : trait des icônes en dégradé (le style CSS l'emporte sur l'attribut stroke). */
+.mixedIcon svg {
+  stroke: url(#category-mix);
 }
 
 .tileTitle {

@@ -128,11 +128,11 @@ function LevelCard({ name, color, unit, cards }: { name: string; color: string; 
       <dl className={styles.levelGrid}>
         {MASTERY_LEVELS.map((level) => (
           <div key={level} className={`${styles.levelCell} ${counts[level] === 0 ? styles.levelEmpty : ""}`}>
-            <dt className={styles.levelLabel}>
+            <dt className={styles.levelLabel}>{MASTERY_LABELS[level]}</dt>
+            <dd className={styles.levelCount}>
               <span className={styles.swatch} style={{ background: LEVEL_COLORS[level] }} aria-hidden="true" />
-              {MASTERY_LABELS[level]}
-            </dt>
-            <dd className={styles.levelCount}>{counts[level]}</dd>
+              {counts[level]}
+            </dd>
           </div>
         ))}
       </dl>

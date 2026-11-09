@@ -50,8 +50,11 @@ export async function resetApp(safari, appUrl, hash = "") {
   await safari.open(`${appUrl}?test=${Date.now()}${hash}`);
 }
 
-/** Simule le choix d'un fichier dans le sélecteur iOS (non pilotable par WebDriver). */
-export async function chooseBackupFile(safari, content) {
+/**
+ * Simule le choix d'un fichier dans le sélecteur iOS (non pilotable par WebDriver),
+ * puis choisit « Remplacer ma collection » (ou « Ajouter… » avec mode = "add").
+ */
+export async function chooseBackupFile(safari, content, mode = "replace") {
   await safari.script(
     `const input = document.querySelector("input[type=file]");
      const transfer = new DataTransfer();
@@ -60,6 +63,12 @@ export async function chooseBackupFile(safari, content) {
      input.dispatchEvent(new Event("change", { bubbles: true }));`,
     [content],
   );
+  // Fichier valide : l'app demande s'il faut ajouter ou remplacer.
+  const choice = mode === "add" ? "Ajouter à ma collection" : "Remplacer ma collection";
+  await safari
+    .waitFor("choix ajouter / remplacer", async () => (await safari.bodyText()).includes(choice), 2500)
+    .then(() => safari.clickButton(choice))
+    .catch(() => {}); // fichier invalide : pas de choix, un message d'erreur s'affiche
 }
 
 /** Sauvegarde de test à partir de paires [mot, définition]. Tous les mots sont à réviser. */
@@ -135,4 +144,12 @@ export async function startLocalSession(safari, appUrl, hash = "") {
   };
   await safari.script("localStorage.clear(); localStorage.setItem('mneme.auth', arguments[0]);", [JSON.stringify(session)]);
   await safari.open(`${appUrl}?test=${Date.now()}${hash}`);
+}
+
+/** Lance la révision du jour (bouton « Commencer · N questions »). */
+export async function startDailyReview(safari) {
+  await safari.waitFor("bouton Commencer", async () =>
+    safari.script(`return [...document.querySelectorAll("button")].some((b) => b.textContent.startsWith("Commencer ·"));`),
+  );
+  await safari.script(`[...document.querySelectorAll("button")].find((b) => b.textContent.startsWith("Commencer ·")).click();`);
 }

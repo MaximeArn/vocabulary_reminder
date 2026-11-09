@@ -8,6 +8,7 @@ import { UpdateBanner } from "../pwa/UpdateBanner";
 import { ReviseScreen } from "../features/revise/ReviseScreen";
 import { CollectionScreen } from "../features/collection/CollectionScreen";
 import { ItemFormSheet } from "../features/collection/ItemFormSheet";
+import { BatchAddSheet } from "../features/collection/BatchAddSheet";
 import { ProgressScreen } from "../features/progress/ProgressScreen";
 import { SettingsScreen } from "../features/settings/SettingsScreen";
 import styles from "./App.module.css";
@@ -27,13 +28,10 @@ function CurrentScreen({ tab }: { tab: TabId }) {
 
 export function App() {
   const [tab, setTab] = useState<TabId>(tabFromLocation);
-  /** Ajout en cours : choix de la catégorie, puis formulaire de la catégorie choisie. */
-  const [adding, setAdding] = useState<"choosing" | string | null>(null);
+  /** Ajout en cours : choix, puis formulaire d'une catégorie ou ajout de plusieurs fiches (« batch »). */
+  const [adding, setAdding] = useState<"choosing" | "batch" | string | null>(null);
 
-  const startAdding = () => {
-    const [only] = CATEGORIES;
-    setAdding(CATEGORIES.length === 1 && only ? only.kind : "choosing");
-  };
+  const startAdding = () => setAdding("choosing");
 
   const selectTab = (next: TabId) => {
     setTab(next);
@@ -53,11 +51,15 @@ export function App() {
       {adding === "choosing" && (
         <ActionSheet
           title="Ajouter à ta collection"
-          options={CATEGORIES.map((category) => ({ label: category.addLabel, onSelect: () => setAdding(category.kind) }))}
+          options={[
+            ...CATEGORIES.map((category) => ({ label: category.addLabel, onSelect: () => setAdding(category.kind) })),
+            { label: "Plusieurs à la fois", onSelect: () => setAdding("batch") },
+          ]}
           onCancel={() => setAdding(null)}
         />
       )}
-      {adding && adding !== "choosing" && <ItemFormSheet kind={adding} onClose={() => setAdding(null)} />}
+      {adding === "batch" && <BatchAddSheet onClose={() => setAdding(null)} />}
+      {adding && adding !== "choosing" && adding !== "batch" && <ItemFormSheet kind={adding} onClose={() => setAdding(null)} />}
     </ToastProvider>
   );
 }

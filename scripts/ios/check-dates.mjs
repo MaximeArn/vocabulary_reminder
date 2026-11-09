@@ -11,6 +11,7 @@ import {
   pause,
   startLocalSession,
   screenshot,
+  startDailyReview
 } from "./helpers.mjs";
 
 const appUrl = process.argv[2] ?? "http://localhost:4173/";
@@ -28,6 +29,8 @@ const EVENTS = {
   "Bataille de Gaugamèles": "331 av. J.-C.",
   "Guerre de Cent Ans": "1337 – 1453",
   "Construction du Parthénon": "vers Ve siècle av. J.-C.",
+  "Massacre de la Saint-Barthélemy": "1572",
+  "Édit de Nantes et fin des guerres de Religion": "1598",
 };
 const nameOfDate = Object.fromEntries(Object.entries(EVENTS).map(([name, date]) => [date, name]));
 
@@ -172,15 +175,37 @@ try {
     if ((await text()).includes("Marathon")) throw new Error("Une date apparaît parmi les mots");
   });
 
-  await step("Aujourd’hui, filtre Dates : 8 dates à réviser", async () => {
+  await step("Ajout par lot : aperçu, doublon et titre écartés, puis ajout", async () => {
+    await openAddForm(safari, "Plusieurs à la fois");
+    await safari.waitForText("Ajouter plusieurs");
+    const lines = [
+      "Guerres de Religion",
+      "* 1572 : massacre de la Saint-Barthélemy.",
+      "* 1598 : édit de Nantes et fin des guerres de Religion.",
+      "* 490 av. J.-C. : Bataille de Marathon",
+      "affable : qui accueille aimablement les gens « Un hôte affable. »",
+    ].join("\n");
+    await safari.type(await safari.find('[aria-label="Fiches à ajouter"]'), lines);
+    await safari.waitForText("Prêt à ajouter : 2 dates · 1 mot");
+    await safari.waitForText("Déjà dans ta collection, ignorées : Bataille de Marathon");
+    await safari.waitForText("« Guerres de Religion » : pas de « : »");
+    screenshot("dates-6-lot");
+    await safari.clickButton("Ajouter (3)");
+    await safari.waitForText("3 fiches ajoutées");
+    await chooseSegment(safari, "Catégorie", "Dates");
+    await safari.waitForText("10 DATES");
+    await safari.waitForText("Massacre de la Saint-Barthélemy");
+  });
+
+  await step("Aujourd’hui, filtre Dates : 10 dates à réviser", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
-    await safari.waitForText("12 fiches à réviser.");
+    await safari.waitForText("15 fiches à réviser.");
     await chooseSegment(safari, "Réviser", "Dates");
-    await safari.waitForText("8 dates à réviser.");
+    await safari.waitForText("10 dates à réviser.");
   });
 
   await step("Session de dates : 5 questions cohérentes, les deux sens, explication après chaque réponse", async () => {
-    await safari.clickButton("Commencer la révision");
+    await startDailyReview(safari);
     const kinds = new Set();
     for (let index = 1; index <= 5; index++) {
       await safari.waitFor(`question ${index}`, async () => (await text()).includes(`${index} / 5`));
@@ -205,7 +230,7 @@ try {
     if (kinds.size < 2) throw new Error("Les deux sens de question n’alternent pas");
     await safari.waitFor("score", async () => (await text()).includes("5 / 5"));
     await safari.clickButton("Terminer");
-    await safari.waitForText("3 dates à réviser.");
+    await safari.waitForText("5 dates à réviser.");
   });
 
   await step("Réglage par catégorie : « Dates : retrouver la date » seulement", async () => {
@@ -214,8 +239,8 @@ try {
     await chooseSegment(safari, "Dates : retrouver", "La date");
     await pause(300);
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
-    await safari.waitForText("3 dates à réviser.");
-    await safari.clickButton("Commencer la révision");
+    await safari.waitForText("5 dates à réviser.");
+    await startDailyReview(safari);
     // 3 dates dues, complétées par de l'entraînement jusqu'à la taille de session.
     await safari.waitFor("compteur", async () => /1 \/ \d+/.test(await text()));
     const total = Number((await text()).match(/1 \/ (\d+)/)[1]);

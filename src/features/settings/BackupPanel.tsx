@@ -2,11 +2,18 @@ import { useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button } from "../../ui/Button";
 import { SettingsCard } from "../../ui/Section";
+import { ActionSheet } from "../../ui/ActionSheet";
+import { db } from "../../data/db";
+import { addItems } from "../../data/itemsRepository";
+import { previewBatch } from "../../categories/batch";
+import { unitForKinds } from "../../categories/registry";
+import { formatAdded, formatCardCount } from "../../ui/format";
+import type { BackupFile } from "../../domain/backup";
 import { useToast } from "../../ui/Toast";
 import { formatLongDate } from "../../ui/format";
 import { readSetting } from "../../data/settingsRepository";
 import { useCards } from "../collection/useCards";
-import { LAST_EXPORT_KEY, exportBackupFile, readBackupFile } from "./backupActions";
+import { LAST_EXPORT_KEY, exportBackupFile, parseBackupText } from "./backupActions";
 import { useRestoreBackup } from "./useRestoreBackup";
 import { ExportTextSheet } from "./ExportTextSheet";
 import { ImportTextSheet } from "./ImportTextSheet";
@@ -26,6 +33,8 @@ export function BackupPanel() {
   const restore = useRestoreBackup();
   const fileInput = useRef<HTMLInputElement>(null);
   const [openSheet, setOpenSheet] = useState<OpenSheet>(null);
+  /** Sauvegarde choisie, en attente du choix « ajouter » ou « remplacer ». */
+  const [pendingFile, setPendingFile] = useState<{ text: string; backup: BackupFile } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -44,9 +53,36 @@ export function BackupPanel() {
 
   const importFile = async (file: File) => {
     setError(null);
+    try {
+      const text = await file.text();
+      setPendingFile({ text, backup: parseBackupText(text) });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Ce fichier est illisible.");
+    }
+  };
+
+  /** Ajoute les fiches de la sauvegarde absentes de la collection, sans rien supprimer. */
+  const addFromFile = async (text: string) => {
+    setPendingFile(null);
     setBusy(true);
     try {
-      await restore(await readBackupFile(file));
+      const preview = previewBatch(text, await db.items.toArray());
+      const added = preview.entries.length > 0 ? await addItems(preview.entries) : 0;
+      const unit = unitForKinds(preview.entries.map((entry) => entry.kind));
+      const skipped = preview.duplicates.length > 0 ? ` · ${preview.duplicates.length} déjà présente${preview.duplicates.length > 1 ? "s" : ""}` : "";
+      showToast({ message: `${formatAdded(added, unit)}${skipped}` });
+    } catch {
+      setError("L’ajout a échoué. Rien n’a été modifié.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const replaceFromFile = async (backup: BackupFile) => {
+    setPendingFile(null);
+    setBusy(true);
+    try {
+      await restore(backup);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "La restauration a échoué.");
     } finally {
@@ -107,6 +143,16 @@ export function BackupPanel() {
 
       {openSheet === "export-text" && <ExportTextSheet onClose={() => setOpenSheet(null)} />}
       {openSheet === "import-text" && <ImportTextSheet onClose={() => setOpenSheet(null)} />}
+      {pendingFile && (
+        <ActionSheet
+          title={`Sauvegarde de ${formatCardCount(pendingFile.backup.items.length, unitForKinds(pendingFile.backup.items.map((item) => item.kind))).toLowerCase()}`}
+          options={[
+            { label: "Ajouter à ma collection", onSelect: () => void addFromFile(pendingFile.text) },
+            { label: "Remplacer ma collection", onSelect: () => void replaceFromFile(pendingFile.backup) },
+          ]}
+          onCancel={() => setPendingFile(null)}
+        />
+      )}
     </SettingsCard>
   );
 }

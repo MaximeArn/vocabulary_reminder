@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { markPending } from "./outbox";
-import type { Item } from "../domain/types";
+import type { Item, Review } from "../domain/types";
 
 /**
  * Opérations d'écriture sur les fiches. Les lectures passent par `useLiveQuery`.
@@ -42,4 +42,31 @@ async function changeItem(id: string, changes: Partial<Item>): Promise<void> {
     if (updated === 0) throw new Error("Cette fiche n’existe plus.");
     await markPending("items", [id]);
   });
+}
+
+/** Une fiche à ajouter par lot : nouvelle (contenu seul) ou venant d'une sauvegarde (avec son historique). */
+export interface BatchItem {
+  kind: string;
+  content: unknown;
+  fromBackup?: { item: Item; reviews: Review[] };
+}
+
+/** Ajoute un lot de fiches en une seule transaction (tout ou rien), noté pour la synchronisation. */
+export async function addItems(entries: BatchItem[]): Promise<number> {
+  const now = Date.now();
+  const items: Item[] = entries.map((entry, index) =>
+    entry.fromBackup
+      ? { ...entry.fromBackup.item, deletedAt: undefined }
+      : { id: crypto.randomUUID(), kind: entry.kind, content: entry.content, createdAt: now + index, updatedAt: now + index },
+  );
+  const reviews = entries.flatMap((entry) => entry.fromBackup?.reviews ?? []);
+  await db.transaction("rw", [db.items, db.reviews, db.outbox], async () => {
+    await db.items.bulkAdd(items);
+    const existingReviews = new Set(await db.reviews.where("id").anyOf(reviews.map((review) => review.id)).primaryKeys());
+    const newReviews = reviews.filter((review) => !existingReviews.has(review.id));
+    await db.reviews.bulkAdd(newReviews);
+    await markPending("items", items.map((item) => item.id));
+    await markPending("reviews", newReviews.map((review) => review.id));
+  });
+  return items.length;
 }

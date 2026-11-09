@@ -3,7 +3,7 @@ import { Screen } from "../../ui/Screen";
 import { Panel } from "../../ui/Panel";
 import { Button } from "../../ui/Button";
 import { CategoryToggle } from "../../ui/CategoryToggle";
-import { ChevronRightIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
+import { FlameIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
 import { formatCardCount, formatRelativeDay } from "../../ui/format";
 import { InstallHint } from "../../pwa/InstallHint";
 import { CHOICE_COUNT } from "../../domain/quiz";
@@ -38,36 +38,11 @@ interface RunningSession {
   restart: () => void;
 }
 
-/** Les entraînements proposés en accès rapide. */
-const PRACTICES: {
-  kind: PracticeKind;
-  title: string;
-  Icon: (props: { size?: number }) => React.ReactNode;
-  /** Détail sous le titre ; `count` est déjà mis en forme (« 3 mots »), sans accord à faire. */
-  describe: (count: string) => string;
-  empty: string;
-}[] = [
-  {
-    kind: "forgotten",
-    title: "Les plus oubliées",
-    Icon: RepeatIcon,
-    describe: (count) => `À retravailler : ${count}`,
-    empty: "Rien d’oublié pour l’instant.",
-  },
-  {
-    kind: "recent",
-    title: "Nouveautés",
-    Icon: SparkIcon,
-    describe: (count) => `Ajouts des ${RECENT_DAYS} derniers jours : ${count}`,
-    empty: `Rien d’ajouté ces ${RECENT_DAYS} derniers jours.`,
-  },
-  {
-    kind: "random",
-    title: "Tout en vrac",
-    Icon: ShuffleIcon,
-    describe: (count) => `Au hasard parmi ${count}`,
-    empty: "",
-  },
+/** Les entraînements proposés en accès rapide (libellés courts : trois tuiles côte à côte). */
+const PRACTICES: { kind: PracticeKind; title: string; Icon: (props: { size?: number }) => React.ReactNode; hint: string }[] = [
+  { kind: "forgotten", title: "Oubliées", Icon: RepeatIcon, hint: "Les fiches déjà ratées, les plus souvent d’abord" },
+  { kind: "recent", title: "Nouveautés", Icon: SparkIcon, hint: `Les fiches ajoutées ces ${RECENT_DAYS} derniers jours` },
+  { kind: "random", title: "En vrac", Icon: ShuffleIcon, hint: "Un tirage au hasard dans la collection" },
 ];
 
 /** Cartes des catégories qui ont assez de fiches pour composer des questions. */
@@ -143,63 +118,53 @@ export function ReviseScreen() {
 
       <Panel>
         <p className={styles.eyebrow}>Révision du jour</p>
-        <DailyMessage cards={selected} reviewable={reviewable} dueCount={dueCount} today={today} sessionSize={settings.sessionSize} />
+        <DailyMessage cards={selected} reviewable={reviewable} dueCount={dueCount} today={today} />
         {dueCount > 0 && (
           <Button fullWidth onClick={startDaily}>
-            Commencer la révision
+            Commencer · {Math.min(settings.sessionSize, reviewable.length)} questions
           </Button>
+        )}
+        {reviews.length > 0 && (
+          <p className={styles.stats}>
+            <span className={styles.flame}>
+              <FlameIcon size={16} />
+            </span>
+            {streak} {streak > 1 ? "jours de suite" : "jour de suite"} · {answeredToday}{" "}
+            {answeredToday > 1 ? "réponses aujourd’hui" : "réponse aujourd’hui"}
+          </p>
         )}
       </Panel>
 
       {reviewable.length > 0 && (
         <section className={styles.practices}>
           <h2 className={styles.heading}>Entraînements</h2>
-          <ul className={styles.list}>
-            {PRACTICES.map(({ kind: practice, title, Icon, describe, empty }) => {
+          <div className={styles.tiles}>
+            {PRACTICES.map(({ kind: practice, title, Icon, hint }) => {
               const count = practiceCandidates(reviewable, practice, Date.now()).length;
-              const counted = formatCardCount(count, unitFor(reviewable)).toLowerCase();
               return (
-                <li key={practice}>
-                  <button
-                    type="button"
-                    className={styles.practice}
-                    onClick={() => startPractice(practice)}
-                    disabled={count === 0}
-                    aria-label={title}
-                    aria-describedby={`practice-${practice}`}
-                  >
-                    <span className={styles.practiceIcon}>
-                      <Icon size={22} />
-                    </span>
-                    <span className={styles.practiceText}>
-                      <span className={styles.practiceTitle}>{title}</span>
-                      <span className={styles.practiceDetail} id={`practice-${practice}`}>
-                        {count === 0 ? empty : describe(counted)}
-                      </span>
-                    </span>
-                    <ChevronRightIcon size={18} />
-                  </button>
-                </li>
+                <button
+                  key={practice}
+                  type="button"
+                  className={styles.tile}
+                  onClick={() => startPractice(practice)}
+                  disabled={count === 0}
+                  aria-label={title}
+                  aria-describedby={`practice-${practice}`}
+                >
+                  <span className={styles.tileIcon}>
+                    <Icon size={22} />
+                  </span>
+                  <span className={styles.tileTitle}>{title}</span>
+                  <span className={styles.tileCount}>{count}</span>
+                  <span className={styles.hidden} id={`practice-${practice}`}>
+                    {hint}
+                  </span>
+                </button>
               );
             })}
-          </ul>
-          <p className={styles.footnote}>
-            En entraînement, une bonne réponse n’avance pas ton planning ; une erreur, si.
-          </p>
+          </div>
+          <p className={styles.footnote}>Une bonne réponse en entraînement n’avance pas le planning ; une erreur, si.</p>
         </section>
-      )}
-
-      {reviews.length > 0 && (
-        <div className={styles.stats}>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{streak}</span>
-            <span className={styles.statLabel}>{streak > 1 ? "jours de suite" : "jour de suite"}</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{answeredToday}</span>
-            <span className={styles.statLabel}>{answeredToday > 1 ? "réponses aujourd’hui" : "réponse aujourd’hui"}</span>
-          </div>
-        </div>
       )}
 
       {session && (
@@ -221,19 +186,15 @@ interface DailyMessageProps {
   reviewable: Card[];
   dueCount: number;
   today: string;
-  sessionSize: number;
 }
 
-/** Message de la révision du jour, selon l'état de la collection. */
-function DailyMessage({ cards, reviewable, dueCount, today, sessionSize }: DailyMessageProps) {
+/** Message de la révision du jour, selon l'état de la collection (une ou deux lignes). */
+function DailyMessage({ cards, reviewable, dueCount, today }: DailyMessageProps) {
   if (cards.length === 0) {
     return (
       <>
         <p className={styles.lead}>Ton carnet est encore vide.</p>
-        <p className={styles.text}>
-          Ajoute les mots et les dates rencontrés au fil de tes lectures avec le bouton +, puis reviens chaque jour les
-          réviser.
-        </p>
+        <p className={styles.text}>Ajoute des mots et des dates avec le bouton +.</p>
       </>
     );
   }
@@ -244,22 +205,15 @@ function DailyMessage({ cards, reviewable, dueCount, today, sessionSize }: Daily
       <>
         <p className={styles.lead}>Encore un peu de patience.</p>
         <p className={styles.text}>
-          Il faut au moins {CHOICE_COUNT} mots, avec des définitions différentes, pour composer les questions. Ajoute-en
-          encore {missing === 1 ? "un" : missing}.
+          Il faut au moins {CHOICE_COUNT} mots aux définitions différentes. Ajoute-en encore {missing === 1 ? "un" : missing}.
         </p>
       </>
     );
   }
 
   if (dueCount > 0) {
-    const questions = Math.min(sessionSize, reviewable.length);
     const dueCards = reviewable.filter((card) => card.progress.dueDay <= today);
-    return (
-      <>
-        <p className={styles.lead}>{formatCardCount(dueCount, unitFor(dueCards))} à réviser.</p>
-        <p className={styles.text}>Une session de {questions} questions, quelques minutes à peine.</p>
-      </>
-    );
+    return <p className={`${styles.lead} ${styles.leadWithButton}`}>{formatCardCount(dueCount, unitFor(dueCards))} à réviser.</p>;
   }
 
   const nextDay = nextDueDay(reviewable, today);
@@ -267,8 +221,8 @@ function DailyMessage({ cards, reviewable, dueCount, today, sessionSize }: Daily
     <>
       <p className={styles.lead}>Tout est révisé pour aujourd’hui.</p>
       <p className={styles.text}>
-        {nextDay ? `Prochaine révision ${formatRelativeDay(nextDay, today, addDays(today, 1))}.` : ""} Un entraînement
-        ci-dessous, en attendant ?
+        {nextDay ? `Prochaine révision ${formatRelativeDay(nextDay, today, addDays(today, 1))}. ` : ""}Un entraînement, en
+        attendant ?
       </p>
     </>
   );

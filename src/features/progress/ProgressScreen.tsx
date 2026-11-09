@@ -7,15 +7,14 @@ import { MASTERY_LABELS, MASTERY_LEVELS, isDue, type MasteryLevel } from "../../
 import { activityByDay, countByLevel, currentStreak, type DayActivity } from "../../domain/progress";
 import { lastDays } from "../../domain/studyDay";
 import type { Card } from "../../domain/card";
-import { formatCount } from "../../categories/model";
-import { describeCard, findCategory, presentCategories, unitFor } from "../../categories/registry";
+import { formatCount, type Unit } from "../../categories/model";
+import { presentCategories, unitFor } from "../../categories/registry";
 import { useCards } from "../collection/useCards";
 import { useReviews } from "../review/useReviews";
 import { useToday } from "../review/useToday";
 import styles from "./ProgressScreen.module.css";
 
 const HISTORY_DAYS = 14;
-const DIFFICULT_SHOWN = 5;
 
 /** Gradation d'une seule teinte, du plus clair (nouveau) au plus soutenu (maîtrisé). */
 const LEVEL_COLORS: Record<MasteryLevel, string> = {
@@ -45,10 +44,6 @@ export function ProgressScreen() {
   const levels = countByLevel(cards);
   const dueCards = cards.filter((card) => isDue(card.progress, today));
   const streak = currentStreak(reviews, today);
-  const difficult = cards
-    .filter((card) => card.progress.lapses > 0)
-    .sort((a, b) => b.progress.lapses - a.progress.lapses)
-    .slice(0, DIFFICULT_SHOWN);
   const breakdown =
     categories.length > 1
       ? categories.map((category) => formatCount(cards.filter((card) => card.item.kind === category.kind).length, category.unit)).join(" · ")
@@ -65,22 +60,17 @@ export function ProgressScreen() {
 
       <section className={styles.section}>
         <h2 className={styles.heading}>Niveaux</h2>
-        <div className={styles.legend} aria-hidden="true">
-          {MASTERY_LEVELS.map((level) => (
-            <span key={level} className={styles.legendItem}>
-              <span className={styles.swatch} style={{ background: LEVEL_COLORS[level] }} />
-              {MASTERY_LABELS[level]}
-            </span>
+        <div className={styles.levelCards}>
+          {categories.map((category) => (
+            <LevelCard
+              key={category.kind}
+              name={category.label}
+              color={category.color}
+              unit={category.unit}
+              cards={cards.filter((card) => card.item.kind === category.kind)}
+            />
           ))}
         </div>
-        {categories.map((category) => (
-          <LevelBar
-            key={category.kind}
-            name={category.label}
-            color={category.color}
-            cards={cards.filter((card) => card.item.kind === category.kind)}
-          />
-        ))}
       </section>
 
       <section className={styles.section}>
@@ -88,7 +78,6 @@ export function ProgressScreen() {
         <ActivityChart activity={activityByDay(reviews, lastDays(today, HISTORY_DAYS))} />
       </section>
 
-      {difficult.length > 0 && <CardSection title="Les plus oubliées" cards={difficult} empty="" />}
     </Screen>
   );
 }
@@ -116,30 +105,37 @@ function Tile({ icon, tone, value, label, detail }: TileProps) {
 }
 
 /**
- * Répartition des fiches d'une catégorie par niveau : une barre empilée à 100 %,
- * puis le détail en toutes lettres (lisible sans les couleurs).
+ * Niveaux d'une catégorie : une carte avec la barre de répartition, puis les
+ * quatre niveaux alignés dessous (nuance, nombre, libellé), qui servent aussi de légende.
  */
-function LevelBar({ name, color, cards }: { name: string; color: string; cards: Card[] }) {
+function LevelCard({ name, color, unit, cards }: { name: string; color: string; unit: Unit; cards: Card[] }) {
   const counts = countByLevel(cards);
   const total = cards.length;
-  const present = MASTERY_LEVELS.filter((level) => counts[level] > 0);
   return (
-    <div className={styles.levelGroup}>
+    <div className={styles.levelCard}>
       <div className={styles.levelHeader}>
         <span className={styles.levelName}>
           <span className={styles.dot} style={{ background: color }} aria-hidden="true" />
           {name}
         </span>
-        <span className={styles.levelTotal}>{total}</span>
+        <span className={styles.levelTotal}>{formatCount(total, unit)}</span>
       </div>
       <div className={styles.stack} aria-hidden="true">
-        {present.map((level) => (
+        {MASTERY_LEVELS.filter((level) => counts[level] > 0).map((level) => (
           <span key={level} className={styles.segment} style={{ flexGrow: counts[level], background: LEVEL_COLORS[level] }} />
         ))}
       </div>
-      <p className={styles.levelDetail}>
-        {present.map((level) => `${MASTERY_LABELS[level]} ${counts[level]}`).join(" · ")}
-      </p>
+      <dl className={styles.levelGrid}>
+        {MASTERY_LEVELS.map((level) => (
+          <div key={level} className={`${styles.levelCell} ${counts[level] === 0 ? styles.levelEmpty : ""}`}>
+            <dt className={styles.levelLabel}>
+              <span className={styles.swatch} style={{ background: LEVEL_COLORS[level] }} aria-hidden="true" />
+              {MASTERY_LABELS[level]}
+            </dt>
+            <dd className={styles.levelCount}>{counts[level]}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }
@@ -188,26 +184,5 @@ function ActivityChart({ activity }: { activity: DayActivity[] }) {
         </p>
       )}
     </>
-  );
-}
-
-/** Liste de fiches, chacune avec la pastille de sa catégorie. */
-function CardSection({ title, cards, empty }: { title: string; cards: Card[]; empty: string }) {
-  return (
-    <section className={styles.section}>
-      <h2 className={styles.heading}>{title}</h2>
-      {cards.length === 0 ? (
-        <p className={styles.empty}>{empty}</p>
-      ) : (
-        <ul className={styles.chips}>
-          {cards.map((card) => (
-            <li key={card.item.id} className={styles.chip}>
-              <span className={styles.dot} style={{ background: findCategory(card.item.kind)?.color }} aria-hidden="true" />
-              {describeCard.title(card)}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
   );
 }

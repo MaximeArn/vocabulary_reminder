@@ -27,3 +27,9 @@ export function formatRelativeDay(day: string, today: string, tomorrow: string):
   if (day === tomorrow) return "demain";
   return `le ${dayFormatter.format(dateOfDay(day))}`;
 }
+
+/** « 3 mots ajoutés », « 1 date ajoutée », « 2 fiches ajoutées » (« mots » est le seul masculin). */
+export function formatAdded(count: number, unit: { singular: string; plural: string }): string {
+  const feminine = unit.plural !== "mots";
+  return `${formatCardCount(count, unit)} ajouté${feminine ? "e" : ""}${count > 1 ? "s" : ""}`;
+}

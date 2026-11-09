@@ -2,7 +2,7 @@
 // Prérequis et usage : voir check-words.mjs. Le scénario efface les données de l'app.
 
 import { IosSafari } from "./webdriver.mjs";
-import { chooseBackupFile, createStepper, makeBackup, startLocalSession, screenshot } from "./helpers.mjs";
+import { chooseBackupFile, createStepper, makeBackup, startLocalSession, screenshot, startDailyReview } from "./helpers.mjs";
 
 const appUrl = process.argv[2] ?? "http://localhost:4173/";
 const safari = new IosSafari("http://localhost:4444");
@@ -85,12 +85,12 @@ try {
   await step("Aujourd’hui : 6 mots à réviser", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`); // ancienne adresse : doit ouvrir « Réviser »
     await safari.waitForText("6 mots à réviser.");
-    await safari.waitForText("Une session de 5 questions");
+    await safari.waitForText("Commencer · 5 questions");
   });
 
   let failedTerm;
   await step("Première question ratée volontairement, retour affiché", async () => {
-    await safari.clickButton("Commencer la révision");
+    await startDailyReview(safari);
     await safari.waitForText("1 / 5");
     const question = await readQuestion();
     const expected = expectedAnswer(question);
@@ -164,20 +164,20 @@ try {
     }
   });
 
-  await step("Progrès : chiffres, niveaux, activité, mots oubliés", async () => {
+  await step("Progrès : chiffres, niveaux par catégorie, activité", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#progres`);
     await safari.waitForText("NIVEAUX");
     const text = (await safari.bodyText()).replace(/\s+/g, " ");
-    for (const expected of ["6 mots", "1 à réviser aujourd’hui", "En apprentissage 5", "5 réponses, dont 4 justes", `LES PLUS OUBLIÉES ${failedTerm}`]) {
+    for (const expected of ["6 mots", "1 à réviser aujourd’hui", "Vocabulaire 6 mots", "Nouveau 1 En apprentissage 5", "5 réponses, dont 4 justes"]) {
       if (!text.includes(expected)) throw new Error(`« ${expected} » absent de : ${text}`);
     }
     screenshot("review-4-progress");
   });
 
-  await step("Tout révisé : entraînement « Tout en vrac » sans effet sur le planning", async () => {
+  await step("Tout révisé : entraînement « En vrac » sans effet sur le planning", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
     await safari.waitForText("1 mot à réviser.");
-    await safari.clickButton("Commencer la révision");
+    await startDailyReview(safari);
     for (let index = 1; index <= 5; index++) {
       await safari.waitFor(`question ${index}`, async () => (await safari.bodyText()).includes(`${index} / `));
       const question = await readQuestion();
@@ -188,7 +188,7 @@ try {
     await safari.clickButton("Terminer");
     await safari.waitForText("Tout est révisé pour aujourd’hui.");
     await safari.waitForText("Prochaine révision demain");
-    await safari.clickButton("Tout en vrac");
+    await safari.clickButton("En vrac");
     const question = await readQuestion();
     const expected = expectedAnswer(question);
     const trainedTerm = question.instruction.includes("définition") ? question.prompt : expected;

@@ -49,12 +49,6 @@
   margin-bottom: var(--space-3);
 }
 
-.empty {
-  font-family: var(--font-serif);
-  font-style: italic;
-  color: var(--ink-faint);
-}
-
 
 /* Activité : une colonne par jour, la hauteur suit le nombre de réponses. */
 .chart {
@@ -111,38 +105,25 @@
 }
 
 
-/* Niveaux : légende, puis une barre empilée par catégorie. */
-.legend {
+/* Niveaux : une carte par catégorie */
+.levelCards {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  margin-bottom: var(--space-4);
-  font-size: var(--text-xs);
-  color: var(--ink-soft);
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-.legendItem {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06);
-}
-
-.levelGroup {
-  margin-bottom: var(--space-4);
+.levelCard {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  box-shadow: inset 0 0 0 1px var(--rule);
 }
 
 .levelHeader {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
   font-size: var(--text-sm);
 }
 
@@ -150,12 +131,14 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
   font-weight: 600;
 }
 
 .levelTotal {
   font-variant-numeric: tabular-nums;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
 }
 
 .dot {
@@ -165,11 +148,11 @@
   border-radius: 50%;
 }
 
-/* Segments séparés de 2 px, extrémités arrondies */
+/* Barre de répartition : segments séparés de 2 px, extrémités arrondies */
 .stack {
   display: flex;
   gap: 2px;
-  height: 14px;
+  height: 12px;
 }
 
 .segment {
@@ -178,41 +161,62 @@
 }
 
 .segment:first-child {
-  border-radius: 7px 2px 2px 7px;
+  border-radius: 6px 2px 2px 6px;
 }
 
 .segment:last-child {
-  border-radius: 2px 7px 7px 2px;
+  border-radius: 2px 6px 6px 2px;
 }
 
 .segment:only-child {
-  border-radius: 7px;
+  border-radius: 6px;
 }
 
-.levelDetail {
-  margin-top: var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--ink-faint);
+/* Les quatre niveaux, alignés sous la barre : légende et valeurs à la fois */
+.levelGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
 }
 
-/* Fiches à réviser, plus oubliées : pastille de la catégorie */
-.chips {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* Le nombre au-dessus du libellé : les nombres restent alignés même si un libellé passe sur deux lignes. */
+.levelCell {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  flex-direction: column;
+  gap: 2px;
 }
 
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  border-radius: 999px;
-  background: var(--paper-raised);
-  box-shadow: inset 0 0 0 1px var(--rule);
+.levelCell .levelCount {
+  order: -1;
+}
+
+.levelEmpty {
+  opacity: 0.45;
+}
+
+.levelLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 0.6875rem;
+  line-height: 1.25;
+  color: var(--ink-soft);
+}
+
+.swatch {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 1px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+
+.levelCount {
+  margin: 0;
   font-family: var(--font-serif);
-  font-size: var(--text-sm);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }

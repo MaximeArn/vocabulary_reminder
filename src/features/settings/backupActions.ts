@@ -68,7 +68,3 @@ export function parseBackupText(text: string): BackupFile {
   return result.backup;
 }
 
-/** Lit un fichier de sauvegarde ; lève une erreur lisible s'il est invalide. */
-export async function readBackupFile(file: File): Promise<BackupFile> {
-  return parseBackupText(await file.text());
-}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TabBar } from "./TabBar";
 import { saveTabInLocation, tabFromLocation, type TabId } from "./tabs";
 import { ToastProvider } from "../ui/Toast";
@@ -37,6 +37,18 @@ export function App() {
     setTab(next);
     saveTabInLocation(next);
   };
+
+  // Toucher un rappel quand l'app est déjà ouverte : le service worker demande d'aller à « Réviser ».
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type !== "open") return;
+      window.history.replaceState(null, "", event.data.hash);
+      setTab(tabFromLocation());
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, []);
 
   return (
     <ToastProvider>

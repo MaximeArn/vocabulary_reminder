@@ -6,6 +6,7 @@ import { AccountPanel } from "./AccountPanel";
 import { BackupPanel } from "./BackupPanel";
 import { DiagnosticPanel } from "./DiagnosticPanel";
 import { ReviewSettingsPanel } from "./ReviewSettingsPanel";
+import { ReminderPanel } from "./ReminderPanel";
 
 const buildDateFormatter = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" });
 
@@ -15,6 +16,7 @@ export function SettingsScreen() {
     <Screen title="Réglages">
       <Section title="Révision" icon={<CardsIcon size={18} />}>
         <ReviewSettingsPanel />
+        <ReminderPanel />
       </Section>
 
       <Section title="Sauvegarde" icon={<CloudIcon size={18} />}>

@@ -1,0 +1,40 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 44px;
+  border-top: 1px solid var(--rule);
+  font-size: var(--text-sm);
+}
+
+.label {
+  color: var(--ink-soft);
+}
+
+/* Sélecteur d'heure natif (roue iOS) ; 16 px au moins pour éviter le zoom */
+.time {
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.note {
+  margin: var(--space-2) 0;
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+}
+
+.error {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--error-soft);
+  color: var(--error);
+  font-size: var(--text-sm);
+}

@@ -50,6 +50,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
         navigateFallback: "index.html",
         cleanupOutdatedCaches: true,
+        // Rappel quotidien : réception des notifications (public/push-sw.js).
+        importScripts: ["push-sw.js"],
       },
     }),
   ],

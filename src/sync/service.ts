@@ -2,6 +2,8 @@ import { db } from "../data/db";
 import { clearLocalData } from "../data/localData";
 import { onPendingChange } from "../data/outbox";
 import { synchronize } from "./engine";
+import { publishReminder } from "./reminderPublisher";
+import { disableReminder } from "../pwa/push";
 import { AUTH_STORAGE_KEY, supabase } from "./supabase";
 
 /**
@@ -94,6 +96,8 @@ async function runSync(): Promise<void> {
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw new Error("Connexion au serveur impossible pour l’instant.");
     await synchronize(data.session.user.id);
+    // Rappel quotidien : sans effet sur la synchronisation s'il échoue (il sera republié à la suivante).
+    await publishReminder(data.session.user.id).catch((error) => console.warn("Rappel quotidien non publié", error));
     const now = Date.now();
     await db.settings.put({ key: LAST_SYNC_KEY, value: now });
     setState({ status: "idle", lastSyncedAt: now });
@@ -162,6 +166,8 @@ export async function signOut(): Promise<void> {
     // Une synchronisation en cours pourrait réécrire des données après l'effacement.
     clearTimeout(debounceTimer);
     await running;
+    // Plus de rappels sur cet appareil pour ce compte (sans bloquer la déconnexion hors ligne).
+    await disableReminder().catch(() => {});
     const { error } = await supabase.auth.signOut({ scope: "local" });
     if (error) throw new Error(describeError(error));
     await clearLocalData();

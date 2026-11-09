@@ -8,7 +8,7 @@ const READY_TIMEOUT_MS = 5000;
 export async function readServiceWorkerStatus(): Promise<ServiceWorkerStatus> {
   if (!("serviceWorker" in navigator)) return "unsupported";
 
-  const registration = await waitForActiveRegistration();
+  const registration = await getServiceWorkerRegistration();
   if (!registration) return "not-registered";
   if (registration.active) return "active";
   return "installing";
@@ -18,7 +18,7 @@ export async function readServiceWorkerStatus(): Promise<ServiceWorkerStatus> {
  * `navigator.serviceWorker.ready` se résout dès qu'un service worker est actif,
  * mais ne se résout jamais s'il n'y en a pas : on borne donc l'attente.
  */
-async function waitForActiveRegistration(): Promise<ServiceWorkerRegistration | undefined> {
+export async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | undefined> {
   const timeout = new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), READY_TIMEOUT_MS));
   const ready = await Promise.race([navigator.serviceWorker.ready, timeout]);
   return ready ?? (await navigator.serviceWorker.getRegistration());

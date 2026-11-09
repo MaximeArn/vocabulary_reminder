@@ -37,7 +37,7 @@ export default defineConfig({
         scope: base,
         display: "standalone",
         orientation: "portrait",
-        background_color: "#ffffff", // fond blanc de l'icône : écran de lancement assorti
+        background_color: paperLight, // fond de l'icône : écran de lancement assorti
         theme_color: paperLight,
         icons: [
           { src: "icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

@@ -1,4 +1,5 @@
-"""Génère les icônes de l'app à partir de l'illustration source.
+"""Génère les icônes de l'app à partir de l'illustration source, recolorée aux
+couleurs de l'app : encre bleu nuit sur papier crème (voir src/styles/tokens.css).
 
 Source attendue (non versionnée, licence de banque d'images) :
     scripts/icons/source/mneme-illustration.png
@@ -11,7 +12,9 @@ from PIL import Image, ImageChops
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE / "source" / "mneme-illustration.png"
 OUTPUT = HERE.parent.parent / "public" / "icons"
-BACKGROUND = (255, 255, 255)
+BACKGROUND = (255, 255, 255)        # fond de l'illustration source
+PAPER = (0xF5, 0xF0, 0xE6)          # --paper
+INK = (0x1F, 0x33, 0x50)            # --accent (encre bleu nuit)
 
 
 def content_box(image: Image.Image) -> tuple[int, int, int, int]:
@@ -21,9 +24,29 @@ def content_box(image: Image.Image) -> tuple[int, int, int, int]:
     return mask.getbbox()
 
 
+def recolor(drawing: Image.Image) -> Image.Image:
+    """Remplace les couleurs du dessin par l'encre sur papier.
+
+    L'intensité du trait (écart au blanc) sert de masque : l'anticrénelage des
+    bords est conservé, les traits restent nets à toutes les tailles.
+    """
+    strength = ImageChops.difference(drawing, Image.new("RGB", drawing.size, BACKGROUND)).convert("L")
+    # Intensité typique d'un trait : la médiane des pixels nettement dessinés. Au-delà, encre pleine.
+    histogram = strength.histogram()
+    drawn = [(value, count) for value, count in enumerate(histogram) if value > 64]
+    half, seen, typical = sum(count for _, count in drawn) / 2, 0, 255
+    for value, count in drawn:
+        seen += count
+        if seen >= half:
+            typical = value
+            break
+    mask = strength.point(lambda value: min(255, round(value * 255 / typical)))
+    return Image.composite(Image.new("RGB", drawing.size, INK), Image.new("RGB", drawing.size, PAPER), mask)
+
+
 def square_icon(drawing: Image.Image, size: int, fill_ratio: float) -> Image.Image:
-    """Le dessin centré sur un carré blanc, occupant `fill_ratio` de sa plus grande dimension."""
-    canvas = Image.new("RGB", (size, size), BACKGROUND)
+    """Le dessin centré sur un carré de papier, occupant `fill_ratio` de sa plus grande dimension."""
+    canvas = Image.new("RGB", (size, size), PAPER)
     scale = size * fill_ratio / max(drawing.size)
     resized = drawing.resize((round(drawing.width * scale), round(drawing.height * scale)), Image.LANCZOS)
     canvas.paste(resized, ((size - resized.width) // 2, (size - resized.height) // 2))
@@ -32,7 +55,7 @@ def square_icon(drawing: Image.Image, size: int, fill_ratio: float) -> Image.Ima
 
 def main() -> None:
     image = Image.open(SOURCE).convert("RGB")
-    drawing = image.crop(content_box(image))
+    drawing = recolor(image.crop(content_box(image)))
     OUTPUT.mkdir(parents=True, exist_ok=True)
 
     # Icônes pleines : marge suffisante pour les coins arrondis d'iOS.

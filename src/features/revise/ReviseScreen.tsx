@@ -30,11 +30,10 @@ import styles from "./ReviseScreen.module.css";
 
 /**
  * Couleurs de l'action principale et des icônes selon la catégorie révisée.
- * Pour « Tout », moitié vocabulaire, moitié dates : le bouton est coupé en deux
- * (texte compris), et chaque icône a un tracé de chaque couleur.
- * Contrastes vérifiés en clair et en sombre (texte ≥ 4,5:1, icônes ≥ 3:1).
+ * Pour « Tout », moitié vocabulaire, moitié dates : le bouton a une bordure
+ * bicolore (texte d'une seule couleur, toujours lisible), et chaque icône a un
+ * tracé de chaque couleur. Contrastes vérifiés en clair et en sombre.
  */
-const SPLIT_BACKGROUND = "linear-gradient(90deg, var(--vocabulary-fill) 50%, var(--dates-fill) 50%)";
 const SPLIT_ICON_TONES: [string, string] = ["var(--vocabulary)", "var(--dates)"];
 
 interface RunningSession {
@@ -136,12 +135,10 @@ export function ReviseScreen() {
           <Button
             fullWidth
             onClick={startDaily}
-            style={category ? { background: category.fillColor, color: category.onFillColor } : { background: SPLIT_BACKGROUND }}
+            className={category ? undefined : styles.splitButton}
+            style={category ? { background: category.fillColor, color: category.onFillColor } : undefined}
           >
-            {/* « Tout » : le texte change de couleur à mi-largeur, comme le fond. */}
-            <span className={category ? undefined : styles.splitLabel}>
-              Commencer · {Math.min(settings.sessionSize, reviewable.length)} questions
-            </span>
+            Commencer · {Math.min(settings.sessionSize, reviewable.length)} questions
           </Button>
         )}
         {reviews.length > 0 && (

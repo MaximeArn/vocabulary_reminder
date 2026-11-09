@@ -91,17 +91,16 @@
 }
 
 /*
- * « Tout » : le libellé occupe toute la largeur du bouton, si bien que sa moitié
- * coïncide avec celle du fond ; sa couleur change au même endroit.
+ * « Tout » : bordure moitié vocabulaire, moitié dates, séparée par une courte
+ * transition à 45° ; fond neutre et texte d'encre (une seule couleur, lisible).
  */
-.splitLabel {
-  display: block;
-  width: 100%;
-  text-align: center;
-  background: linear-gradient(90deg, var(--on-vocabulary-fill) 50%, var(--on-dates-fill) 50%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* `button` : prime sur la variante du composant Button, quel que soit l’ordre des feuilles. */
+button.splitButton {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--paper-raised), var(--paper-raised)) padding-box,
+    linear-gradient(135deg, var(--vocabulary) calc(50% - 10px), var(--dates) calc(50% + 10px)) border-box;
+  color: var(--ink);
 }
 
 .tileTitle {

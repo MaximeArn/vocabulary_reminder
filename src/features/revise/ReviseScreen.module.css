@@ -90,9 +90,18 @@
   margin-bottom: var(--space-1);
 }
 
-/* « Tout » : trait des icônes en dégradé (le style CSS l'emporte sur l'attribut stroke). */
-.mixedIcon svg {
-  stroke: url(#category-mix);
+/*
+ * « Tout » : le libellé occupe toute la largeur du bouton, si bien que sa moitié
+ * coïncide avec celle du fond ; sa couleur change au même endroit.
+ */
+.splitLabel {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: linear-gradient(90deg, var(--on-vocabulary-fill) 50%, var(--on-dates-fill) 50%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .tileTitle {

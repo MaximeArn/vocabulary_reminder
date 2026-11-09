@@ -11,18 +11,6 @@
   margin-bottom: var(--space-2);
 }
 
-.text {
-  font-size: var(--text-sm);
-  color: var(--ink-soft);
-  margin-bottom: var(--space-4);
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
 .rows {
   margin: 0 0 var(--space-4);
   border-top: 1px solid var(--rule);

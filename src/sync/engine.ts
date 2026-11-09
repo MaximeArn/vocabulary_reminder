@@ -1,6 +1,7 @@
 import { db } from "../data/db";
 import { clearSent, isDeviceSetting, pendingFor } from "../data/outbox";
 import { readSetting } from "../data/settingsRepository";
+import { clearLocalData } from "../data/localData";
 import {
   itemFromRemote,
   itemToRemote,
@@ -38,11 +39,16 @@ export async function synchronize(userId: string): Promise<SyncReport> {
 }
 
 /**
- * Premier passage d'un compte sur cet appareil (ou changement de compte) :
- * tout ce qui existe localement est mis en file d'envoi, et la réception repart de zéro.
+ * Premier passage d'un compte sur cet appareil :
+ * - appareil jamais synchronisé : ce qui existe localement part vers ce compte ;
+ * - appareil d'un autre compte : ses données (déjà sur le serveur de l'autre compte)
+ *   sont effacées de l'appareil, pour ne jamais passer d'un compte à l'autre.
+ * Dans les deux cas, la réception repart de zéro.
  */
 async function prepareForAccount(userId: string): Promise<void> {
-  if ((await readSetting<string>(ACCOUNT_KEY)) === userId) return;
+  const previous = await readSetting<string>(ACCOUNT_KEY);
+  if (previous === userId) return;
+  if (previous !== undefined) await clearLocalData();
   await db.transaction("rw", [db.items, db.reviews, db.settings, db.outbox], async () => {
     const version = Date.now() * 1000;
     const itemIds = await db.items.toCollection().primaryKeys();

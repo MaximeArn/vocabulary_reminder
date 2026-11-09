@@ -37,18 +37,34 @@ async function freshDevice(hash) {
   await safari.open(`${appUrl}?t=${Date.now()}${hash}`);
 }
 
+/** Connexion depuis l'écran d'accueil, puis attente de la première synchronisation. */
 async function signIn({ email, password }) {
-  await safari.waitForText("SYNCHRONISATION");
-  await safari.type(await safari.find('input[type="email"]'), email);
-  await safari.type(await safari.find('input[type="password"]'), password);
-  await safari.clickButton("Se connecter");
+  await fillLogin(email, password);
   await safari.waitForText("Se déconnecter", 15000);
   await waitSynced();
 }
 
-/** Attend « À jour » sans modification en attente. */
+async function fillLogin(email, password) {
+  await safari.waitForText("Ce que tu lis, tu le retiens.");
+  await safari.type(await safari.find('input[type="email"]'), email);
+  await safari.type(await safari.find('input[type="password"]'), password);
+  await safari.clickButton("Se connecter");
+}
+
+/** Attend « À jour » sans modification en attente (panneau Compte des Réglages). */
 async function waitSynced() {
-  await safari.waitFor("synchronisation terminée", async () => /État À jour/.test(await text()), 20000);
+  await safari.open(`${appUrl}?t=${Date.now()}#reglages`);
+  await safari.waitFor("synchronisation terminée", async () => /Synchronisation À jour/.test(await text()), 25000);
+}
+
+async function localItemCount() {
+  return safari.scriptAsync(`
+    const request = indexedDB.open("lexique");
+    request.onsuccess = () => {
+      const db = request.result;
+      const count = db.transaction("items").objectStore("items").count();
+      count.onsuccess = () => { done(count.result); db.close(); };
+    };`);
 }
 
 async function collectionTitles() {
@@ -87,15 +103,15 @@ try {
   console.log(`Safari ${capabilities.browserVersion} sur ${capabilities["safari:deviceName"]} (iOS ${capabilities["safari:platformVersion"]})\n`);
   const accounts = readTestAccounts();
 
-  await step("Réglages : synchronisation proposée, sans compte l'app fonctionne", async () => {
-    await freshDevice("#reglages");
-    await safari.waitForText("Sans compte, tout reste sur cet appareil.");
+  await step("Premier lancement : écran de connexion, l'app n'est pas accessible", async () => {
+    await freshDevice("#collection");
+    await safari.waitForText("Ce que tu lis, tu le retiens.");
+    if ((await text()).includes("Collection")) throw new Error("L’app est visible sans connexion");
+    screenshot("sync-0-connexion");
   });
 
   await step("Mauvais mot de passe refusé par le serveur, message clair", async () => {
-    await safari.type(await safari.find('input[type="email"]'), accounts?.first.email ?? "test1@mneme.invalid");
-    await safari.type(await safari.find('input[type="password"]'), "mauvais-mot-de-passe");
-    await safari.clickButton("Se connecter");
+    await fillLogin(accounts?.first.email ?? "test1@mneme.invalid", "mauvais-mot-de-passe");
     await safari.waitForText("E-mail ou mot de passe incorrect.", 15000);
   });
 
@@ -107,6 +123,7 @@ try {
     await step("Appareil A : connexion, puis données envoyées au serveur", async () => {
       await freshDevice("#reglages");
       await signIn(accounts.first);
+      await safari.waitForText("SAUVEGARDE");
       await chooseBackupFile(safari, backup);
       await pause(800);
       await safari.acceptAlert().catch(() => {}); // confirmation si des fiches d'anciennes exécutions sont revenues
@@ -151,9 +168,25 @@ try {
       if (shown.length !== 3) throw new Error(`Collection inattendue : ${shown}`);
     });
 
-    await step("Isolation : le second compte ne voit rien du premier", async () => {
-      await freshDevice("#reglages");
-      await signIn(accounts.second);
+    await step("Déconnexion : retour à l'écran de connexion, appareil vidé", async () => {
+      await safari.open(`${appUrl}?t=${Date.now()}#reglages`);
+      await safari.waitForText("Se déconnecter");
+      await safari.clickButton("Se déconnecter");
+      await pause(1500);
+      await safari.acceptAlert();
+      await safari.waitForText("Ce que tu lis, tu le retiens.", 15000);
+      const remaining = await localItemCount();
+      if (remaining !== 0) throw new Error(`${remaining} fiche(s) encore sur l’appareil`);
+    });
+
+    // Le second compte de test est facultatif : sans lui, l'étape est signalée comme non faite.
+    await freshDevice("#reglages");
+    await fillLogin(accounts.second.email, accounts.second.password);
+    await safari.waitFor("connexion du second compte", async () => /Se déconnecter|incorrect/.test(await text()), 15000);
+    if ((await text()).includes("incorrect")) {
+      console.log("– Isolation NON testée ici : compte test2 refusé par Supabase (voir supabase/tests/isolation.sql)");
+    } else await step("Isolation : le second compte ne voit rien du premier", async () => {
+      await waitSynced();
       const shown = await collectionTitles();
       if (shown.some((title) => title.endsWith(run))) throw new Error(`Données du premier compte visibles : ${shown}`);
       // Contrôle direct de l'API, avec le jeton du second compte : RLS doit tout filtrer.
@@ -170,13 +203,6 @@ try {
       if (leaked !== 0) throw new Error(`Une fiche du premier compte est lisible par le second (${leaked})`);
     });
 
-    await step("Déconnexion : les données restent sur l'appareil", async () => {
-      await safari.open(`${appUrl}?t=${Date.now()}#reglages`);
-      await safari.clickButton("Se déconnecter");
-      await pause(300);
-      await safari.acceptAlert();
-      await safari.waitForText("Sans compte, tout reste sur cet appareil.");
-    });
   }
 
   console.log(`\n${stepper.count} vérifications réussies.`);

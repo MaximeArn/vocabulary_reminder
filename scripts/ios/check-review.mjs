@@ -2,7 +2,7 @@
 // Prérequis et usage : voir check-words.mjs. Le scénario efface les données de l'app.
 
 import { IosSafari } from "./webdriver.mjs";
-import { chooseBackupFile, createStepper, makeBackup, resetApp, screenshot } from "./helpers.mjs";
+import { chooseBackupFile, createStepper, makeBackup, startLocalSession, screenshot } from "./helpers.mjs";
 
 const appUrl = process.argv[2] ?? "http://localhost:4173/";
 const safari = new IosSafari("http://localhost:4444");
@@ -76,7 +76,7 @@ try {
   console.log(`Safari ${capabilities.browserVersion} sur ${capabilities["safari:deviceName"]} (iOS ${capabilities["safari:platformVersion"]})\n`);
 
   await step("Collection de 6 mots restaurée", async () => {
-    await resetApp(safari, appUrl, "#reglages");
+    await startLocalSession(safari, appUrl, "#reglages");
     await safari.waitForText("SAUVEGARDE");
     await chooseBackupFile(safari, makeBackup(entries));
     await safari.waitForText("6 mots restaurés");

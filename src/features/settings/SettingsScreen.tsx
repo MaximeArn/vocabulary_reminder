@@ -1,7 +1,7 @@
 import { Screen } from "../../ui/Screen";
 import { InfoList } from "../../ui/InfoList";
 import { BackupPanel } from "./BackupPanel";
-import { SyncPanel } from "./SyncPanel";
+import { AccountPanel } from "./AccountPanel";
 import { ReviewSettingsPanel } from "./ReviewSettingsPanel";
 import { DiagnosticPanel } from "./DiagnosticPanel";
 
@@ -10,7 +10,7 @@ const buildDateFormatter = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium
 export function SettingsScreen() {
   return (
     <Screen title="Réglages">
-      <SyncPanel />
+      <AccountPanel />
       <ReviewSettingsPanel />
       <BackupPanel />
       <DiagnosticPanel />

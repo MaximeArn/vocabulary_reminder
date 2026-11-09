@@ -113,3 +113,26 @@ export async function chooseSegment(safari, groupLabel, optionLabel) {
   );
   if (!clicked) throw new Error(`Option « ${optionLabel} » de « ${groupLabel} » introuvable`);
 }
+
+/**
+ * Appareil neuf avec une session de test LOCALE (jeton fictif, valide en apparence) :
+ * l'app s'ouvre comme pour un utilisateur connecté, sans dépendre du serveur
+ * (la synchronisation échoue proprement). Pour les scénarios qui ne testent pas le serveur.
+ */
+export async function startLocalSession(safari, appUrl, hash = "") {
+  await resetApp(safari, appUrl, "");
+  const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  const expiresAt = Math.floor(Date.now() / 1000) + 365 * 24 * 3600;
+  const userId = "00000000-0000-4000-8000-000000000001";
+  const token = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: userId, role: "authenticated", exp: expiresAt })}.signature-fictive`;
+  const session = {
+    access_token: token,
+    token_type: "bearer",
+    expires_in: 365 * 24 * 3600,
+    expires_at: expiresAt,
+    refresh_token: "jeton-de-test",
+    user: { id: userId, email: "test-local@mneme.invalid", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {} },
+  };
+  await safari.script("localStorage.clear(); localStorage.setItem('mneme.auth', arguments[0]);", [JSON.stringify(session)]);
+  await safari.open(`${appUrl}?test=${Date.now()}${hash}`);
+}

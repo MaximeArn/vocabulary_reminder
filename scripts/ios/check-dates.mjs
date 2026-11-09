@@ -9,7 +9,7 @@ import {
   fieldByLabel,
   openAddForm,
   pause,
-  resetApp,
+  startLocalSession,
   screenshot,
 } from "./helpers.mjs";
 
@@ -89,7 +89,7 @@ try {
   console.log(`Safari ${capabilities.browserVersion} sur ${capabilities["safari:deviceName"]} (iOS ${capabilities["safari:platformVersion"]})\n`);
 
   await step("Collection de départ : 5 dates et 4 mots restaurés (format v2)", async () => {
-    await resetApp(safari, appUrl, "#reglages");
+    await startLocalSession(safari, appUrl, "#reglages");
     await safari.waitForText("SAUVEGARDE");
     await chooseBackupFile(safari, backup);
     await safari.waitForText("9 fiches restaurées");

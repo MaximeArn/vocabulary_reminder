@@ -1,17 +1,27 @@
-import type { Session } from "@supabase/supabase-js";
 import { db } from "../data/db";
+import { clearLocalData } from "../data/localData";
 import { onPendingChange } from "../data/outbox";
 import { synchronize } from "./engine";
-import { supabase } from "./supabase";
+import { AUTH_STORAGE_KEY, supabase } from "./supabase";
 
 /**
- * Service de synchronisation : décide quand synchroniser et publie son état
- * pour l'interface. L'app fonctionne entièrement sans lui (local d'abord).
+ * Compte et synchronisation.
+ *
+ * L'accès à l'app suit la présence d'une session enregistrée sur l'appareil,
+ * même expirée : hors ligne, l'app s'ouvre toujours. L'écran de connexion
+ * n'apparaît qu'au premier lancement, après une déconnexion, ou si le serveur
+ * a révoqué la session (mot de passe changé…).
+ *
+ * La synchronisation est entièrement automatique : au lancement, au retour au
+ * premier plan, au retour du réseau, peu après chaque modification, et
+ * régulièrement tant que l'app est ouverte.
  */
 
-export type SyncStatus = "signed-out" | "idle" | "syncing" | "offline" | "error";
+export type AuthState = "unknown" | "signed-in" | "signed-out";
+export type SyncStatus = "idle" | "syncing" | "offline" | "error";
 
 export interface SyncState {
+  auth: AuthState;
   status: SyncStatus;
   email?: string;
   lastSyncedAt?: number;
@@ -24,9 +34,10 @@ const DEBOUNCE_MS = 2000;
 /** Synchronisation régulière tant que l'app est ouverte (modifications faites ailleurs). */
 const PERIODIC_MS = 5 * 60 * 1000;
 
-let state: SyncState = { status: "signed-out" };
-let session: Session | null = null;
+let state: SyncState = { auth: "unknown", status: "idle" };
 let running: Promise<void> | null = null;
+/** Déconnexion en cours : plus de synchronisation, et l'écran ne bascule qu'une fois l'appareil vidé. */
+let signingOut = false;
 let rerunRequested = false;
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 const listeners = new Set<() => void>();
@@ -45,6 +56,19 @@ export const syncStore = {
   getSnapshot: () => state,
 };
 
+/* ---------- Session enregistrée sur l'appareil ---------- */
+
+function storedSession(): { user?: { email?: string } } | null {
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/* ---------- Synchronisation ---------- */
+
 /** Lance une synchronisation (ou en programme une autre si l'une est en cours). */
 export function syncNow(): Promise<void> {
   if (running) {
@@ -62,11 +86,14 @@ export function syncNow(): Promise<void> {
 }
 
 async function runSync(): Promise<void> {
-  if (!session) return setState({ status: "signed-out", error: undefined });
+  if (state.auth !== "signed-in" || signingOut) return;
   if (!navigator.onLine) return setState({ status: "offline" });
   setState({ status: "syncing", error: undefined });
   try {
-    await synchronize(session.user.id);
+    // Session à jour (rafraîchie si besoin) : elle peut avoir expiré pendant une période hors ligne.
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw new Error("Connexion au serveur impossible pour l’instant.");
+    await synchronize(data.session.user.id);
     const now = Date.now();
     await db.settings.put({ key: LAST_SYNC_KEY, value: now });
     setState({ status: "idle", lastSyncedAt: now });
@@ -75,9 +102,9 @@ async function runSync(): Promise<void> {
   }
 }
 
-function scheduleSync() {
+function scheduleSync(delay = DEBOUNCE_MS) {
   clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => void syncNow(), DEBOUNCE_MS);
+  debounceTimer = setTimeout(() => void syncNow(), delay);
 }
 
 /** Démarre le service : session, déclencheurs, première synchronisation. */
@@ -86,14 +113,23 @@ export function startSyncService(): void {
     if (typeof setting?.value === "number") setState({ lastSyncedAt: setting.value });
   });
 
-  supabase.auth.onAuthStateChange((_event, newSession) => {
-    const changedUser = newSession?.user.id !== session?.user.id;
-    session = newSession;
-    setState({ email: newSession?.user.email, status: newSession ? state.status : "signed-out" });
-    if (newSession && changedUser) void syncNow();
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      setState({ auth: "signed-in", email: session.user.email });
+      // Jamais d'appel à supabase dans ce gestionnaire (risque d'interblocage) : on diffère.
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") scheduleSync(0);
+    } else if (event === "SIGNED_OUT") {
+      // Déconnexion demandée ici : `signOut` basculera l'écran une fois l'appareil vidé.
+      if (!signingOut) setState({ auth: "signed-out", status: "idle", email: undefined, error: undefined });
+    } else {
+      // Session illisible au lancement (hors ligne, jeton expiré) : on garde l'accès si elle est enregistrée.
+      const stored = storedSession();
+      setState({ auth: stored ? "signed-in" : "signed-out", email: stored?.user?.email });
+      if (stored) scheduleSync(0);
+    }
   });
 
-  onPendingChange(scheduleSync);
+  onPendingChange(() => scheduleSync());
   window.addEventListener("online", () => void syncNow());
   window.addEventListener("offline", () => setState({ status: "offline" }));
   document.addEventListener("visibilitychange", () => {
@@ -104,17 +140,35 @@ export function startSyncService(): void {
   }, PERIODIC_MS);
 }
 
-/* ---------- Connexion ---------- */
+/* ---------- Connexion / déconnexion ---------- */
 
 export async function signIn(email: string, password: string): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
   if (error) throw new Error(describeError(error));
 }
 
-/** Déconnexion : les données restent sur l'appareil (l'app fonctionne sans compte). */
+/** Nombre de modifications pas encore envoyées au serveur. */
+export function pendingChanges(): Promise<number> {
+  return db.outbox.count();
+}
+
+/**
+ * Déconnexion de cet appareil seulement : la session est fermée et les données
+ * locales sont effacées (elles restent sur le serveur).
+ */
 export async function signOut(): Promise<void> {
-  await supabase.auth.signOut();
-  setState({ status: "signed-out", error: undefined });
+  signingOut = true;
+  try {
+    // Une synchronisation en cours pourrait réécrire des données après l'effacement.
+    clearTimeout(debounceTimer);
+    await running;
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    if (error) throw new Error(describeError(error));
+    await clearLocalData();
+    setState({ auth: "signed-out", status: "idle", email: undefined, error: undefined, lastSyncedAt: undefined });
+  } finally {
+    signingOut = false;
+  }
 }
 
 function describeError(error: unknown): string {

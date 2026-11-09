@@ -9,7 +9,7 @@
 // Attention : le scénario efface les données de l'app à cette adresse.
 
 import { IosSafari } from "./webdriver.mjs";
-import { chooseBackupFile as chooseFile, createStepper, makeBackup, openAddForm, resetApp, screenshot } from "./helpers.mjs";
+import { chooseBackupFile as chooseFile, createStepper, makeBackup, openAddForm, startLocalSession, screenshot } from "./helpers.mjs";
 
 const appUrl = process.argv[2] ?? "http://localhost:4173/";
 const safari = new IosSafari("http://localhost:4444");
@@ -37,7 +37,7 @@ try {
   console.log(`Safari ${capabilities.browserVersion} sur ${capabilities["safari:deviceName"]} (iOS ${capabilities["safari:platformVersion"]})\n`);
 
   await step("Données de test et cache effacés", async () => {
-    await resetApp(safari, appUrl, "#collection");
+    await startLocalSession(safari, appUrl, "#collection");
     await safari.waitForText("Ta collection est vide");
   });
 

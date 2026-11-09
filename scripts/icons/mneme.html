@@ -1,8 +1,9 @@
 <!doctype html>
 <!--
-  Icône « Mnémé » : la muse de face, d'après la mosaïque de Mnémosyne et la
-  sculpture grecque archaïque (boucles en coquille, longues mèches ondulées),
-  sur l'encre bleu nuit de l'app, dans un médaillon, avec une frise de grecques.
+  Icône « Mnémé » : la muse de face, en dessin au trait néoclassique (ivoire sur
+  l'encre bleu nuit de l'app), chevelure en mèches ondulées depuis une raie au
+  milieu, diadème, et son attribut : le rouleau (volumen), mémoire écrite.
+  Frise de grecques en bas.
   ?safe=1 → version « maskable » : motif réduit dans la zone sûre.
   Rendu en PNG par generate-icons.mjs (Chrome headless).
 -->
@@ -12,86 +13,47 @@
 <style>
   html, body { margin: 0; width: 1024px; height: 1024px; overflow: hidden; }
   svg { display: block; }
+  .ink { fill: none; stroke: #efe0c4; stroke-linecap: round; stroke-linejoin: round; }
+  .gold { fill: none; stroke: #e0b866; stroke-linecap: round; stroke-linejoin: round; }
 </style>
 </head>
 <body>
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="night" cx="50%" cy="42%" r="70%">
-      <stop offset="0" stop-color="#2a4670"/>
-      <stop offset="1" stop-color="#172840"/>
+    <radialGradient id="night" cx="50%" cy="42%" r="72%">
+      <stop offset="0" stop-color="#27426a"/>
+      <stop offset="1" stop-color="#16263d"/>
     </radialGradient>
-    <radialGradient id="skin" cx="46%" cy="40%" r="62%">
-      <stop offset="0" stop-color="#f8eedf"/>
-      <stop offset="0.7" stop-color="#efdcc2"/>
-      <stop offset="1" stop-color="#ddc09b"/>
-    </radialGradient>
-    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#cf7444"/>
-      <stop offset="1" stop-color="#9c4627"/>
-    </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#c9913a"/>
-      <stop offset="0.5" stop-color="#f0cc78"/>
-      <stop offset="1" stop-color="#c9913a"/>
-    </linearGradient>
-    <linearGradient id="cloth" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#efe1c8"/>
-      <stop offset="1" stop-color="#d9c19c"/>
-    </linearGradient>
-    <linearGradient id="mantle" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#b65530"/>
-      <stop offset="1" stop-color="#7f3519"/>
-    </linearGradient>
   </defs>
-
   <rect width="1024" height="1024" fill="url(#night)"/>
-  <!-- Médaillon, en écho à la mosaïque -->
-  <circle cx="512" cy="470" r="396" fill="none" stroke="#e0b866" stroke-opacity="0.6" stroke-width="5"/>
 
   <g id="portrait">
-    <!-- Masse de la chevelure, derrière le visage -->
-    <ellipse cx="512" cy="420" rx="214" ry="252" fill="url(#hair)"/>
-    <g id="tresses"></g>
+    <g id="hair"></g>
 
-    <!-- Buste : tunique et manteau en diagonale -->
-    <path d="M 452 640 L 448 760 C 372 778, 290 820, 262 900 L 762 900 C 734 820, 652 778, 576 760 L 572 640 Z" fill="url(#cloth)"/>
-    <path d="M 448 760 C 500 806, 524 806, 576 760" fill="none" stroke="#c9a77c" stroke-width="5"/>
-    <path d="M 262 900 C 300 820, 380 782, 446 768 C 470 812, 520 850, 600 868 C 640 878, 700 886, 740 900 Z" fill="url(#mantle)"/>
-    <path d="M 330 860 C 380 830, 430 818, 470 822 M 400 900 C 450 870, 520 862, 580 880" fill="none" stroke="#6b2a12" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
-    <path d="M 610 800 C 630 840, 650 870, 664 900 M 680 806 C 700 840, 712 870, 720 900" fill="none" stroke="#c9a77c" stroke-width="5" stroke-linecap="round"/>
+    <!-- Cou et drapé (chiton) -->
+    <path class="ink" stroke-width="10" d="M 470 628 C 472 664, 470 692, 464 722 M 554 628 C 552 664, 554 692, 560 722"/>
+    <path class="ink" stroke-width="10" d="M 464 722 C 416 736, 344 756, 306 808 M 560 722 C 608 736, 680 756, 718 808"/>
+    <path class="ink" stroke-width="7.5" d="M 436 732 C 466 768, 558 768, 588 732 M 460 756 C 488 786, 536 786, 564 756"/>
 
-    <!-- Cou et ombre sous le menton -->
-    <path d="M 452 600 L 452 770 C 480 790, 544 790, 572 770 L 572 600 Z" fill="url(#skin)"/>
-    <path d="M 456 680 C 490 700, 534 700, 568 680 L 568 650 C 534 670, 490 670, 456 650 Z" fill="#d9bb94" opacity="0.6"/>
-    <!-- Collier de perles dorées -->
-    <g id="necklace"></g>
-
-    <!-- Visage -->
-    <path d="M 512 270 C 604 270, 664 336, 666 432 C 668 520, 638 598, 588 650 C 560 678, 536 692, 512 692 C 488 692, 464 678, 436 650 C 386 598, 356 520, 358 432 C 360 336, 420 270, 512 270 Z" fill="url(#skin)"/>
-
-    <!-- Sourcils effilés ; nez d'un trait depuis le sourcil gauche, comme sur la mosaïque -->
-    <path d="M 404 408 C 430 388, 470 386, 496 398" fill="none" stroke="#3a2416" stroke-width="7" stroke-linecap="round"/>
-    <path d="M 528 398 C 554 386, 594 388, 620 408" fill="none" stroke="#3a2416" stroke-width="7" stroke-linecap="round"/>
-    <path d="M 496 404 C 503 450, 504 510, 498 556" fill="none" stroke="#8a5a3c" stroke-width="5" stroke-linecap="round"/>
-    <path d="M 478 560 C 486 574, 500 578, 512 574 C 524 578, 538 574, 546 560" fill="none" stroke="#8a5a3c" stroke-width="5" stroke-linecap="round"/>
-
-    <!-- Yeux : blanc, iris, paupière supérieure, pli de la paupière -->
+    <!-- Visage : contour, ligne du front, sourcils prolongés par le nez (profil grec vu de face) -->
+    <path class="ink" stroke-width="11.2" d="M 390 436 C 390 520, 420 590, 470 626 C 490 640, 500 646, 512 646 C 524 646, 534 640, 554 626 C 604 590, 634 520, 634 436"/>
+    <path class="ink" stroke-width="7.5" d="M 416 442 C 440 424, 474 422, 498 436 C 504 470, 502 510, 494 540"/>
+    <path class="ink" stroke-width="7.5" d="M 608 442 C 584 424, 550 422, 526 436 C 520 470, 522 510, 530 540"/>
+    <path class="ink" stroke-width="7.5" d="M 486 546 C 494 560, 506 562, 512 556 C 518 562, 530 560, 538 546"/>
     <g id="eyes"></g>
+    <!-- Bouche : arc de Cupidon, lèvre inférieure, creux du menton -->
+    <path class="ink" stroke-width="7.5" d="M 474 590 C 490 582, 502 580, 512 586 C 522 580, 534 582, 550 590"/>
+    <path class="ink" stroke-width="7.5" d="M 474 590 C 494 596, 530 596, 550 590"/>
+    <path class="ink" stroke-width="6.2" d="M 486 604 C 500 612, 524 612, 538 604"/>
+    <path class="ink" stroke-width="5" d="M 500 626 C 508 630, 516 630, 524 626"/>
 
-    <!-- Lèvres, avec l'arc de Cupidon -->
-    <path d="M 466 616 C 482 604, 498 602, 512 610 C 526 602, 542 604, 558 616 C 540 626, 484 626, 466 616 Z" fill="#b5543a"/>
-    <path d="M 466 616 C 484 626, 540 626, 558 616 C 548 642, 476 642, 466 616 Z" fill="#c9694c"/>
-    <path d="M 468 616 C 490 622, 534 622, 556 616" fill="none" stroke="#6e2a1a" stroke-width="4" stroke-linecap="round"/>
+    <!-- Diadème -->
+    <g id="diadem"></g>
 
-    <!-- Boucles en coquille sur le front, bandeau doré, seconde rangée -->
-    <g id="curls-back"></g>
-    <g id="curls-front"></g>
-    <!-- Bandeau doré posé sur les boucles, comme un diadème -->
-    <g id="band"></g>
+    <!-- Attribut : le rouleau (volumen), tenu devant le buste -->
+    <g id="scroll"></g>
   </g>
 
-  <!-- Frise de grecques -->
   <g id="frieze"></g>
 </svg>
 <script>
@@ -103,93 +65,144 @@
     return element;
   };
 
-  /** Spirale d'une boucle « en coquille » (archimédienne), du bord vers le centre. */
-  function spiral(cx, cy, radius, turns, clockwise) {
+  /** Point d'une courbe de Bézier cubique. */
+  const bezier = (p0, p1, p2, p3, t) => {
+    const u = 1 - t;
+    return [
+      u ** 3 * p0[0] + 3 * u ** 2 * t * p1[0] + 3 * u * t ** 2 * p2[0] + t ** 3 * p3[0],
+      u ** 3 * p0[1] + 3 * u ** 2 * t * p1[1] + 3 * u * t ** 2 * p2[1] + t ** 3 * p3[1],
+    ];
+  };
+
+  /** Mèche ondulée : une courbe de Bézier perturbée d'une légère ondulation le long de sa normale. */
+  function wavyStrand(p0, p1, p2, p3, amplitude, waves, phase) {
     const points = [];
-    const steps = 48;
+    const steps = 80;
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
-      const angle = (clockwise ? 1 : -1) * t * turns * 2 * Math.PI - Math.PI / 2;
-      const r = radius * (1 - t * 0.92);
+      const [x, y] = bezier(p0, p1, p2, p3, t);
+      const [x2, y2] = bezier(p0, p1, p2, p3, Math.min(1, t + 0.01));
+      const length = Math.hypot(x2 - x, y2 - y) || 1;
+      const nx = -(y2 - y) / length, ny = (x2 - x) / length;
+      // L'ondulation s'estompe aux extrémités pour des départs et des pointes nettes.
+      const envelope = Math.sin(Math.PI * t);
+      const offset = amplitude * envelope * Math.sin(phase + t * waves * 2 * Math.PI);
+      points.push(`${(x + nx * offset).toFixed(1)} ${(y + ny * offset).toFixed(1)}`);
+    }
+    return `M ${points.join(" L ")}`;
+  }
+
+  // Chevelure : des mèches ondulées suivent des arcs concentriques autour de la tête. Elles partent
+  // de la raie au milieu, couvrent les tempes et finissent derrière la mâchoire.
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const inner = { cx: 512, cy: 446, rx: 126, ry: 96 };   // bord du visage (ligne des cheveux)
+  const outer = { cx: 512, cy: 430, rx: 226, ry: 258 };  // contour de la coiffure
+  const STRANDS = 8;
+
+  function arcPoint(k, angleDeg) {
+    const t = k / (STRANDS - 1);
+    const a = (angleDeg * Math.PI) / 180;
+    return [lerp(inner.cx, outer.cx, t) + lerp(inner.rx, outer.rx, t) * Math.cos(a), lerp(inner.cy, outer.cy, t) + lerp(inner.ry, outer.ry, t) * Math.sin(a)];
+  }
+
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < STRANDS; k++) {
+      const t = k / (STRANDS - 1);
+      // Angles en degrés, 0° à droite, -90° en haut. Le côté gauche tourne vers -180° et au-delà.
+      const reach = lerp(20, 40, t);                    // jusque derrière la mâchoire
+      const startAngle = side < 0 ? -92 : -88;          // à la raie
+      const endAngle = side < 0 ? -180 - reach : reach;
+      const points = [];
+      const steps = 90;
+      for (let i = 0; i <= steps; i++) {
+        const u = i / steps;
+        const angle = lerp(startAngle, endAngle, u);
+        const [x, y] = arcPoint(k, angle);
+        // Ondulation le long du rayon, qui s'estompe à la raie.
+        const wave = 6 * Math.min(1, u * 4) * Math.sin(u * 6.5 * Math.PI + k * 0.7);
+        const dx = x - 512, dy = y - 440, length = Math.hypot(dx, dy) || 1;
+        points.push(`${(x + (dx / length) * wave).toFixed(1)} ${(y + (dy / length) * wave).toFixed(1)}`);
+      }
+      add("hair", "path", { class: "ink", "stroke-width": k === STRANDS - 1 ? 10 : 7.5, d: `M ${points.join(" L ")}` });
+    }
+    // Rouleaux bouclés le long du contour extérieur.
+    for (let angle = -74; angle <= 38; angle += 16) {
+      const a = side < 0 ? 180 - angle : angle;
+      const [x, y] = arcPoint(STRANDS - 1, a);
+      const radius = 24;
+      // Centre un peu à l'extérieur du contour : les rouleaux forment une bordure festonnée.
+      const dx = x - 512, dy = y - 430, length = Math.hypot(dx, dy);
+      const cx = x + (dx / length) * 16, cy = y + (dy / length) * 16;
+      add("hair", "path", { class: "ink", "stroke-width": 7.5, d: spiral(cx, cy, radius, side) });
+    }
+    // Mèches qui tombent derrière le cou, terminées par une spirale.
+    for (const [offset, length] of [[0, 0], [34, 40]]) {
+      const x = 512 + side * (150 + offset);
+      const endY = 700 + length;
+      add("hair", "path", { class: "ink", "stroke-width": 7.5, d: `M ${x} 600 C ${x + side * 18} 630, ${x - side * 16} 660, ${x + side * 4} ${endY - 20}` });
+      add("hair", "path", { class: "ink", "stroke-width": 7.5, d: spiral(x + side * 14, endY, 16, side) });
+    }
+  }
+
+  /** Spirale (boucle de cheveux, extrémité du rouleau). */
+  function spiral(cx, cy, radius, direction) {
+    const points = [];
+    for (let i = 0; i <= 60; i++) {
+      const t = i / 60;
+      const angle = direction * t * 2.2 * 2 * Math.PI;
+      const r = radius * (1 - t * 0.85);
       points.push(`${(cx + r * Math.cos(angle)).toFixed(1)} ${(cy + r * Math.sin(angle)).toFixed(1)}`);
     }
     return `M ${points.join(" L ")}`;
   }
 
-  function curl(group, cx, cy, radius, clockwise) {
-    add(group, "circle", { cx, cy, r: radius, fill: "url(#hair)" });
-    add(group, "path", { d: spiral(cx, cy, radius * 0.86, 1.6, clockwise), fill: "none", stroke: "#6e2c14", "stroke-width": 5, "stroke-linecap": "round" });
-  }
-
-  /** Rangée de boucles le long d'un arc d'ellipse, symétrique de part et d'autre du centre. */
-  function curlRow(group, cy, rx, ry, count, radius, from, to) {
-    for (let i = 0; i < count; i++) {
-      const angle = ((from + (to - from) * (i / (count - 1))) * Math.PI) / 180;
-      const x = 512 + rx * Math.cos(angle);
-      const y = cy + ry * Math.sin(angle);
-      curl(group, x, y, radius, x > 512);
-    }
-  }
-
-  // Rangée arrière (sommet de la tête), puis bandeau, puis rangée de boucles sur le front.
-  curlRow("curls-back", 420, 206, 246, 13, 38, 190, 350);
-  curlRow("curls-front", 438, 160, 168, 11, 27, 200, 340);
-  add("band", "path", { d: "M 352 330 C 410 236, 614 236, 672 330", fill: "none", stroke: "#7a4f1c", "stroke-width": 26, "stroke-linecap": "round", opacity: 0.45 });
-  add("band", "path", { d: "M 352 326 C 410 232, 614 232, 672 326", fill: "none", stroke: "url(#gold)", "stroke-width": 20, "stroke-linecap": "round" });
-  // Petites perles le long du bandeau, comme les tesselles dorées de la mosaïque.
-  for (let i = 1; i < 10; i++) {
-    const t = i / 10;
-    const x = (1 - t) ** 3 * 352 + 3 * (1 - t) ** 2 * t * 410 + 3 * (1 - t) * t ** 2 * 614 + t ** 3 * 672;
-    const y = (1 - t) ** 3 * 326 + 3 * (1 - t) ** 2 * t * 232 + 3 * (1 - t) * t ** 2 * 232 + t ** 3 * 326;
-    add("band", "circle", { cx: x, cy: y, r: 4, fill: "#fff1c9" });
-  }
-
-  // Longues mèches ondulées qui tombent sur les épaules : trois fines mèches de chaque côté.
+  // Yeux sereins, paupières lourdes, à la manière des statues classiques.
   for (const side of [-1, 1]) {
-    for (const [offset, width, length] of [[0, 24, 0], [26, 22, 30], [50, 20, -20]]) {
-      const x = 512 + side * (214 - offset);
-      const end = 790 + length;
-      const d = `M ${x} 440 C ${x + side * 26} 510, ${x - side * 22} 570, ${x + side * 10} 630 S ${x + side * 2} ${end - 70}, ${x + side * 30} ${end}`;
-      add("tresses", "path", { d, fill: "none", stroke: "url(#hair)", "stroke-width": width, "stroke-linecap": "round" });
-      add("tresses", "path", { d, fill: "none", stroke: "#6e2c14", "stroke-width": 3, "stroke-linecap": "round", opacity: 0.5 });
-    }
+    const cx = 512 + side * 62;
+    add("eyes", "path", { class: "ink", "stroke-width": 8.8, d: `M ${cx - 36} 456 C ${cx - 18} 438, ${cx + 18} 438, ${cx + 36} 454` });
+    add("eyes", "path", { class: "ink", "stroke-width": 6.2, d: `M ${cx - 34} 458 C ${cx - 14} 470, ${cx + 14} 470, ${cx + 34} 456` });
+    add("eyes", "path", { class: "ink", "stroke-width": 5, d: `M ${cx - 30} 440 C ${cx - 12} 426, ${cx + 14} 426, ${cx + 32} 438` });
+    add("eyes", "path", { class: "ink", "stroke-width": 7.5, d: `M ${cx - 10} 446 C ${cx - 10} 462, ${cx + 10} 462, ${cx + 10} 446` });
   }
 
-  // Yeux en amande.
-  for (const side of [-1, 1]) {
-    const cx = 512 + side * 64;
-    const almond = `M ${cx - 40} 456 C ${cx - 22} 432, ${cx + 22} 432, ${cx + 40} 454 C ${cx + 20} 470, ${cx - 20} 472, ${cx - 40} 456 Z`;
-    add("eyes", "path", { d: almond, fill: "#fbf6ee" });
-    add("eyes", "circle", { cx: cx + side * -2, cy: 452, r: 15, fill: "#7a4428" });
-    add("eyes", "circle", { cx: cx + side * -2, cy: 452, r: 7, fill: "#1d1a16" });
-    add("eyes", "circle", { cx: cx + side * -2 + 5, cy: 447, r: 3, fill: "#fbf6ee" });
-    add("eyes", "path", { d: `M ${cx - 42} 457 C ${cx - 22} 430, ${cx + 22} 430, ${cx + 42} 454`, fill: "none", stroke: "#2b1a10", "stroke-width": 6, "stroke-linecap": "round" });
-    add("eyes", "path", { d: `M ${cx - 32} 440 C ${cx - 14} 422, ${cx + 16} 422, ${cx + 34} 438`, fill: "none", stroke: "#a77b5a", "stroke-width": 3, "stroke-linecap": "round" });
-    add("eyes", "path", { d: `M ${cx - 36} 460 C ${cx - 16} 472, ${cx + 16} 472, ${cx + 36} 458`, fill: "none", stroke: "#a77b5a", "stroke-width": 2.5, "stroke-linecap": "round" });
+  // Diadème : bandeau doré posé sur la chevelure, orné de petites perles.
+  {
+    const band = (k) => {
+      const points = [];
+      for (let angle = -150; angle <= -30; angle += 4) points.push(arcPoint(k, angle));
+      return points;
+    };
+    const top = band(3.1), bottom = band(2.2);
+    const toPath = (points) => points.map(([x, y], i) => `${i ? "L" : "M"} ${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+    add("diadem", "path", { fill: "#1f3456", stroke: "none", d: `${toPath(top)} ${toPath([...bottom].reverse()).replace("M", "L")} Z` });
+    add("diadem", "path", { class: "gold", "stroke-width": 7.5, d: toPath(top) });
+    add("diadem", "path", { class: "gold", "stroke-width": 7.5, d: toPath(bottom) });
+    const middle = band(2.65);
+    for (let i = 2; i < middle.length - 2; i += 3) add("diadem", "circle", { cx: middle[i][0], cy: middle[i][1], r: 4.5, fill: "#e0b866" });
   }
 
-  // Collier de perles.
-  for (let i = 0; i <= 12; i++) {
-    const t = i / 12;
-    const x = 452 + 120 * t;
-    const y = 760 + 40 * Math.sin(Math.PI * t);
-    add("necklace", "circle", { cx: x, cy: y, r: 6.5, fill: "url(#gold)" });
+  // Rouleau : la feuille, quelques lignes d'écriture, deux extrémités enroulées.
+  add("scroll", "path", { fill: "#1e3352", stroke: "none", d: "M 400 800 L 624 800 L 624 850 L 400 850 Z" });
+  add("scroll", "path", { class: "ink", "stroke-width": 8.8, d: "M 400 800 L 624 800 M 400 850 L 624 850" });
+  add("scroll", "path", { class: "ink", "stroke-width": 5, d: "M 432 818 L 592 818 M 432 832 L 560 832" });
+  for (const [cx, direction] of [[388, -1], [636, 1]]) {
+    add("scroll", "ellipse", { cx, cy: 825, rx: 22, ry: 32, fill: "#1e3352", stroke: "#e0b866", "stroke-width": 8.8 });
+    add("scroll", "path", { class: "gold", "stroke-width": 6.2, d: spiral(cx, 825, 18, direction) });
   }
 
   // Frise : deux filets et un méandre continu entre eux.
-  const friezeTop = 910, unit = 64; // (« top » est réservé : window.top)
+  const friezeTop = 922, unit = 64; // (« top » est réservé : window.top)
   let meander = "";
   for (let x = 16; x < 1024; x += unit) {
-    meander += `M ${x} ${friezeTop + 64} L ${x} ${friezeTop + 8} L ${x + 48} ${friezeTop + 8} L ${x + 48} ${friezeTop + 48} L ${x + 16} ${friezeTop + 48} L ${x + 16} ${friezeTop + 28} L ${x + 30} ${friezeTop + 28} `;
+    meander += `M ${x} ${friezeTop + 56} L ${x} ${friezeTop + 8} L ${x + 48} ${friezeTop + 8} L ${x + 48} ${friezeTop + 44} L ${x + 16} ${friezeTop + 44} L ${x + 16} ${friezeTop + 26} L ${x + 30} ${friezeTop + 26} `;
   }
   document.getElementById("frieze").innerHTML = `
-    <rect x="0" y="${friezeTop - 14}" width="1024" height="${1024 - friezeTop + 14}" fill="#172840"/>
-    <path d="M 0 ${friezeTop - 10} H 1024 M 0 ${friezeTop + 80} H 1024" stroke="#e0b866" stroke-width="6" fill="none"/>
-    <path d="${meander}" fill="none" stroke="#e0b866" stroke-width="9" stroke-linecap="square"/>`;
+    <path class="gold" stroke-width="6.2" d="M 0 ${friezeTop - 8} H 1024 M 0 ${friezeTop + 72} H 1024"/>
+    <path class="gold" stroke-width="10" stroke-linecap="square" d="${meander}"/>`;
 
   if (new URLSearchParams(location.search).has("safe")) {
-    document.getElementById("portrait").setAttribute("transform", "translate(512 470) scale(0.8) translate(-512 -470)");
-    document.getElementById("frieze").setAttribute("transform", "translate(102 -120) scale(0.8)");
+    document.getElementById("portrait").setAttribute("transform", "translate(512 500) scale(0.8) translate(-512 -500)");
+    document.getElementById("frieze").setAttribute("transform", "translate(102 -150) scale(0.8)");
   }
 </script>
 </body>

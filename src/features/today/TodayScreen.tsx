@@ -3,15 +3,14 @@ import { Screen } from "../../ui/Screen";
 import { Panel } from "../../ui/Panel";
 import { Button } from "../../ui/Button";
 import { SegmentedControl } from "../../ui/SegmentedControl";
-import { formatRelativeDay, formatWordCount } from "../../ui/format";
+import { formatCardCount, formatRelativeDay } from "../../ui/format";
 import { InstallHint } from "../../pwa/InstallHint";
 import { CHOICE_COUNT } from "../../domain/quiz";
 import type { Card } from "../../domain/card";
 import { countDue, nextDueDay, planSession, type SessionItem } from "../../domain/session";
 import { activityByDay, currentStreak } from "../../domain/progress";
 import { addDays } from "../../domain/studyDay";
-import { CATEGORIES, findCategory } from "../../categories/registry";
-import { vocabulary } from "../../categories/vocabulary";
+import { CATEGORIES, categoryFilterOptions, filterByKind, findCategory, unitFor } from "../../categories/registry";
 import { useCards } from "../collection/useCards";
 import { useReviews } from "../review/useReviews";
 import { useToday } from "../review/useToday";
@@ -20,12 +19,6 @@ import { ReviewSession } from "../review/ReviewSession";
 import styles from "./TodayScreen.module.css";
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-
-/** Choix du type de question : tous en alternance, ou un exercice imposé. */
-const EXERCISE_OPTIONS: Record<string, string> = {
-  mixed: "Les deux",
-  ...Object.fromEntries(vocabulary.exercises.map((exercise) => [exercise.id, exercise.label])),
-};
 
 interface RunningSession {
   id: number;
@@ -47,30 +40,36 @@ export function TodayScreen() {
   const cards = useCards();
   const reviews = useReviews();
   const today = useToday();
-  const { sessionSize, exercisePreference, setExercisePreference } = useReviewSettings();
+  const settings = useReviewSettings();
   const [session, setSession] = useState<RunningSession | null>(null);
 
   if (cards === undefined || reviews === undefined) {
     return <Screen eyebrow={dateFormatter.format(new Date())} title="Aujourd’hui" />;
   }
 
-  const reviewable = reviewableCards(cards);
-  const dueCount = countDue(cards, today);
+  // Filtre « Réviser » : proposé seulement si plusieurs catégories ont des fiches.
+  const filterOptions = categoryFilterOptions(cards);
+  const kind = filterOptions && settings.categoryFilter in filterOptions ? settings.categoryFilter : "all";
+  const selected = filterByKind(cards, kind);
+  const reviewable = reviewableCards(selected);
+  const dueCount = countDue(reviewable, today);
   const streak = currentStreak(reviews, today);
   const answeredToday = activityByDay(reviews, [today])[0]?.answered ?? 0;
 
-  // Exercices possibles pour une carte : ceux de sa catégorie, ou l'exercice imposé.
+  // Exercices possibles pour une carte : ceux de sa catégorie, ou celui imposé dans les réglages.
   const exercisesFor = (card: Card) => {
     const ids = findCategory(card.item.kind)?.exercises.map((exercise) => exercise.id) ?? [];
-    return ids.includes(exercisePreference) ? [exercisePreference] : ids;
+    const preference = settings.exercisePreference(card.item.kind);
+    return ids.includes(preference) ? [preference] : ids;
   };
 
   // La session part d'un instantané de la collection : elle reste stable pendant les réponses.
+  // Toutes les cartes sont transmises : les mauvaises réponses se tirent dans toute la catégorie.
   const startSession = () => {
     setSession({
       id: Date.now(),
       cards,
-      plan: planSession(reviewable, today, sessionSize, exercisesFor),
+      plan: planSession(reviewable, today, settings.sessionSize, exercisesFor),
     });
   };
 
@@ -78,22 +77,22 @@ export function TodayScreen() {
     <Screen eyebrow={dateFormatter.format(new Date())} title="Aujourd’hui">
       <InstallHint />
       <Panel>
-        <TodayMessage cards={cards} canReview={reviewable.length > 0} dueCount={dueCount} today={today} sessionSize={sessionSize} />
+        {filterOptions && (
+          <div className={styles.filter}>
+            <SegmentedControl label="Réviser" options={filterOptions} value={kind} onChange={settings.setCategoryFilter} />
+          </div>
+        )}
+        <TodayMessage
+          cards={selected}
+          reviewable={reviewable}
+          dueCount={dueCount}
+          today={today}
+          sessionSize={settings.sessionSize}
+        />
         {reviewable.length > 0 && (
-          <>
-            <Button fullWidth variant={dueCount > 0 ? "primary" : "secondary"} onClick={startSession}>
-              {dueCount > 0 ? "Commencer la révision" : "S’entraîner"}
-            </Button>
-            <div className={styles.mode}>
-              <span>Retrouver</span>
-              <SegmentedControl
-                label="Retrouver"
-                options={EXERCISE_OPTIONS}
-                value={exercisePreference in EXERCISE_OPTIONS ? exercisePreference : "mixed"}
-                onChange={setExercisePreference}
-              />
-            </div>
-          </>
+          <Button fullWidth variant={dueCount > 0 ? "primary" : "secondary"} onClick={startSession}>
+            {dueCount > 0 ? "Commencer la révision" : "S’entraîner"}
+          </Button>
         )}
       </Panel>
 
@@ -126,26 +125,27 @@ export function TodayScreen() {
 
 interface TodayMessageProps {
   cards: Card[];
-  canReview: boolean;
+  reviewable: Card[];
   dueCount: number;
   today: string;
   sessionSize: number;
 }
 
 /** Message principal, selon l'état de la collection. */
-function TodayMessage({ cards, canReview, dueCount, today, sessionSize }: TodayMessageProps) {
+function TodayMessage({ cards, reviewable, dueCount, today, sessionSize }: TodayMessageProps) {
   if (cards.length === 0) {
     return (
       <>
         <p className={styles.lead}>Ton carnet est encore vide.</p>
         <p className={styles.text}>
-          Ajoute les mots rencontrés au fil de tes lectures avec le bouton +, puis reviens chaque jour les réviser.
+          Ajoute les mots et les dates rencontrés au fil de tes lectures avec le bouton +, puis reviens chaque jour les
+          réviser.
         </p>
       </>
     );
   }
 
-  if (!canReview) {
+  if (reviewable.length === 0) {
     const missing = Math.max(CHOICE_COUNT - cards.length, 1);
     return (
       <>
@@ -159,16 +159,17 @@ function TodayMessage({ cards, canReview, dueCount, today, sessionSize }: TodayM
   }
 
   if (dueCount > 0) {
-    const questions = Math.min(sessionSize, cards.length);
+    const questions = Math.min(sessionSize, reviewable.length);
+    const dueCards = reviewable.filter((card) => card.progress.dueDay <= today);
     return (
       <>
-        <p className={styles.lead}>{formatWordCount(dueCount)} à réviser.</p>
+        <p className={styles.lead}>{formatCardCount(dueCount, unitFor(dueCards))} à réviser.</p>
         <p className={styles.text}>Une session de {questions} questions, quelques minutes à peine.</p>
       </>
     );
   }
 
-  const nextDay = nextDueDay(cards, today);
+  const nextDay = nextDueDay(reviewable, today);
   return (
     <>
       <p className={styles.lead}>Tout est révisé pour aujourd’hui.</p>

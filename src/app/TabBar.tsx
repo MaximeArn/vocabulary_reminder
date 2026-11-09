@@ -29,7 +29,7 @@ export function TabBar({ current, onSelect, onAdd }: TabBarProps) {
     <nav className={styles.tabBar} aria-label="Navigation principale">
       {TABS.slice(0, middle).map(renderTab)}
       <div className={styles.addSlot}>
-        <button type="button" className={styles.add} onClick={onAdd} aria-label="Ajouter un mot">
+        <button type="button" className={styles.add} onClick={onAdd} aria-label="Ajouter une fiche">
           <PlusIcon size={26} />
         </button>
       </div>

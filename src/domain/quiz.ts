@@ -25,6 +25,8 @@ export interface Question {
   exercise: string;
   /** Ce qui est demandé : un mot, une définition, un événement… */
   prompt: string;
+  /** Consigne propre à cette question (sinon, celle de l'exercice). */
+  instruction?: string;
   choices: Choice[];
   correctChoiceId: string;
 }

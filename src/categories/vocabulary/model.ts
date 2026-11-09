@@ -82,6 +82,10 @@ const definitionToWord: Exercise<VocabularyContent> = {
 export const vocabularyModel: CategoryModel<VocabularyContent, VocabularyDraft> = {
   kind: "vocabulary",
   label: "Vocabulaire",
+  unit: { singular: "mot", plural: "mots" },
+  addLabel: "Un mot",
+  newItemTitle: "Nouveau mot",
+  addedMessage: (title) => `« ${title} » ajouté à ta collection`,
 
   validateContent(raw) {
     const record = expectRecord(raw);

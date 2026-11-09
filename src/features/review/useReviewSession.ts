@@ -42,11 +42,11 @@ export function useReviewSession(cards: Card[], plan: SessionItem[], today: stri
     setResults((previous) => [...previous, { itemId: item.itemId, correct, isRetry }]);
 
     if (isRetry) return;
-    recordAnswer(item.itemId, item.exercise, correct, today).catch(() =>
+    recordAnswer(item.itemId, question.exercise, correct, today).catch(() =>
       showToast({ message: "Cette réponse n’a pas pu être enregistrée." }),
     );
     if (!correct) {
-      const retry = buildQuestion(item, cards);
+      const retry = buildQuestion({ ...item, exercise: question.exercise }, cards);
       if (retry) setEntries((previous) => [...previous, { item, question: retry, isRetry: true }]);
     }
   };
@@ -70,13 +70,22 @@ export function useReviewSession(cards: Card[], plan: SessionItem[], today: stri
   };
 }
 
-/** Construit la question d'une carte avec l'exercice prévu, parmi les fiches de sa catégorie. */
+/**
+ * Construit la question d'une carte avec l'exercice prévu, parmi les fiches de sa
+ * catégorie. Si c'est impossible (trop peu de fiches pour cet exercice), essaie
+ * les autres exercices de la catégorie.
+ */
 function buildQuestion(sessionItem: SessionItem, cards: Card[]): Question | null {
   const found = findExercise(sessionItem.exercise);
   const target = cards.find((card) => card.item.id === sessionItem.itemId);
   if (!found || !target) return null;
   const pool = cards.filter((card) => card.item.kind === target.item.kind).map((card) => card.item);
-  return found.exercise.build(target.item, pool);
+  const exercises = [found.exercise, ...found.category.exercises.filter((exercise) => exercise !== found.exercise)];
+  for (const exercise of exercises) {
+    const question = exercise.build(target.item, pool);
+    if (question) return question;
+  }
+  return null;
 }
 
 function buildEntries(plan: SessionItem[], cards: Card[]): SessionEntry[] {

@@ -43,7 +43,7 @@ export function QuestionCard({ question, card, isRetry, selectedChoiceId, isLast
     <div className={styles.card}>
       <p className={styles.instruction}>
         {isRetry && <span className={styles.retry}>Deuxième chance · </span>}
-        {exercise.instruction}
+        {question.instruction ?? exercise.instruction}
       </p>
       <h2 className={exercise.promptStyle === "headline" ? styles.term : styles.definition}>{question.prompt}</h2>
 

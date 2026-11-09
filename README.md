@@ -1,6 +1,7 @@
 # Lexique
 
-Carnet de vocabulaire personnel : une PWA installable sur iPhone, hors ligne, sans compte ni serveur.
+Carnet de mémorisation personnel (vocabulaire, dates historiques…) : une PWA installable sur iPhone,
+hors ligne, sans compte ni serveur, avec un moteur de répétition espacée commun à toutes les catégories.
 
 ## Commandes
 
@@ -10,7 +11,7 @@ Carnet de vocabulaire personnel : une PWA installable sur iPhone, hors ligne, sa
 | `npm run build`     | Vérification des types + build de production dans `dist/`   |
 | `npm run preview`   | Sert le build de production (service worker actif)          |
 | `npm test`          | Tests unitaires (Vitest) de la logique métier               |
-| `npm run check:ios` | Parcours de bout en bout dans Safari iOS (simulateur)        |
+| `npm run check:ios` | Parcours de bout en bout dans Safari iOS : mots, révision, dates |
 | `npm run icons`     | Régénère les icônes depuis `scripts/icons/icon.html`        |
 
 Le service worker n'est actif qu'avec `build` + `preview` (pas en `dev`).
@@ -22,7 +23,7 @@ src/
   domain/      Moteur de mémorisation, TypeScript pur et testé : fiches, historique,
                répétition espacée (Leitner, progression rejouée depuis l'historique),
                sessions, statistiques, sauvegardes
-  categories/  Une catégorie de connaissances par dossier (vocabulary/…) :
+  categories/  Une catégorie de connaissances par dossier (vocabulary/, historical-event/) :
                model.ts (logique, exercices) + views.tsx (formulaire, fiche, explication)
   data/        Accès à IndexedDB via Dexie (schéma versionné, migrations, dépôts)
   features/    Un dossier par écran : today, collection, review, progress, settings
@@ -37,6 +38,9 @@ Principes :
   de réponses en ajout seul. La progression de chaque fiche est recalculée en rejouant
   son historique : rien à synchroniser ni à migrer de ce côté.
 - Les suppressions sont « douces » (`deletedAt`) : annulables, et synchronisables plus tard.
+- Dates historiques : jamais de `Date` JavaScript. Années « historiennes » (-480 = 480 av. J.-C.,
+  pas d'an 0), précision (jour → siècle), « vers », périodes ; calculs via la numérotation
+  astronomique (`categories/historical-event/dates.ts`).
 
 Ajouter une catégorie :
 1. Créer `src/categories/<nom>/` avec `model.ts` (contrat `CategoryModel` : validation,

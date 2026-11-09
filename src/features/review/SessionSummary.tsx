@@ -73,6 +73,6 @@ export function SessionSummary({ results, onRestart, onClose }: SessionSummaryPr
 function encouragement(score: number, total: number): string {
   const ratio = score / total;
   if (ratio === 1) return "Sans faute. Bravo !";
-  if (ratio >= 0.6) return "Belle session. Les mots manqués reviendront demain.";
-  return "Ces mots reviendront dès demain pour être retravaillés.";
+  if (ratio >= 0.6) return "Belle session. Ce que tu as manqué reviendra demain.";
+  return "Ce que tu as manqué reviendra dès demain pour être retravaillé.";
 }

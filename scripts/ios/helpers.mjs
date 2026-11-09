@@ -83,3 +83,33 @@ export function makeBackup(entries) {
     settings: [],
   });
 }
+
+/** Ouvre le formulaire d'ajout d'une catégorie : bouton +, puis choix (« Un mot »…). */
+export async function openAddForm(safari, choiceLabel) {
+  await safari.clickButton("Ajouter une fiche");
+  await safari.waitForText("Ajouter à ta collection");
+  await safari.clickButton(choiceLabel);
+}
+
+/** Champ de formulaire désigné par le texte de son <label>. */
+export async function fieldByLabel(safari, label) {
+  const element = await safari.script(
+    `const label = [...document.querySelectorAll("[role=dialog] label")].find((l) => l.textContent.trim().startsWith(arguments[0]));
+     return label ? document.getElementById(label.htmlFor) : null;`,
+    [label],
+  );
+  if (!element) throw new Error(`Champ « ${label} » introuvable`);
+  return Object.values(element)[0];
+}
+
+/** Choisit une option d'un sélecteur segmenté (role=radiogroup) désigné par son aria-label. */
+export async function chooseSegment(safari, groupLabel, optionLabel) {
+  const clicked = await safari.script(
+    `const group = document.querySelector('[role=radiogroup][aria-label="' + arguments[0] + '"]');
+     const option = group && [...group.querySelectorAll("[role=radio]")].find((o) => o.textContent === arguments[1]);
+     if (option) option.click();
+     return !!option;`,
+    [groupLabel, optionLabel],
+  );
+  if (!clicked) throw new Error(`Option « ${optionLabel} » de « ${groupLabel} » introuvable`);
+}

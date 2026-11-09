@@ -9,7 +9,7 @@
 // Attention : le scénario efface les données de l'app à cette adresse.
 
 import { IosSafari } from "./webdriver.mjs";
-import { chooseBackupFile as chooseFile, createStepper, makeBackup, resetApp, screenshot } from "./helpers.mjs";
+import { chooseBackupFile as chooseFile, createStepper, makeBackup, openAddForm, resetApp, screenshot } from "./helpers.mjs";
 
 const appUrl = process.argv[2] ?? "http://localhost:4173/";
 const safari = new IosSafari("http://localhost:4444");
@@ -42,7 +42,7 @@ try {
   });
 
   await step("Formulaire ouvert sans défilement, focus sur le mot", async () => {
-    await safari.clickButton("Ajouter un mot");
+    await openAddForm(safari, "Un mot");
     await safari.waitForText("Nouveau mot");
     await new Promise((resolve) => setTimeout(resolve, 400)); // fin de l'animation
     const state = await safari.script(
@@ -71,7 +71,7 @@ try {
   });
 
   await step("Doublon signalé à la saisie", async () => {
-    await safari.clickButton("Ajouter un mot");
+    await openAddForm(safari, "Un mot");
     const fields = await formFields();
     await safari.type(fields.term, "Alacrite");
     await safari.waitForText("est déjà dans ta collection");
@@ -180,7 +180,7 @@ try {
     await safari.waitForText("Senestre");
     await safari.clear(search);
     await safari.type(search, "zzz");
-    await safari.waitForText("Aucun mot ne correspond");
+    await safari.waitForText("Rien ne correspond");
     await safari.clear(search);
     await safari.clickButton("A → Z");
     await safari.waitFor("ordre alphabétique", async () => {

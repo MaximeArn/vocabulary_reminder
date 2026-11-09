@@ -34,10 +34,27 @@ export interface Exercise<Content> {
 /** Erreurs de saisie, par champ du formulaire. */
 export type DraftErrors = Record<string, string | undefined>;
 
+/** Unité de comptage : « 1 mot », « 3 dates ». */
+export interface Unit {
+  singular: string;
+  plural: string;
+}
+
+export function formatCount(count: number, unit: Unit): string {
+  return `${count} ${count > 1 ? unit.plural : unit.singular}`;
+}
+
 export interface CategoryModel<Content, Draft> {
   kind: string;
-  /** « Vocabulaire » */
+  /** « Vocabulaire », « Dates » (filtres, réglages). */
   label: string;
+  unit: Unit;
+  /** Choix dans le menu d'ajout : « Un mot ». */
+  addLabel: string;
+  /** Titre du formulaire d'ajout : « Nouveau mot ». */
+  newItemTitle: string;
+  /** Message après un ajout. */
+  addedMessage(title: string): string;
   /** Vérifie et normalise un contenu venu de l'extérieur (sauvegarde, synchronisation). */
   validateContent(raw: unknown): Content;
 

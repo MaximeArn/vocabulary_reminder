@@ -2,6 +2,8 @@ import { useState } from "react";
 import { TabBar } from "./TabBar";
 import { saveTabInLocation, tabFromLocation, type TabId } from "./tabs";
 import { ToastProvider } from "../ui/Toast";
+import { ActionSheet } from "../ui/ActionSheet";
+import { CATEGORIES } from "../categories/registry";
 import { UpdateBanner } from "../pwa/UpdateBanner";
 import { TodayScreen } from "../features/today/TodayScreen";
 import { CollectionScreen } from "../features/collection/CollectionScreen";
@@ -25,7 +27,13 @@ function CurrentScreen({ tab }: { tab: TabId }) {
 
 export function App() {
   const [tab, setTab] = useState<TabId>(tabFromLocation);
-  const [adding, setAdding] = useState(false);
+  /** Ajout en cours : choix de la catégorie, puis formulaire de la catégorie choisie. */
+  const [adding, setAdding] = useState<"choosing" | string | null>(null);
+
+  const startAdding = () => {
+    const [only] = CATEGORIES;
+    setAdding(CATEGORIES.length === 1 && only ? only.kind : "choosing");
+  };
 
   const selectTab = (next: TabId) => {
     setTab(next);
@@ -40,10 +48,16 @@ export function App() {
         <main className={styles.content} key={tab}>
           <CurrentScreen tab={tab} />
         </main>
-        <TabBar current={tab} onSelect={selectTab} onAdd={() => setAdding(true)} />
+        <TabBar current={tab} onSelect={selectTab} onAdd={startAdding} />
       </div>
-      {/* Une seule catégorie pour l'instant ; le choix de la catégorie viendra avec la deuxième. */}
-      {adding && <ItemFormSheet kind="vocabulary" onClose={() => setAdding(false)} />}
+      {adding === "choosing" && (
+        <ActionSheet
+          title="Ajouter à ta collection"
+          options={CATEGORIES.map((category) => ({ label: category.addLabel, onSelect: () => setAdding(category.kind) }))}
+          onCancel={() => setAdding(null)}
+        />
+      )}
+      {adding && adding !== "choosing" && <ItemFormSheet kind={adding} onClose={() => setAdding(null)} />}
     </ToastProvider>
   );
 }

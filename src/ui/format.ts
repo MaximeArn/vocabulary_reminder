@@ -1,8 +1,9 @@
 /** Mises en forme françaises partagées par plusieurs écrans. */
 
-export function formatWordCount(count: number): string {
-  if (count === 0) return "Aucun mot";
-  return count === 1 ? "1 mot" : `${count} mots`;
+/** « 3 mots », « 1 date », « Aucune fiche ». */
+export function formatCardCount(count: number, unit: { singular: string; plural: string }): string {
+  if (count === 0) return "Aucune fiche";
+  return `${count} ${count > 1 ? unit.plural : unit.singular}`;
 }
 
 const longDateFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" });

@@ -1,6 +1,7 @@
 import { readAllData, replaceAllData } from "../../data/backupRepository";
 import type { BackupFile } from "../../domain/backup";
-import { formatWordCount } from "../../ui/format";
+import { formatCardCount } from "../../ui/format";
+import { unitForKinds } from "../../categories/registry";
 import { useToast } from "../../ui/Toast";
 
 export type RestoreOutcome = "restored" | "cancelled";
@@ -17,16 +18,20 @@ export function useRestoreBackup() {
     // Lu dans la base au moment même : sert à la confirmation et à l'annulation.
     const previous = await readAllData();
     const currentCount = previous.items.length;
+    const describe = (items: { kind: string }[]) =>
+      formatCardCount(items.length, unitForKinds(items.map((item) => item.kind))).toLowerCase();
+    const restoredCount = formatCardCount(backup.items.length, unitForKinds(backup.items.map((item) => item.kind)));
     const confirmed =
       currentCount === 0 ||
       window.confirm(
-        `Remplacer tes ${formatWordCount(currentCount).toLowerCase()} par les ${formatWordCount(backup.items.length).toLowerCase()} de cette sauvegarde ?`,
+        `Remplacer tes ${describe(previous.items)} par les ${describe(backup.items)} de cette sauvegarde ?`,
       );
     if (!confirmed) return "cancelled";
 
     await replaceAllData(backup);
     showToast({
-      message: `${formatWordCount(backup.items.length)} restauré${backup.items.length > 1 ? "s" : ""}`,
+      // « 3 mots restaurés », « 2 dates restaurées »
+      message: `${restoredCount} ${restoredLabel(backup.items.map((item) => item.kind), backup.items.length)}`,
       actionLabel: currentCount > 0 ? "Annuler" : undefined,
       onAction: () => {
         replaceAllData(previous).catch(() => showToast({ message: "Impossible d’annuler la restauration." }));
@@ -34,4 +39,10 @@ export function useRestoreBackup() {
     });
     return "restored";
   };
+}
+
+/** Accord du participe : « dates » et « fiches » sont féminins, « mots » masculin. */
+function restoredLabel(kinds: string[], count: number): string {
+  const feminine = unitForKinds(kinds).plural !== "mots";
+  return `restauré${feminine ? "e" : ""}${count > 1 ? "s" : ""}`;
 }

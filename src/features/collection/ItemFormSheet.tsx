@@ -54,7 +54,7 @@ export function ItemFormSheet({ kind, item, onClose }: ItemFormSheetProps) {
         showToast({ message: "Modifications enregistrées" });
       } else {
         await addItem(kind, content);
-        showToast({ message: `« ${category.title(content)} » ajouté à ta collection` });
+        showToast({ message: category.addedMessage(category.title(content)) });
       }
       onClose();
     } catch {
@@ -71,7 +71,7 @@ export function ItemFormSheet({ kind, item, onClose }: ItemFormSheetProps) {
 
   return (
     <Sheet
-      title={isEditing ? "Modifier" : "Nouveau mot"}
+      title={isEditing ? "Modifier" : category.newItemTitle}
       confirmLabel={isEditing ? "Enregistrer" : "Ajouter"}
       onConfirm={save}
       onCancel={cancel}

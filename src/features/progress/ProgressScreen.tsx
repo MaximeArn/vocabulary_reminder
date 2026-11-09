@@ -6,7 +6,7 @@ import { MASTERY_LABELS, MASTERY_LEVELS, isDue } from "../../domain/srs";
 import { activityByDay, countByLevel, currentStreak, type DayActivity } from "../../domain/progress";
 import { lastDays } from "../../domain/studyDay";
 import type { Card } from "../../domain/card";
-import { describeCard } from "../../categories/registry";
+import { describeCard, unitFor } from "../../categories/registry";
 import { useCards } from "../collection/useCards";
 import { useReviews } from "../review/useReviews";
 import { useToday } from "../review/useToday";
@@ -41,7 +41,7 @@ export function ProgressScreen() {
   return (
     <Screen title="Progrès">
       <div className={styles.tiles}>
-        <Tile value={cards.length} label={cards.length > 1 ? "mots" : "mot"} />
+        <Tile value={cards.length} label={cards.length > 1 ? unitFor(cards).plural : unitFor(cards).singular} />
         <Tile value={levels.mastered} label={levels.mastered > 1 ? "maîtrisés" : "maîtrisé"} />
         <Tile value={dueCards.length} label="à réviser aujourd’hui" />
         <Tile value={streak} label={streak > 1 ? "jours de suite" : "jour de suite"} />

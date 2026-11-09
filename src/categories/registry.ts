@@ -31,7 +31,13 @@ export function findExercise(exerciseId: string) {
 export const describeCard: Describer = {
   title: (card: Card) => findCategory(card.item.kind)?.title(card.item.content) ?? "",
   searchTexts: (card: Card) => findCategory(card.item.kind)?.searchTexts(card.item.content) ?? [],
+  chronology: (card: Card) => findCategory(card.item.kind)?.chronologicalKey?.(card.item.content),
 };
+
+/** Catégories qui ont au moins une fiche, dans l'ordre du registre. */
+export function presentCategories(cards: Card[]): AnyCategory[] {
+  return CATEGORIES.filter((category) => cards.some((card) => card.item.kind === category.kind));
+}
 
 const GENERIC_UNIT: Unit = { singular: "fiche", plural: "fiches" };
 

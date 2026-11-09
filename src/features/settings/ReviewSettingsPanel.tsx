@@ -1,16 +1,17 @@
 import { SESSION_SIZES } from "../../domain/session";
 import { CATEGORIES } from "../../categories/registry";
 import { SegmentedControl } from "../../ui/SegmentedControl";
+import { SettingsCard } from "../../ui/Section";
 import { useReviewSettings } from "../review/useReviewSettings";
 import styles from "./ReviewSettingsPanel.module.css";
 
 const SIZE_OPTIONS = Object.fromEntries(SESSION_SIZES.map((size) => [String(size), String(size)]));
 
+/** Taille des sessions et type de question, catégorie par catégorie. */
 export function ReviewSettingsPanel() {
   const { sessionSize, setSessionSize, exercisePreference, setExercisePreference } = useReviewSettings();
   return (
-    <section className={styles.panel}>
-      <h2 className={styles.heading}>Révision</h2>
+    <SettingsCard>
       <div className={styles.row}>
         <span className={styles.label}>Questions par session</span>
         <SegmentedControl
@@ -20,7 +21,6 @@ export function ReviewSettingsPanel() {
           onChange={(value) => setSessionSize(Number(value))}
         />
       </div>
-      {/* Type de question par catégorie : un sens imposé, ou les deux en alternance. */}
       {CATEGORIES.filter((category) => category.exercises.length > 1).map((category) => {
         const options: Record<string, string> = {
           mixed: "Les deux",
@@ -29,7 +29,10 @@ export function ReviewSettingsPanel() {
         const value = exercisePreference(category.kind);
         return (
           <div key={category.kind} className={styles.row}>
-            <span className={styles.label}>{category.label} : retrouver</span>
+            <span className={styles.label}>
+              <span className={styles.dot} style={{ background: category.color }} aria-hidden="true" />
+              {category.label} : retrouver
+            </span>
             <SegmentedControl
               label={`${category.label} : retrouver`}
               options={options}
@@ -39,6 +42,6 @@ export function ReviewSettingsPanel() {
           </div>
         );
       })}
-    </section>
+    </SettingsCard>
   );
 }

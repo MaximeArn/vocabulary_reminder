@@ -11,7 +11,8 @@ export interface InfoRow {
 }
 
 interface InfoListProps {
-  heading: string;
+  /** Titre au-dessus de la liste (absent quand la liste est dans une carte de section). */
+  heading?: string;
   rows: InfoRow[];
   /** Contenu affiché sous la liste (bouton d'action…). */
   footer?: React.ReactNode;
@@ -19,9 +20,9 @@ interface InfoListProps {
 
 export function InfoList({ heading, rows, footer }: InfoListProps) {
   return (
-    <section className={styles.group}>
-      <h2 className={styles.heading}>{heading}</h2>
-      <dl className={styles.list}>
+    <section className={heading ? styles.group : undefined}>
+      {heading && <h2 className={styles.heading}>{heading}</h2>}
+      <dl className={heading ? styles.list : styles.cardList}>
         {rows.map((row) => (
           <div key={row.label} className={styles.row}>
             <dt className={styles.label}>{row.label}</dt>

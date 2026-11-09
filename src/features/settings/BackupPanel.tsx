@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button } from "../../ui/Button";
+import { SettingsCard } from "../../ui/Section";
 import { useToast } from "../../ui/Toast";
 import { formatLongDate } from "../../ui/format";
 import { readSetting } from "../../data/settingsRepository";
@@ -56,13 +57,11 @@ export function BackupPanel() {
   const nothingToExport = cards.length === 0;
 
   return (
-    <section className={styles.panel}>
-      <h2 className={styles.heading}>Sauvegarde</h2>
+    <SettingsCard title="Copie de sauvegarde" padded>
       <p className={styles.text}>
-        Tes mots ne sont enregistrés que sur cet appareil. Exporte-les régulièrement : en fichier (Fichiers, iCloud
-        Drive) ou en texte à coller où tu veux.
+        Une copie indépendante du serveur, à garder dans Fichiers ou iCloud Drive, ou en texte.
         <br />
-        {lastExportAt ? `Dernière sauvegarde : ${formatLongDate(lastExportAt)}.` : "Aucune sauvegarde pour l’instant."}
+        {lastExportAt ? `Dernier export : ${formatLongDate(lastExportAt)}.` : "Aucun export pour l’instant."}
       </p>
 
       <div className={styles.row}>
@@ -108,6 +107,6 @@ export function BackupPanel() {
 
       {openSheet === "export-text" && <ExportTextSheet onClose={() => setOpenSheet(null)} />}
       {openSheet === "import-text" && <ImportTextSheet onClose={() => setOpenSheet(null)} />}
-    </section>
+    </SettingsCard>
   );
 }

@@ -41,6 +41,9 @@ export function QuestionCard({ question, card, isRetry, selectedChoiceId, isLast
 
   return (
     <div className={styles.card}>
+      <div className={styles.category} style={{ color: category.color }}>
+        {category.label}
+      </div>
       <p className={styles.instruction}>
         {isRetry && <span className={styles.retry}>Deuxième chance · </span>}
         {question.instruction ?? exercise.instruction}

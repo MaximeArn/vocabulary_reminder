@@ -34,3 +34,12 @@
   line-clamp: 2;
   overflow: hidden;
 }
+
+/* Date en tête d'une fiche datée, comme sur une frise chronologique */
+.date {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}

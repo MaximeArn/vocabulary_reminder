@@ -174,7 +174,10 @@ export async function signOut(): Promise<void> {
 function describeError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   if (/invalid login credentials/i.test(message)) return "E-mail ou mot de passe incorrect.";
-  if (/failed to fetch|network|load failed/i.test(message)) {
+  if (/jwt|invalid claim|not authorized|401/i.test(message)) {
+    return "Le serveur refuse la session de cet appareil. Déconnecte-toi puis reconnecte-toi.";
+  }
+  if (/failed to fetch|network|load failed|délai dépassé|timeout|abort/i.test(message)) {
     return "Serveur injoignable. Vérifie ta connexion (ou le projet Supabase est en pause).";
   }
   return message;

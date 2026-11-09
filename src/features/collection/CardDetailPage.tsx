@@ -33,6 +33,9 @@ export function CardDetailPage({ itemId, onClose }: CardDetailPageProps) {
   return (
     <Page backLabel="Collection" onBack={onClose}>
       <article>
+        <p className={styles.category} style={{ color: category.color }}>
+          {category.label}
+        </p>
         <category.Detail content={card.item.content} />
         <p className={styles.meta}>
           {MASTERY_LABELS[masteryLevel(card.progress.box)]} · révision{" "}

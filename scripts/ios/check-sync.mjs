@@ -5,7 +5,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { IosSafari } from "./webdriver.mjs";
-import { chooseBackupFile, createStepper, fieldByLabel, pause, resetApp, screenshot } from "./helpers.mjs";
+import { chooseBackupFile, chooseSegment, createStepper, fieldByLabel, pause, resetApp, screenshot } from "./helpers.mjs";
 
 const appUrl = process.argv[2] ?? "http://localhost:4173/";
 const safari = new IosSafari("http://localhost:4444");
@@ -54,7 +54,14 @@ async function fillLogin(email, password) {
 /** Attend « À jour » sans modification en attente (panneau Compte des Réglages). */
 async function waitSynced() {
   await safari.open(`${appUrl}?t=${Date.now()}#reglages`);
-  await safari.waitFor("synchronisation terminée", async () => /Synchronisation À jour/.test(await text()), 25000);
+  try {
+    await safari.waitFor("synchronisation terminée", async () => /État À jour/.test(await text()), 25000);
+  } catch (error) {
+    // Diagnostic : état affiché et file d'envoi au moment de l'échec.
+    const shown = (await text()).match(/État (.{0,120}?) (Réessayer|Se déconnecter)/)?.[1];
+    const pending = await safari.scriptAsync(`const r = indexedDB.open("lexique"); r.onsuccess = () => { const c = r.result.transaction("outbox").objectStore("outbox").count(); c.onsuccess = () => { done(c.result); r.result.close(); }; };`);
+    throw new Error(`${error.message} — état affiché : « ${shown} », file d’envoi : ${pending}`);
+  }
 }
 
 async function localItemCount() {
@@ -67,10 +74,22 @@ async function localItemCount() {
     };`);
 }
 
+/** Textes des fiches de la collection, toutes catégories (elles s'affichent une à la fois). */
 async function collectionTitles() {
   await safari.open(`${appUrl}?t=${Date.now()}#collection`);
   await safari.waitFor("collection chargée", async () => /FICHES?|MOTS?|DATES?|Ta collection est vide/.test(await text()));
-  return safari.script(`return [...document.querySelectorAll("li button p:first-child")].map((p) => p.textContent);`);
+  const read = () => safari.script(`return [...document.querySelectorAll("li button")].map((b) => [...b.querySelectorAll("p")].map((p) => p.textContent).join(" "));`);
+  const categories = await safari.script(
+    `return [...document.querySelectorAll('[role=radiogroup][aria-label="Catégorie"] [role=radio]')].map((o) => o.textContent);`,
+  );
+  if (categories.length === 0) return read();
+  const all = [];
+  for (const category of categories) {
+    await chooseSegment(safari, "Catégorie", category);
+    await pause(300);
+    all.push(...(await read()));
+  }
+  return all;
 }
 
 // Données de test propres à cette exécution (les comptes de test gardent les données des exécutions passées).
@@ -142,7 +161,7 @@ try {
       await freshDevice("#reglages");
       await signIn(accounts.first);
       const shown = await collectionTitles();
-      for (const title of titles) if (!shown.includes(title)) throw new Error(`« ${title} » absent : ${shown}`);
+      for (const title of titles) if (!shown.some((entry) => entry.includes(title))) throw new Error(`« ${title} » absent : ${shown}`);
       if (shown.length !== 4) throw new Error(`Fiches en trop : ${shown}`);
       await safari.open(`${appUrl}?t=${Date.now()}#progres`);
       await safari.waitForText("NIVEAUX");
@@ -164,7 +183,7 @@ try {
       await freshDevice("#reglages");
       await signIn(accounts.first);
       const shown = await collectionTitles();
-      if (shown.includes(titles[1])) throw new Error("La fiche supprimée est revenue");
+      if (shown.some((entry) => entry.includes(titles[1]))) throw new Error("La fiche supprimée est revenue");
       if (shown.length !== 3) throw new Error(`Collection inattendue : ${shown}`);
     });
 
@@ -188,7 +207,7 @@ try {
     } else await step("Isolation : le second compte ne voit rien du premier", async () => {
       await waitSynced();
       const shown = await collectionTitles();
-      if (shown.some((title) => title.endsWith(run))) throw new Error(`Données du premier compte visibles : ${shown}`);
+      if (shown.some((entry) => entry.includes(run))) throw new Error(`Données du premier compte visibles : ${shown}`);
       // Contrôle direct de l'API, avec le jeton du second compte : RLS doit tout filtrer.
       const leaked = await safari.scriptAsync(
         `const session = JSON.parse(localStorage.getItem("mneme.auth"));

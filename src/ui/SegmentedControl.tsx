@@ -2,7 +2,8 @@ import styles from "./SegmentedControl.module.css";
 
 interface SegmentedControlProps<T extends string> {
   label: string;
-  options: Record<T, string>;
+  /** Options proposées (un sous-ensemble des valeurs possibles). */
+  options: Partial<Record<T, string>>;
   value: T;
   onChange: (value: T) => void;
 }

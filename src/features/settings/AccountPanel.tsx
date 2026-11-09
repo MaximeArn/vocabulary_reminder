@@ -2,6 +2,7 @@ import { useState, useSyncExternalStore } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../data/db";
 import { Button } from "../../ui/Button";
+import { SettingsCard } from "../../ui/Section";
 import { pendingChanges, signOut, syncNow, syncStore, type SyncState } from "../../sync/service";
 import styles from "./AccountPanel.module.css";
 
@@ -31,15 +32,14 @@ export function AccountPanel() {
   };
 
   return (
-    <section className={styles.panel}>
-      <h2 className={styles.heading}>Compte</h2>
+    <SettingsCard title="Synchronisation automatique" padded>
       <dl className={styles.rows}>
         <div className={styles.row}>
           <dt className={styles.label}>E-mail</dt>
           <dd className={styles.value}>{state.email}</dd>
         </div>
         <div className={styles.row}>
-          <dt className={styles.label}>Synchronisation</dt>
+          <dt className={styles.label}>État</dt>
           <dd className={`${styles.value} ${status.tone ? styles[status.tone] : ""}`} role="status">
             {status.text}
           </dd>
@@ -60,7 +60,7 @@ export function AccountPanel() {
           Se déconnecter
         </Button>
       </div>
-    </section>
+    </SettingsCard>
   );
 }
 

@@ -97,7 +97,7 @@ try {
 
   await step("Formulaire de date : erreurs claires si incomplet", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#collection`);
-    await safari.waitForText("9 FICHES");
+    await safari.waitForText("4 MOTS"); // la collection s'ouvre sur la première catégorie
     await openAddForm(safari, "Une date historique");
     await safari.waitForText("Nouvelle date");
     await safari.clickButton("Ajouter");
@@ -115,10 +115,12 @@ try {
     screenshot("dates-1-formulaire");
     await safari.clickButton("Ajouter");
     await safari.waitForText("Date ajoutée : « Bataille de Gaugamèles »");
+    await chooseSegment(safari, "Catégorie", "Dates");
+    await safari.waitForText("6 DATES");
   });
 
   await step("Fiche : date, ancienneté, contexte, personnages, source", async () => {
-    await safari.script(`[...document.querySelectorAll("li button")].find((b) => b.textContent.startsWith("Bataille de Gaugamèles")).click();`);
+    await safari.script(`[...document.querySelectorAll("li button")].find((b) => b.textContent.includes("Bataille de Gaugamèles")).click();`);
     await safari.waitForText("Personnages");
     const detail = await text();
     for (const expected of ["331 av. J.-C.", "Victoire décisive", "Alexandre le Grand, Darius III", "Arrien, Anabase"]) {
@@ -157,15 +159,17 @@ try {
     await safari.waitForText("vers Ve siècle av. J.-C.");
   });
 
-  await step("Filtre de la collection : Dates / Vocabulaire / Tout", async () => {
+  await step("Collection : mots et dates séparés, dates en ordre chronologique", async () => {
     await chooseSegment(safari, "Catégorie", "Dates");
     await safari.waitForText("8 DATES");
-    if ((await text()).includes("dextre")) throw new Error("Un mot apparaît dans le filtre Dates");
+    if ((await text()).includes("dextre")) throw new Error("Un mot apparaît parmi les dates");
+    const order = await safari.script(`return [...document.querySelectorAll("li button p:last-child")].map((p) => p.textContent);`);
+    const expected = ["Construction du Parthénon", "Bataille de Marathon", "Bataille de Salamine", "Bataille de Platées", "Bataille de Chéronée", "Bataille de Gaugamèles", "Guerre de Cent Ans", "Prise de la Bastille"];
+    if (order.join("|") !== expected.join("|")) throw new Error(`Ordre chronologique inattendu : ${order}`);
     screenshot("dates-3-collection");
     await chooseSegment(safari, "Catégorie", "Vocabulaire");
     await safari.waitForText("4 MOTS");
-    await chooseSegment(safari, "Catégorie", "Tout");
-    await safari.waitForText("12 FICHES");
+    if ((await text()).includes("Marathon")) throw new Error("Une date apparaît parmi les mots");
   });
 
   await step("Aujourd’hui, filtre Dates : 8 dates à réviser", async () => {

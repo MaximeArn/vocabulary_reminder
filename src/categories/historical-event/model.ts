@@ -284,6 +284,11 @@ export const historicalEventModel: CategoryModel<HistoricalEventContent, Histori
   addLabel: "Une date historique",
   newItemTitle: "Nouvelle date",
   addedMessage: (title) => `Date ajoutée : « ${title} »`,
+  color: "var(--dates)",
+  softColor: "var(--dates-soft)",
+  searchPlaceholder: "Rechercher un événement, une date, un personnage…",
+  listStyle: "timeline",
+  chronologicalKey: (content) => chronologicalKey(content.start),
 
   validateContent(raw) {
     const record = expectRecord(raw);

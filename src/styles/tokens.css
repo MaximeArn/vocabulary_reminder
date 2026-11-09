@@ -21,6 +21,23 @@
   --error: #a3402b;
   --error-soft: #f3e0d9;
 
+  /*
+   * Couleurs porteuses de sens (jamais décoratives) :
+   * - identité des catégories : encre pour le vocabulaire, terre cuite pour les dates
+   *   (paire vérifiée : contraste ≥ 5:1 sur le papier, distincte pour les daltoniens) ;
+   * - gradation des niveaux de maîtrise : une seule teinte, du plus clair au plus soutenu ;
+   * - or : la série de jours.
+   */
+  --vocabulary: #1f3350;
+  --vocabulary-soft: #e3e8f0;
+  --dates: #a8452c;
+  --dates-soft: #f3e2db;
+  --level-new: #e1d9cb;
+  --level-learning: #c3cfe0;
+  --level-progressing: #7d97b9;
+  --level-mastered: #1f3350;
+  --gold: #b9832c;
+
   /* Typographie */
   --font-serif: "Literata", "Iowan Old Style", Georgia, serif;
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
@@ -74,6 +91,15 @@
     --success-soft: #24301f;
     --error: #e59a85;
     --error-soft: #3a231c;
+    --vocabulary: #a9c1e0;
+    --vocabulary-soft: #222f42;
+    --dates: #d0775c;
+    --dates-soft: #3a2620;
+    --level-new: #3a3630;
+    --level-learning: #34496a;
+    --level-progressing: #6d8cb6;
+    --level-mastered: #c3d6f0;
+    --gold: #e3b45c;
   }
 }
 

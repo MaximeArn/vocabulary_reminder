@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { InfoList } from "../../ui/InfoList";
+import { SettingsCard } from "../../ui/Section";
 import { Button } from "../../ui/Button";
 import { requestPersistentStorage } from "../../pwa/storageStatus";
 import { collectDiagnostic, toInfoRows, type DiagnosticReport } from "./diagnostic";
@@ -21,8 +22,8 @@ export function DiagnosticPanel() {
   if (!report) return null;
 
   return (
-    <InfoList
-      heading="Diagnostic"
+    <SettingsCard>
+      <InfoList
       rows={toInfoRows(report)}
       footer={
         report.storage.persisted === false && (
@@ -31,6 +32,7 @@ export function DiagnosticPanel() {
           </Button>
         )
       }
-    />
+      />
+    </SettingsCard>
   );
 }

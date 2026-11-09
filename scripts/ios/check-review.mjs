@@ -168,7 +168,7 @@ try {
     await safari.open(`${appUrl}?t=${Date.now()}#progres`);
     await safari.waitForText("NIVEAUX");
     const text = (await safari.bodyText()).replace(/\s+/g, " ");
-    for (const expected of ["6 mots", "1 à réviser aujourd’hui", "En apprentissage 5", "5 réponses, dont 4 justes", `LES PLUS OUBLIÉS ${failedTerm}`]) {
+    for (const expected of ["6 mots", "1 à réviser aujourd’hui", "En apprentissage 5", "5 réponses, dont 4 justes", `LES PLUS OUBLIÉES ${failedTerm}`]) {
       if (!text.includes(expected)) throw new Error(`« ${expected} » absent de : ${text}`);
     }
     screenshot("review-4-progress");

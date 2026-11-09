@@ -86,6 +86,10 @@ export const vocabularyModel: CategoryModel<VocabularyContent, VocabularyDraft> 
   addLabel: "Un mot",
   newItemTitle: "Nouveau mot",
   addedMessage: (title) => `« ${title} » ajouté à ta collection`,
+  color: "var(--vocabulary)",
+  softColor: "var(--vocabulary-soft)",
+  searchPlaceholder: "Rechercher un mot, une définition…",
+  listStyle: "definition",
 
   validateContent(raw) {
     const record = expectRecord(raw);

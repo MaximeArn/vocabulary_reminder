@@ -1,0 +1,18 @@
+/* Carte d'une section de réglages : surface claire, filet, lignes séparées. */
+.card {
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+.title {
+  padding: var(--space-3) 0 var(--space-1);
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.padded {
+  padding-bottom: var(--space-4);
+}

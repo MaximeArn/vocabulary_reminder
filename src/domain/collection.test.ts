@@ -39,6 +39,11 @@ describe("sortCards", () => {
     expect(titles(sortCards(cards, "oldest", describe_))).toEqual(["Dilection", "Écot", "alacrité"]);
   });
 
+  it("trie chronologiquement quand la catégorie est datée", () => {
+    const dated: Describer = { ...describe_, chronology: (c) => ({ "1": 1492, "2": -490, "3": 476 })[c.item.id] };
+    expect(titles(sortCards(cards, "chronological", dated))).toEqual(["alacrité", "Dilection", "Écot"]);
+  });
+
   it("trie alphabétiquement à la française (accents et casse ignorés)", () => {
     expect(titles(sortCards(cards, "alphabetical", describe_))).toEqual(["alacrité", "Dilection", "Écot"]);
   });

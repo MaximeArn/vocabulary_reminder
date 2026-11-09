@@ -47,3 +47,12 @@
 .footer {
   margin-top: var(--space-3);
 }
+
+/* Dans une carte de section : pas de filet au-dessus, ni sous la dernière ligne. */
+.cardList {
+  margin: 0;
+}
+
+.cardList .row:last-child {
+  border-bottom: none;
+}

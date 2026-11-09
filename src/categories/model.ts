@@ -55,6 +55,18 @@ export interface CategoryModel<Content, Draft> {
   newItemTitle: string;
   /** Message après un ajout. */
   addedMessage(title: string): string;
+  /** Couleur d'identité de la catégorie (variable CSS de `tokens.css`) et sa version claire. */
+  color: string;
+  softColor: string;
+  /** Texte d'aide du champ de recherche. */
+  searchPlaceholder: string;
+  /**
+   * Présentation dans la liste : « definition » (titre, puis résumé) ou
+   * « timeline » (résumé en tête, comme une date sur une frise, puis titre).
+   */
+  listStyle: "definition" | "timeline";
+  /** Position dans le temps, pour un tri chronologique (catégories datées seulement). */
+  chronologicalKey?(content: Content): number;
   /** Vérifie et normalise un contenu venu de l'extérieur (sauvegarde, synchronisation). */
   validateContent(raw: unknown): Content;
 

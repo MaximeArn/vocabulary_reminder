@@ -2,6 +2,15 @@
   animation: appear var(--duration-base) var(--ease-out);
 }
 
+/* Catégorie de la question (utile en session mixte), dans sa couleur d'identité */
+.category {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .instruction {
   font-size: var(--text-xs);
   font-weight: 600;

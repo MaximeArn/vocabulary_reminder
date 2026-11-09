@@ -1,5 +1,13 @@
-import { buildChoiceQuestion, hasEnoughDistinct } from "../../domain/quiz";
-import { cleanOptionalText, cleanText, comparisonKey, stripSurroundingQuotes } from "../../domain/text";
+import { buildChoiceQuestion, hasEnoughDistinct, type TypedGrade, type TypedQuestion } from "../../domain/quiz";
+import {
+  answerKey,
+  cleanOptionalText,
+  cleanText,
+  comparisonKey,
+  editDistance,
+  stripSurroundingQuotes,
+  toleratedTypos,
+} from "../../domain/text";
 import type { Item } from "../../domain/types";
 import { expectRecord, expectText, optionalText, type CategoryModel, type Exercise } from "../model";
 
@@ -44,6 +52,7 @@ const maskedDefinition = (item: VocabularyItem) => maskTerm(item.content.definit
 
 const wordToDefinition: Exercise<VocabularyContent> = {
   id: "vocabulary.word-to-definition",
+  mode: "choice",
   label: "La définition",
   instruction: "Quelle est la définition ?",
   promptStyle: "headline",
@@ -63,6 +72,7 @@ const wordToDefinition: Exercise<VocabularyContent> = {
 
 const definitionToWord: Exercise<VocabularyContent> = {
   id: "vocabulary.definition-to-word",
+  mode: "choice",
   label: "Le mot",
   instruction: "Quel est ce mot ?",
   promptStyle: "text",
@@ -77,6 +87,45 @@ const definitionToWord: Exercise<VocabularyContent> = {
       isEquivalent: (candidate) => sameTerm(candidate.content, target.content),
       random,
     }),
+};
+
+/**
+ * Corrige un mot tapé. Majuscules, accents, tirets et apostrophes ne comptent pas ;
+ * une petite faute (deux pour un mot long) est acceptée, l'orthographe exacte étant
+ * alors affichée. Un autre mot de la collection n'est jamais accepté, même proche.
+ */
+export function gradeTypedTerm(answer: string, expected: string, otherTerms: string[] = []): TypedGrade {
+  const typed = answerKey(answer);
+  const target = answerKey(expected);
+  const exact = cleanText(answer).toLocaleLowerCase("fr") === cleanText(expected).toLocaleLowerCase("fr");
+  if (typed === target) return { correct: true, exact };
+  if (otherTerms.some((term) => answerKey(term) === typed)) return { correct: false, exact: false };
+  return { correct: editDistance(typed, target) <= toleratedTypos(expected), exact: false };
+}
+
+/** Retrouver le mot à partir de sa définition, et le taper. */
+export function buildTypedWordQuestion(target: VocabularyItem, pool: VocabularyItem[]): TypedQuestion {
+  const otherTerms = pool.filter((item) => !sameTerm(item.content, target.content)).map((item) => item.content.term);
+  return {
+    type: "typed",
+    itemId: target.id,
+    exercise: typedWord.id,
+    prompt: maskedDefinition(target),
+    input: "text",
+    expected: target.content.term,
+    grade: (answer) => gradeTypedTerm(answer, target.content.term, otherTerms),
+  };
+}
+
+const typedWord: Exercise<VocabularyContent> = {
+  id: "vocabulary.definition-to-word-typed",
+  mode: "typed",
+  follows: definitionToWord.id,
+  label: "Le mot, tapé",
+  instruction: "Tape le mot",
+  promptStyle: "text",
+  choiceStyle: "short",
+  build: (target, pool) => buildTypedWordQuestion(target, pool),
 };
 
 export const vocabularyModel: CategoryModel<VocabularyContent, VocabularyDraft> = {
@@ -106,7 +155,7 @@ export const vocabularyModel: CategoryModel<VocabularyContent, VocabularyDraft> 
   subtitle: (content) => content.definition,
   searchTexts: (content) => [content.term, content.definition],
 
-  exercises: [wordToDefinition, definitionToWord],
+  exercises: [wordToDefinition, definitionToWord, typedWord],
   canBuildQuestions: (items) =>
     hasEnoughDistinct(items.map((item) => item.content.term)) &&
     hasEnoughDistinct(items.map((item) => item.content.definition)),

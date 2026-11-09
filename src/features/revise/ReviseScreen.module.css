@@ -116,6 +116,47 @@ button.splitButton {
   font-variant-numeric: tabular-nums;
 }
 
+/* Par époque : une ligne sous les tuiles (elle ouvre le choix de l'époque) */
+.eraRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  text-align: left;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.eraRow:active {
+  transform: scale(0.985);
+}
+
+.eraRow .tileIcon {
+  margin-bottom: 0;
+}
+
+.eraText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.eraText .tileCount {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  display: flex;
+  color: var(--ink-faint);
+}
+
 /* Texte destiné aux lecteurs d'écran uniquement */
 .hidden {
   position: absolute;

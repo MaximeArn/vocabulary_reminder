@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { seededRandom } from "../../domain/random";
 import { vocabularyItem } from "../../test/factories";
-import { findSameTerm, maskTerm, vocabularyModel } from "./model";
+import type { ChoiceQuestion } from "../../domain/quiz";
+import type { Item } from "../../domain/types";
+import { buildTypedWordQuestion, findSameTerm, gradeTypedTerm, maskTerm, vocabularyModel, type VocabularyContent } from "./model";
 
-const [wordToDefinition, definitionToWord] = vocabularyModel.exercises;
+/** Les exercices à choix, avec des questions typées comme telles. */
+const asChoice = (exercise: (typeof vocabularyModel.exercises)[number]) => ({
+  build: (target: Item<VocabularyContent>, pool: Item<VocabularyContent>[], random?: () => number) =>
+    exercise.build(target, pool, random) as ChoiceQuestion | null,
+});
+const [wordToDefinition, definitionToWord] = vocabularyModel.exercises.filter((exercise) => exercise.mode === "choice").map(asChoice);
 
 const collection = [
   vocabularyItem("dextre", "Droite."),
@@ -117,5 +124,39 @@ describe("maskTerm", () => {
 
   it("supporte les caractères spéciaux d'expression régulière", () => {
     expect(maskTerm("a (b) c", "(b)")).toBe("a … c");
+  });
+});
+
+describe("mot tapé", () => {
+  it("accepte accents, majuscules et tirets absents, en signalant l'orthographe exacte", () => {
+    expect(gradeTypedTerm("alacrité", "alacrité")).toEqual({ correct: true, exact: true });
+    expect(gradeTypedTerm("Alacrité ", "alacrité")).toEqual({ correct: true, exact: true });
+    expect(gradeTypedTerm("alacrite", "alacrité")).toEqual({ correct: true, exact: false });
+    expect(gradeTypedTerm("peut etre", "peut-être")).toEqual({ correct: true, exact: false });
+  });
+
+  it("tolère une petite faute, deux pour un mot long, aucune pour un mot très court", () => {
+    expect(gradeTypedTerm("alcarité", "alacrité").correct).toBe(true); // inversion
+    expect(gradeTypedTerm("frute", "fruste").correct).toBe(true); // lettre manquante
+    expect(gradeTypedTerm("frutse", "fruste").correct).toBe(true);
+    expect(gradeTypedTerm("frutt", "fruste").correct).toBe(false);
+    expect(gradeTypedTerm("resipicense", "résipiscence").correct).toBe(true); // 2 fautes, 12 lettres
+    expect(gradeTypedTerm("ire", "ira").correct).toBe(false);
+  });
+
+  it("refuse un autre mot de la collection, même proche", () => {
+    expect(gradeTypedTerm("dextre", "dexter", ["dextre"]).correct).toBe(false);
+  });
+
+  it("refuse une saisie vide ou sans rapport", () => {
+    expect(gradeTypedTerm("", "fruste").correct).toBe(false);
+    expect(gradeTypedTerm("sybarite", "fruste").correct).toBe(false);
+  });
+
+  it("pose la définition masquée et attend le mot exact", () => {
+    const question = buildTypedWordQuestion(collection[3]!, collection);
+    expect(question.prompt).not.toMatch(/férule/i);
+    expect(question.expected).toBe("férule");
+    expect(question.grade("ferule").correct).toBe(true);
   });
 });

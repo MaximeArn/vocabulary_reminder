@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { recordAnswer } from "../../data/reviewsRepository";
 import type { Card } from "../../domain/card";
-import type { Question } from "../../domain/quiz";
+import { gradeResponse, type ItemGrade, type Outcome, type Question, type QuestionResponse } from "../../domain/quiz";
+import { shuffle } from "../../domain/random";
 import type { SessionItem } from "../../domain/session";
 import { findExercise } from "../../categories/registry";
 import { useToast } from "../../ui/Toast";
@@ -14,8 +15,9 @@ interface SessionEntry {
   isRetry: boolean;
 }
 
+/** Résultat d'une question : une note par fiche concernée (plusieurs pour un classement). */
 export interface AnswerResult {
-  itemId: string;
+  grades: ItemGrade[];
   correct: boolean;
   isRetry: boolean;
 }
@@ -28,31 +30,35 @@ export function useReviewSession(cards: Card[], plan: SessionItem[], today: stri
   const showToast = useToast();
   const [entries, setEntries] = useState<SessionEntry[]>(() => buildEntries(plan, cards));
   const [position, setPosition] = useState(0);
-  const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [results, setResults] = useState<AnswerResult[]>([]);
 
   const current = entries[position];
 
-  const answer = (choiceId: string) => {
-    if (!current || selectedChoiceId !== null) return;
+  const submit = (response: QuestionResponse) => {
+    if (!current || outcome !== null) return;
     const { item, question, isRetry } = current;
-    const correct = choiceId === question.correctChoiceId;
+    const graded = gradeResponse(question, response);
 
-    setSelectedChoiceId(choiceId);
-    setResults((previous) => [...previous, { itemId: item.itemId, correct, isRetry }]);
+    setOutcome(graded);
+    setResults((previous) => [...previous, { grades: graded.grades, correct: graded.correct, isRetry }]);
 
     if (isRetry) return;
-    recordAnswer(item.itemId, question.exercise, correct, today).catch(() =>
+    // Une réponse par fiche : un classement note chacun de ses événements.
+    Promise.all(graded.grades.map((grade) => recordAnswer(grade.itemId, question.exercise, grade.correct, today))).catch(() =>
       showToast({ message: "Cette réponse n’a pas pu être enregistrée." }),
     );
-    if (!correct) {
-      const retry = buildQuestion({ ...item, exercise: question.exercise }, cards);
+    if (!graded.correct) {
+      const retry =
+        question.type === "order"
+          ? { ...question, entries: shuffle(question.entries) }
+          : buildQuestion({ ...item, exercise: question.exercise }, cards);
       if (retry) setEntries((previous) => [...previous, { item, question: retry, isRetry: true }]);
     }
   };
 
   const next = () => {
-    setSelectedChoiceId(null);
+    setOutcome(null);
     setPosition((previous) => previous + 1);
   };
 
@@ -61,37 +67,46 @@ export function useReviewSession(cards: Card[], plan: SessionItem[], today: stri
     isRetry: current?.isRetry ?? false,
     position,
     total: entries.length,
-    selectedChoiceId,
-    answered: selectedChoiceId !== null,
+    outcome,
+    answered: outcome !== null,
     finished: position >= entries.length,
     results,
-    answer,
+    submit,
     next,
   };
 }
 
 /**
  * Construit la question d'une carte avec l'exercice prévu, parmi les fiches de sa
- * catégorie. Si c'est impossible (trop peu de fiches pour cet exercice), essaie
- * les autres exercices de la catégorie.
+ * catégorie (pour un classement : sans `excluded`, si possible). Si c'est impossible, essaie
+ * l'exercice à choix correspondant, puis les autres exercices à choix.
  */
-function buildQuestion(sessionItem: SessionItem, cards: Card[]): Question | null {
+function buildQuestion(sessionItem: SessionItem, cards: Card[], excluded: Set<string> = new Set()): Question | null {
   const found = findExercise(sessionItem.exercise);
   const target = cards.find((card) => card.item.id === sessionItem.itemId);
   if (!found || !target) return null;
   const pool = cards.filter((card) => card.item.kind === target.item.kind).map((card) => card.item);
-  const exercises = [found.exercise, ...found.category.exercises.filter((exercise) => exercise !== found.exercise)];
-  for (const exercise of exercises) {
-    const question = exercise.build(target.item, pool);
+  const narrowed = pool.filter((item) => item.id === target.item.id || !excluded.has(item.id));
+  const { category, exercise } = found;
+  const fallbacks = [
+    exercise,
+    ...category.exercises.filter((candidate) => candidate.id === exercise.follows),
+    ...category.exercises.filter((candidate) => candidate.mode === "choice" && candidate !== exercise),
+  ];
+  for (const candidate of fallbacks) {
+    const question =
+      (candidate.mode === "order" ? candidate.build(target.item, narrowed) : null) ?? candidate.build(target.item, pool);
     if (question) return question;
   }
   return null;
 }
 
 function buildEntries(plan: SessionItem[], cards: Card[]): SessionEntry[] {
+  // Un classement évite, si possible, les fiches déjà interrogées dans la session.
+  const planned = new Set(plan.map((item) => item.itemId));
   const entries: SessionEntry[] = [];
   for (const item of plan) {
-    const question = buildQuestion(item, cards);
+    const question = buildQuestion(item, cards, planned);
     if (question) entries.push({ item, question, isRetry: false });
   }
   return entries;

@@ -46,9 +46,9 @@ export function ReviewSession({ cards, plan, today, onClose, onRestart }: Review
               question={session.question}
               card={cards.find((card) => card.item.id === session.question?.itemId)}
               isRetry={session.isRetry}
-              selectedChoiceId={session.selectedChoiceId}
+              outcome={session.outcome}
               isLast={session.position === session.total - 1}
-              onAnswer={session.answer}
+              onSubmit={session.submit}
               onNext={session.next}
             />
           )}

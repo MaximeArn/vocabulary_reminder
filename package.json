@@ -1,7 +1,7 @@
 {
   "name": "mneme",
   "private": true,
-  "version": "0.12.2",
+  "version": "0.13.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "icons": "python3 scripts/icons/generate-icons.py",
-    "check:ios": "node scripts/ios/check-words.mjs && node scripts/ios/check-review.mjs && node scripts/ios/check-dates.mjs && node scripts/ios/check-sync.mjs"
+    "check:ios": "node scripts/ios/check-words.mjs && node scripts/ios/check-review.mjs && node scripts/ios/check-dates.mjs && node scripts/ios/check-exercises.mjs && node scripts/ios/check-sync.mjs"
   },
   "dependencies": {
     "@fontsource-variable/literata": "^5.3.0",

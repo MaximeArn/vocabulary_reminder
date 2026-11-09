@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { seededRandom } from "../../domain/random";
 import type { Item } from "../../domain/types";
+import { gradeOrder } from "../../domain/quiz";
 import type { HistoricalDate } from "./dates";
+import { eraOf } from "./eras";
 import {
   buildDateToEventQuestion,
   buildEventToDateQuestion,
+  buildOrderQuestion,
+  buildTypedYearQuestion,
+  gradeTypedYear,
   dateFromDraft,
   emptyDateDraft,
   historicalEventModel,
@@ -166,5 +171,74 @@ describe("validateContent", () => {
   it("accepte un événement valide et refuse une date impossible", () => {
     expect(historicalEventModel.validateContent(gaugameles.content).start.year).toBe(-331);
     expect(() => historicalEventModel.validateContent({ name: "x", start: { year: 0, precision: "year" } })).toThrow(/an 0/);
+  });
+});
+
+describe("taper l'année", () => {
+  it("n'accepte que l'année exacte, et indique l'écart", () => {
+    expect(gradeTypedYear("1789", 1789)).toEqual({ correct: true, exact: true });
+    expect(gradeTypedYear("1786", 1789)).toMatchObject({ correct: false, detail: "3 ans trop tôt" });
+    expect(gradeTypedYear("1790", 1789)).toMatchObject({ correct: false, detail: "1 an trop tard" });
+    expect(gradeTypedYear("-1", 1)).toMatchObject({ correct: false, detail: "Bonne année, mais après J.-C." });
+    expect(gradeTypedYear("331", -331)).toMatchObject({ correct: false, detail: "Bonne année, mais avant J.-C." });
+    expect(gradeTypedYear("-2", 1)).toMatchObject({ detail: "2 ans trop tôt" }); // pas d'an 0
+    expect(gradeTypedYear("abc", 1789).correct).toBe(false);
+  });
+
+  it("ne porte que sur les dates connues à l'année près", () => {
+    expect(buildTypedYearQuestion(gaugameles)!.expected).toBe("331 av. J.-C.");
+    expect(buildTypedYearQuestion(bastille)!.expected).toBe("1789");
+    expect(buildTypedYearQuestion(centJans)!.instruction).toMatch(/commence/);
+    expect(buildTypedYearQuestion(event("Siècle de Périclès", year(-500, { precision: "century" })))).toBeNull();
+  });
+});
+
+describe("remettre dans l'ordre", () => {
+  const pool = [
+    ...all,
+    event("Fondation de Rome", year(-753, { circa: true })),
+    event("Ve siècle av. J.-C.", year(-500, { precision: "century" })),
+    event("Bataille de Marignan", year(1515)),
+    event("Sacre de Napoléon", year(1804, { precision: "day", month: 12, day: 2 })),
+  ];
+
+  it("classe 4 événements sans ambiguïté, rangs de 0 à 3 dans l'ordre des dates", () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      for (const target of pool) {
+        const question = buildOrderQuestion(target, pool, seededRandom(seed));
+        if (!question) continue;
+        expect(question.entries).toHaveLength(4);
+        expect(question.entries.map((entry) => entry.itemId)).toContain(target.id);
+        const byRank = [...question.entries].sort((a, b) => a.rank - b.rank);
+        expect(byRank.map((entry) => entry.rank)).toEqual([0, 1, 2, 3]);
+        // Le Ve siècle av. J.-C. recouvre Marathon et Salamine : jamais ensemble.
+        const names = question.entries.map((entry) => entry.label);
+        if (names.includes("Ve siècle av. J.-C.")) expect(names).not.toContain("Bataille de Marathon");
+      }
+    }
+  });
+
+  it("n'est pas possible avec trop peu d'événements distincts", () => {
+    expect(buildOrderQuestion(marathon, [marathon, salamine, platees])).toBeNull();
+  });
+
+  it("ne compte comme mal placé que ce qu'il faut déplacer", () => {
+    const entries = ["a", "b", "c", "d"].map((itemId, rank) => ({ itemId, rank, label: itemId, detail: "" }));
+    const wrong = (order: string[]) => gradeOrder(entries, order).filter((grade) => !grade.correct).map((grade) => grade.itemId);
+    expect(wrong(["a", "b", "c", "d"])).toEqual([]);
+    expect(wrong(["b", "a", "c", "d"])).toHaveLength(1);
+    expect(wrong(["d", "a", "b", "c"])).toEqual(["d"]);
+    expect(wrong(["d", "c", "b", "a"])).toHaveLength(3);
+  });
+});
+
+describe("époques", () => {
+  it("rangent un événement selon son début, l'événement fondateur ouvrant l'époque", () => {
+    expect(eraOf(marathon.content).label).toBe("Antiquité");
+    expect(eraOf(event("Chute de Rome", year(476)).content).label).toBe("Moyen Âge");
+    expect(eraOf(centJans.content).label).toBe("Moyen Âge");
+    expect(eraOf(event("Découverte de l’Amérique", year(1492)).content).label).toBe("Temps modernes");
+    expect(eraOf(bastille.content).label).toBe("Époque contemporaine");
+    expect(eraOf(event("Lascaux", year(-17000, { circa: true })).content).label).toBe("Préhistoire");
   });
 });

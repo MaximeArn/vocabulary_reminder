@@ -1,4 +1,11 @@
-import { buildChoiceQuestion, CHOICE_COUNT, type Question } from "../../domain/quiz";
+import {
+  buildChoiceQuestion,
+  CHOICE_COUNT,
+  type ChoiceQuestion,
+  type OrderQuestion,
+  type TypedGrade,
+  type TypedQuestion,
+} from "../../domain/quiz";
 import { shuffle, type Random } from "../../domain/random";
 import { cleanOptionalText, cleanText, comparisonKey } from "../../domain/text";
 import type { Item } from "../../domain/types";
@@ -17,6 +24,7 @@ import {
   chronologicalKey,
   dateProblem,
   decadeOf,
+  formatDate,
   formatSpan,
   shiftYear,
   toAstronomical,
@@ -179,7 +187,7 @@ export function buildEventToDateQuestion(
   pool: EventItem[],
   random: Random = Math.random,
   currentYear = new Date().getFullYear(),
-): Question | null {
+): ChoiceQuestion | null {
   const content = target.content;
   const offsets = offsetsFor(content.start, currentYear);
   const maxOffset = Math.max(...offsets);
@@ -207,6 +215,7 @@ export function buildEventToDateQuestion(
   if (distractors.length < CHOICE_COUNT - 1) return null;
 
   return {
+    type: "choice",
     itemId: target.id,
     exercise: eventToDate.id,
     prompt: content.name,
@@ -224,7 +233,7 @@ const NEAREST_EVENTS = 5;
  * événements de la collection, les plus proches dans le temps d'abord.
  * Un événement de même date affichée n'est jamais proposé (il serait correct lui aussi).
  */
-export function buildDateToEventQuestion(target: EventItem, pool: EventItem[], random: Random = Math.random): Question | null {
+export function buildDateToEventQuestion(target: EventItem, pool: EventItem[], random: Random = Math.random): ChoiceQuestion | null {
   const targetLabel = eventDateLabel(target.content);
   const targetKey = chronologicalKey(target.content.start);
   const others = pool
@@ -245,6 +254,7 @@ export function buildDateToEventQuestion(target: EventItem, pool: EventItem[], r
 
 const eventToDate: Exercise<HistoricalEventContent> = {
   id: "historical-event.event-to-date",
+  mode: "choice",
   label: "La date",
   instruction: "Quand ?",
   promptStyle: "headline",
@@ -254,11 +264,163 @@ const eventToDate: Exercise<HistoricalEventContent> = {
 
 const dateToEvent: Exercise<HistoricalEventContent> = {
   id: "historical-event.date-to-event",
+  mode: "choice",
   label: "L’événement",
   instruction: "Quel événement ?",
   promptStyle: "headline",
   choiceStyle: "short",
   build: (target, pool, random) => buildDateToEventQuestion(target, pool, random),
+};
+
+/* ---------- Taper l'année ---------- */
+
+/** Seules les dates connues à l'année près se prêtent à une saisie exacte. */
+const typableYear = (content: HistoricalEventContent) => ["day", "month", "year"].includes(content.start.precision);
+
+/** Libellé d'une année seule : « 1789 », « 331 av. J.-C. ». */
+const yearLabel = (year: number) => formatDate({ year, precision: "year", circa: false });
+
+/**
+ * Corrige une année tapée (année historienne : « -331 » pour 331 av. J.-C.).
+ * Seule l'année exacte est juste ; l'écart est indiqué.
+ */
+export function gradeTypedYear(answer: string, expected: number): TypedGrade {
+  const year = Number(answer.trim());
+  if (!Number.isInteger(year) || year === 0) return { correct: false, exact: false };
+  if (year === expected) return { correct: true, exact: true };
+  if (year === -expected) {
+    return { correct: false, exact: false, detail: `Bonne année, mais ${expected < 0 ? "avant" : "après"} J.-C.` };
+  }
+  const gap = toAstronomical(year) - toAstronomical(expected);
+  const years = Math.abs(gap);
+  return { correct: false, exact: false, detail: `${years} ${years > 1 ? "ans" : "an"} trop ${gap < 0 ? "tôt" : "tard"}` };
+}
+
+export function buildTypedYearQuestion(target: EventItem): TypedQuestion | null {
+  const content = target.content;
+  if (!typableYear(content)) return null;
+  const year = content.start.year;
+  return {
+    type: "typed",
+    itemId: target.id,
+    exercise: typedYear.id,
+    prompt: content.name,
+    instruction: content.end ? "En quelle année commence-t-elle ?" : "En quelle année ?",
+    input: "year",
+    expected: yearLabel(year),
+    grade: (answer) => gradeTypedYear(answer, year),
+  };
+}
+
+const typedYear: Exercise<HistoricalEventContent> = {
+  id: "historical-event.event-to-year-typed",
+  mode: "typed",
+  follows: eventToDate.id,
+  accepts: (target) => typableYear(target.content),
+  label: "L’année, tapée",
+  instruction: "En quelle année ?",
+  promptStyle: "headline",
+  choiceStyle: "short",
+  build: (target) => buildTypedYearQuestion(target),
+};
+
+/* ---------- Remettre dans l'ordre ---------- */
+
+/** Nombre d'événements à classer. */
+export const ORDER_SIZE = 4;
+/** Événements les plus proches parmi lesquels choisir les autres (de quoi varier, sans rendre la question triviale). */
+const ORDER_NEIGHBOURS = 8;
+
+const UNITS_PER_YEAR = 400;
+/** Marge d'une date « vers… », en années, selon sa précision. */
+const CIRCA_MARGIN: Record<Precision, number> = { day: 5, month: 5, year: 5, decade: 10, century: 25 };
+
+/**
+ * Intervalle de temps que recouvre le début d'un événement, selon sa précision
+ * (un siècle couvre cent ans, « vers 480 » quelques années de part et d'autre).
+ * Deux événements dont les intervalles se chevauchent ne peuvent pas être classés.
+ */
+export function timeSpan(date: HistoricalDate): [number, number] {
+  const year = toAstronomical(date.year) * UNITS_PER_YEAR;
+  let span: [number, number];
+  switch (date.precision) {
+    case "day": {
+      const point = year + (date.month ?? 1) * 32 + (date.day ?? 1);
+      span = [point, point];
+      break;
+    }
+    case "month": {
+      const month = year + (date.month ?? 1) * 32;
+      span = [month, month + 31];
+      break;
+    }
+    case "year":
+      span = [year, year + UNITS_PER_YEAR - 1];
+      break;
+    case "decade":
+      // Avant J.-C., « les années 480 » courent de 489 à 480 : on couvre les deux sens.
+      span = date.year < 0 ? [year - 9 * UNITS_PER_YEAR, year + 10 * UNITS_PER_YEAR - 1] : [year, year + 10 * UNITS_PER_YEAR - 1];
+      break;
+    case "century":
+      span = [year, year + 100 * UNITS_PER_YEAR - 1];
+      break;
+  }
+  if (!date.circa) return span;
+  const margin = CIRCA_MARGIN[date.precision] * UNITS_PER_YEAR;
+  return [span[0] - margin, span[1] + margin];
+}
+
+const overlaps = (a: [number, number], b: [number, number]) => a[0] <= b[1] && b[0] <= a[1];
+
+/**
+ * Remettre quatre événements dans l'ordre chronologique (selon leur début).
+ * Les trois autres sont choisis parmi les plus proches dans le temps, sans
+ * ambiguïté possible : leurs dates ne se recouvrent pas.
+ */
+export function buildOrderQuestion(target: EventItem, pool: EventItem[], random: Random = Math.random): OrderQuestion | null {
+  const spanOf = (item: EventItem) => timeSpan(item.content.start);
+  const middle = (item: EventItem) => (spanOf(item)[0] + spanOf(item)[1]) / 2;
+  const targetMiddle = middle(target);
+  const candidates = pool
+    .filter((item) => item.id !== target.id && !overlaps(spanOf(item), spanOf(target)))
+    .sort((a, b) => Math.abs(middle(a) - targetMiddle) - Math.abs(middle(b) - targetMiddle));
+
+  const pick = (from: EventItem[]) => {
+    const chosen = [target];
+    for (const candidate of from) {
+      if (chosen.length === ORDER_SIZE) break;
+      const distinctName = chosen.every((item) => comparisonKey(item.content.name) !== comparisonKey(candidate.content.name));
+      if (distinctName && chosen.every((item) => !overlaps(spanOf(item), spanOf(candidate)))) chosen.push(candidate);
+    }
+    return chosen.length === ORDER_SIZE ? chosen : null;
+  };
+  const chosen =
+    pick(shuffle(candidates.slice(0, ORDER_NEIGHBOURS), random)) ?? pick([...candidates.slice(0, ORDER_NEIGHBOURS), ...candidates.slice(ORDER_NEIGHBOURS)]);
+  if (!chosen) return null;
+
+  const chronological = [...chosen].sort((a, b) => spanOf(a)[0] - spanOf(b)[0]);
+  return {
+    type: "order",
+    itemId: target.id,
+    exercise: chronologicalOrder.id,
+    prompt: "Du plus ancien au plus récent",
+    entries: shuffle(chosen, random).map((item) => ({
+      itemId: item.id,
+      label: item.content.name,
+      detail: eventDateLabel(item.content),
+      rank: chronological.indexOf(item),
+    })),
+  };
+}
+
+const chronologicalOrder: Exercise<HistoricalEventContent> = {
+  id: "historical-event.chronological-order",
+  mode: "order",
+  label: "Remettre dans l’ordre",
+  instruction: "Remets dans l’ordre",
+  promptStyle: "text",
+  choiceStyle: "short",
+  build: (target, pool, random) => buildOrderQuestion(target, pool, random),
 };
 
 /* ---------- Validation d'un contenu venu de l'extérieur ---------- */
@@ -314,7 +476,7 @@ export const historicalEventModel: CategoryModel<HistoricalEventContent, Histori
       (text): text is string => text !== undefined,
     ),
 
-  exercises: [eventToDate, dateToEvent],
+  exercises: [eventToDate, dateToEvent, typedYear, chronologicalOrder],
   // Retrouver la date fonctionne dès le premier événement (les dates proposées sont fabriquées).
   canBuildQuestions: (items) => items.length > 0,
 

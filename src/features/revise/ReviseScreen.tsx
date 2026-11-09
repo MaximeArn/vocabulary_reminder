@@ -3,7 +3,8 @@ import { Screen } from "../../ui/Screen";
 import { Panel } from "../../ui/Panel";
 import { Button } from "../../ui/Button";
 import { CategoryToggle } from "../../ui/CategoryToggle";
-import { FlameIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
+import { ActionSheet } from "../../ui/ActionSheet";
+import { ChevronRightIcon, FlameIcon, HourglassIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
 import { formatCardCount, formatRelativeDay } from "../../ui/format";
 import { InstallHint } from "../../pwa/InstallHint";
 import { CHOICE_COUNT } from "../../domain/quiz";
@@ -12,6 +13,7 @@ import {
   RECENT_DAYS,
   countDue,
   nextDueDay,
+  planDraw,
   planPractice,
   planSession,
   practiceCandidates,
@@ -21,6 +23,10 @@ import {
 import { activityByDay, currentStreak } from "../../domain/progress";
 import { addDays } from "../../domain/studyDay";
 import { CATEGORIES, findCategory, presentCategories, unitFor } from "../../categories/registry";
+import { chooseExercise } from "../../categories/exercisePlan";
+import { formatCount } from "../../categories/model";
+import { historicalEventModel, ORDER_SIZE, type HistoricalEventContent } from "../../categories/historical-event/model";
+import { ERAS, eraOf } from "../../categories/historical-event/eras";
 import { useCards } from "../collection/useCards";
 import { useReviews } from "../review/useReviews";
 import { useToday } from "../review/useToday";
@@ -73,6 +79,7 @@ export function ReviseScreen() {
   const today = useToday();
   const settings = useReviewSettings();
   const [session, setSession] = useState<RunningSession | null>(null);
+  const [choosingEra, setChoosingEra] = useState(false);
 
   if (cards === undefined || reviews === undefined) {
     return <Screen title="Réviser" />;
@@ -88,22 +95,41 @@ export function ReviseScreen() {
   const category = findCategory(kind);
   const answeredToday = activityByDay(reviews, [today])[0]?.answered ?? 0;
 
-  // Exercices possibles pour une carte : ceux de sa catégorie, ou celui imposé dans les réglages.
-  const exercisesFor = (card: Card) => {
-    const ids = findCategory(card.item.kind)?.exercises.map((exercise) => exercise.id) ?? [];
-    const preference = settings.exercisePreference(card.item.kind);
-    return ids.includes(preference) ? [preference] : ids;
-  };
+  // Exercice d'une carte : selon sa catégorie, son niveau et le réglage de l'utilisateur.
+  const exerciseFor = (card: Card, rotation: number) =>
+    chooseExercise(card, rotation, settings.exercisePreference(card.item.kind));
+
+  // Par époque : les dates révisables, rangées par époque.
+  const dates = reviewable.filter((card) => card.item.kind === historicalEventModel.kind);
+  const datesByEra = new Map(ERAS.map((era) => [era.id, [] as Card[]]));
+  for (const card of dates) datesByEra.get(eraOf(card.item.content as HistoricalEventContent).id)!.push(card);
+  const eras = ERAS.filter((era) => datesByEra.get(era.id)!.length > 0);
 
   // Une session part d'un instantané de la collection : elle reste stable pendant les réponses.
   // Toutes les cartes sont transmises : les mauvaises réponses se tirent dans toute la catégorie.
-  const start = (makePlan: () => SessionItem[]) => {
-    const launch = () => setSession({ id: Date.now(), cards, plan: makePlan(), restart: launch });
+  // `makePlan` peut restreindre les fiches de la session (une époque) : les autres questions s'y tiennent.
+  const start = (makePlan: () => SessionItem[] | { plan: SessionItem[]; cards: Card[] }) => {
+    const launch = () => {
+      const made = makePlan();
+      const planned = Array.isArray(made) ? { plan: made, cards } : made;
+      setSession({ id: Date.now(), ...planned, restart: launch });
+    };
     launch();
   };
-  const startDaily = () => start(() => planSession(reviewable, today, settings.sessionSize, exercisesFor));
+  const startDaily = () => start(() => planSession(reviewable, today, settings.sessionSize, exerciseFor));
   const startPractice = (practice: PracticeKind) =>
-    start(() => planPractice(reviewable, practice, settings.sessionSize, Date.now(), exercisesFor));
+    start(() => planPractice(reviewable, practice, settings.sessionSize, Date.now(), exerciseFor));
+  /** Une époque donnée, ou tirée au hasard (à chaque session) parmi celles qui ont des dates. */
+  const startEra = (eraId: string | "random") => {
+    setChoosingEra(false);
+    start(() => {
+      const id = eraId === "random" ? eras[Math.floor(Math.random() * eras.length)]!.id : eraId;
+      const eraCards = datesByEra.get(id) ?? [];
+      const plan = planDraw(eraCards, settings.sessionSize, exerciseFor);
+      // Classements et propositions restent dans l'époque, si elle a assez de dates pour cela.
+      return { plan, cards: eraCards.length >= ORDER_SIZE ? eraCards : cards };
+    });
+  };
 
   return (
     <Screen title="Réviser">
@@ -180,8 +206,45 @@ export function ReviseScreen() {
               );
             })}
           </div>
+          {eras.length > 0 && (
+            <button
+              type="button"
+              className={styles.eraRow}
+              onClick={() => setChoosingEra(true)}
+              aria-label="Par époque"
+              aria-describedby="practice-eras"
+              aria-haspopup="dialog"
+            >
+              <span className={styles.tileIcon} style={{ color: historicalEventModel.color }}>
+                <HourglassIcon size={22} />
+              </span>
+              <span className={styles.eraText}>
+                <span className={styles.tileTitle}>Par époque</span>
+                <span className={styles.tileCount} id="practice-eras">
+                  {eras.map((era) => era.label).join(", ")}
+                </span>
+              </span>
+              <span className={styles.chevron}>
+                <ChevronRightIcon size={18} />
+              </span>
+            </button>
+          )}
           <p className={styles.footnote}>Une bonne réponse en entraînement n’avance pas le planning ; une erreur, si.</p>
         </section>
+      )}
+
+      {choosingEra && (
+        <ActionSheet
+          title="Réviser une époque"
+          options={[
+            ...(eras.length > 1 ? [{ label: "Époque au hasard", onSelect: () => startEra("random") }] : []),
+            ...eras.map((era) => ({
+              label: `${era.label} · ${formatCount(datesByEra.get(era.id)!.length, historicalEventModel.unit)}`,
+              onSelect: () => startEra(era.id),
+            })),
+          ]}
+          onCancel={() => setChoosingEra(false)}
+        />
       )}
 
       {session && (

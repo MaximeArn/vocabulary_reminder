@@ -17,16 +17,18 @@ export interface SessionItem {
  * 1. les cartes à réviser, de la plus en retard à la moins en retard (les plus fragiles d'abord) ;
  * 2. les nouvelles cartes, de la plus ancienne à la plus récente ;
  * 3. si la session n'est pas pleine, de l'entraînement sur les prochaines cartes à réviser.
- * L'ordre des questions est ensuite mélangé, et les types d'exercice alternent.
+ * L'ordre des questions est ensuite mélangé.
  *
- * `exercisesFor` donne les exercices possibles pour une carte (selon sa catégorie
- * et les préférences de l'utilisateur).
+ * `chooseExercise` donne l'exercice d'une carte (selon sa catégorie, son niveau et
+ * les préférences de l'utilisateur) ; `rotation` permet d'alterner les exercices.
  */
+export type ExerciseChooser = (card: Card, rotation: number) => string | undefined;
+
 export function planSession(
   cards: Card[],
   today: string,
   size: number,
-  exercisesFor: (card: Card) => string[],
+  chooseExercise: ExerciseChooser,
   random: Random = Math.random,
 ): SessionItem[] {
   const due = cards.filter((card) => isDue(card.progress, today) && card.progress.box > 0).sort(byUrgency);
@@ -35,13 +37,15 @@ export function planSession(
     .sort((a, b) => a.item.createdAt - b.item.createdAt);
   const upcoming = cards.filter((card) => !isDue(card.progress, today)).sort(byUrgency);
 
-  const selected = shuffle([...due, ...fresh, ...upcoming].slice(0, size), random);
-  const offset = random() < 0.5 ? 0 : 1;
+  return assignExercises(shuffle([...due, ...fresh, ...upcoming].slice(0, size), random), chooseExercise, random);
+}
 
+/** Associe à chaque carte son exercice ; l'alternance commence au hasard. */
+function assignExercises(cards: Card[], chooseExercise: ExerciseChooser, random: Random): SessionItem[] {
+  const offset = random() < 0.5 ? 0 : 1;
   const items: SessionItem[] = [];
-  selected.forEach((card, index) => {
-    const exercises = exercisesFor(card);
-    const exercise = exercises[(index + offset) % Math.max(exercises.length, 1)];
+  cards.forEach((card, index) => {
+    const exercise = chooseExercise(card, index + offset);
     if (exercise) items.push({ itemId: card.item.id, exercise });
   });
   return items;
@@ -101,17 +105,15 @@ export function planPractice(
   kind: PracticeKind,
   size: number,
   now: number,
-  exercisesFor: (card: Card) => string[],
+  chooseExercise: ExerciseChooser,
   random: Random = Math.random,
 ): SessionItem[] {
   const candidates = practiceCandidates(cards, kind, now);
-  const chosen = kind === "random" ? shuffle(candidates, random).slice(0, size) : candidates.slice(0, size);
-  const offset = random() < 0.5 ? 0 : 1;
-  const items: SessionItem[] = [];
-  shuffle(chosen, random).forEach((card, index) => {
-    const exercises = exercisesFor(card);
-    const exercise = exercises[(index + offset) % Math.max(exercises.length, 1)];
-    if (exercise) items.push({ itemId: card.item.id, exercise });
-  });
-  return items;
+  if (kind === "random") return planDraw(candidates, size, chooseExercise, random);
+  return assignExercises(shuffle(candidates.slice(0, size), random), chooseExercise, random);
+}
+
+/** Entraînement sur un tirage au hasard parmi ces cartes (une époque, par exemple). */
+export function planDraw(cards: Card[], size: number, chooseExercise: ExerciseChooser, random: Random = Math.random): SessionItem[] {
+  return assignExercises(shuffle(cards, random).slice(0, size), chooseExercise, random);
 }

@@ -149,6 +149,15 @@ export function LaurelIcon(props: IconProps) {
   );
 }
 
+/** Un sablier : le temps long, pour réviser par époque. */
+export function HourglassIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M6.5 3.5h11M6.5 20.5h11M8 3.5c0 4.5 3 5.6 3 8.5s-3 4-3 8.5M16 3.5c0 4.5-3 5.6-3 8.5s3 4 3 8.5M9.5 18.5h5" />
+    </Svg>
+  );
+}
+
 export function ClockIcon(props: IconProps) {
   return (
     <Svg {...props}>

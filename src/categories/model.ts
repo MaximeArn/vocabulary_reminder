@@ -13,10 +13,21 @@ import type { Item } from "../domain/types";
 /** Erreur de contenu, avec un message destiné à l'utilisateur. */
 export class InvalidContentError extends Error {}
 
-/** Un type de question pour une catégorie (« retrouver la définition »…). */
+/**
+ * Un type de question pour une catégorie (« retrouver la définition »…).
+ * - « choice » : choisir parmi quatre propositions (le sens se règle dans Réglages) ;
+ * - « typed » : taper la réponse, version exigeante d'un exercice « choice » (`follows`),
+ *   proposée une fois la fiche acquise ;
+ * - « order » : remettre plusieurs fiches dans l'ordre, de temps en temps.
+ */
 export interface Exercise<Content> {
   /** Identifiant stable, préfixé par la catégorie : « vocabulary.word-to-definition ». */
   id: string;
+  mode: "choice" | "typed" | "order";
+  /** Pour une saisie : l'exercice à choix dont elle est la version tapée. */
+  follows?: string;
+  /** L'exercice convient-il à cette fiche ? (Par défaut, oui.) */
+  accepts?(target: Item<Content>): boolean;
   /** Libellé court, pour le choix du type de question (« La définition »). */
   label: string;
   /** Consigne affichée au-dessus de la question. */

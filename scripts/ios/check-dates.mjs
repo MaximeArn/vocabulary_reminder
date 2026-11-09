@@ -33,6 +33,19 @@ const EVENTS = {
   "Édit de Nantes et fin des guerres de Religion": "1598",
 };
 const nameOfDate = Object.fromEntries(Object.entries(EVENTS).map(([name, date]) => [date, name]));
+/** Position dans le temps (début), pour répondre aux questions « Remets dans l’ordre ». */
+const WHEN = {
+  "Bataille de Marathon": -490,
+  "Bataille de Salamine": -480,
+  "Bataille de Platées": -479,
+  "Bataille de Chéronée": -338,
+  "Prise de la Bastille": 1789.5,
+  "Bataille de Gaugamèles": -331,
+  "Guerre de Cent Ans": 1337,
+  "Construction du Parthénon": -450,
+  "Massacre de la Saint-Barthélemy": 1572,
+  "Édit de Nantes et fin des guerres de Religion": 1598,
+};
 
 const event = (id, name, start, extra = {}) => ({
   id,
@@ -71,6 +84,29 @@ async function readQuestion() {
       prompt: card.querySelector("h2").textContent,
       choices: [...card.querySelectorAll("[role=group] button")].map((b) => b.textContent),
     };`);
+}
+
+/**
+ * Question « Remets dans l’ordre » (glissée de temps en temps dans la session) :
+ * touche les événements dans l'ordre chronologique et vérifie le verdict.
+ * Renvoie `false` si ce n'est pas une question de classement.
+ */
+async function answerOrder(question) {
+  if (question.instruction !== "Remets dans l’ordre") return false;
+  const names = await safari.script(
+    `return [...document.querySelectorAll("[aria-label='Événements à classer'] button")].map((b) => b.getAttribute("aria-label"));`,
+  );
+  if (names.length !== 4 || names.some((name) => WHEN[name] === undefined)) throw new Error(`Classement inattendu : ${names}`);
+  const sorted = [...names].sort((a, b) => WHEN[a] - WHEN[b]);
+  for (const name of sorted.slice(0, 3)) {
+    await safari.script(
+      `[...document.querySelectorAll("[aria-label='Événements à classer'] button")].find((b) => b.getAttribute("aria-label") === arguments[0]).click();`,
+      [name],
+    );
+  }
+  await safari.clickButton("Valider");
+  await safari.waitForText("Bon ordre");
+  return true;
 }
 
 async function chooseAnswer(label) {
@@ -207,9 +243,15 @@ try {
   await step("Session de dates : 5 questions cohérentes, les deux sens, explication après chaque réponse", async () => {
     await startDailyReview(safari);
     const kinds = new Set();
+    const choiceParities = new Set();
     for (let index = 1; index <= 5; index++) {
       await safari.waitFor(`question ${index}`, async () => (await text()).includes(`${index} / 5`));
       const question = await readQuestion();
+      if (await answerOrder(question)) {
+        await safari.clickButton(index === 5 ? "Voir le bilan" : "Continuer");
+        continue;
+      }
+      choiceParities.add(index % 2);
       const asksDate = question.instruction !== "Quel événement ?";
       kinds.add(asksDate ? "date" : "événement");
       const expected = asksDate ? EVENTS[question.prompt] : nameOfDate[question.prompt];
@@ -227,10 +269,12 @@ try {
       if (index === 1) screenshot("dates-5-explication");
       await safari.clickButton(index === 5 ? "Voir le bilan" : "Continuer");
     }
-    if (kinds.size < 2) throw new Error("Les deux sens de question n’alternent pas");
+    // (Si les classements n'ont laissé que des questions de même rang pair ou impair, l'alternance ne se voit pas.)
+    if (kinds.size < 2 && choiceParities.size === 2) throw new Error("Les deux sens de question n’alternent pas");
     await safari.waitFor("score", async () => (await text()).includes("5 / 5"));
     await safari.clickButton("Terminer");
-    await safari.waitForText("5 dates à réviser.");
+    // 5 dates révisées… ou plus : un classement juste fait aussi réviser les autres dates dues qu'il contient.
+    await safari.waitFor("dates restantes", async () => /([1-5]) dates? à réviser\.|Tout est révisé/.test(await text()));
   });
 
   await step("Réglage par catégorie : « Dates : retrouver la date » seulement", async () => {
@@ -239,8 +283,11 @@ try {
     await chooseSegment(safari, "Dates : retrouver", "La date");
     await pause(300);
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
-    await safari.waitForText("5 dates à réviser.");
-    await startDailyReview(safari);
+    await safari.waitFor("révision", async () => /à réviser\.|Tout est révisé/.test(await text()));
+    // Plus rien à réviser (classements) : le réglage se vérifie sur un entraînement.
+    const allDone = (await text()).includes("Tout est révisé");
+    if (allDone) await safari.clickButton("En vrac");
+    else await startDailyReview(safari);
     // 3 dates dues, complétées par de l'entraînement jusqu'à la taille de session.
     await safari.waitFor("compteur", async () => /1 \/ \d+/.test(await text()));
     const total = Number((await text()).match(/1 \/ (\d+)/)[1]);
@@ -248,8 +295,10 @@ try {
       await safari.waitFor(`question ${index}`, async () => (await text()).includes(`${index} / ${total}`));
       const question = await readQuestion();
       if (question.instruction === "Quel événement ?") throw new Error("Question « événement » malgré le réglage");
-      await chooseAnswer(EVENTS[question.prompt]);
-      await safari.waitForText("Bonne réponse");
+      if (!(await answerOrder(question))) {
+        await chooseAnswer(EVENTS[question.prompt]);
+        await safari.waitForText("Bonne réponse");
+      }
       await safari.clickButton(index === total ? "Voir le bilan" : "Continuer");
     }
     await safari.clickButton("Terminer");

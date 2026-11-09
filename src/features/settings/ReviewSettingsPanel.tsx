@@ -21,10 +21,13 @@ export function ReviewSettingsPanel() {
           onChange={(value) => setSessionSize(Number(value))}
         />
       </div>
-      {CATEGORIES.filter((category) => category.exercises.length > 1).map((category) => {
+      {CATEGORIES.map((category) => {
+        // Seuls les exercices à choix se règlent ; saisie et classement s'y ajoutent d'eux-mêmes.
+        const choices = category.exercises.filter((exercise) => exercise.mode === "choice");
+        if (choices.length < 2) return null;
         const options: Record<string, string> = {
           mixed: "Les deux",
-          ...Object.fromEntries(category.exercises.map((exercise) => [exercise.id, exercise.label])),
+          ...Object.fromEntries(choices.map((exercise) => [exercise.id, exercise.label])),
         };
         const value = exercisePreference(category.kind);
         return (

@@ -40,3 +40,38 @@ export function stripSurroundingQuotes(text: string | undefined): string | undef
   const stripped = text.replace(/^[«"“]\s*/, "").replace(/\s*[»"”]$/, "").trim();
   return stripped === "" ? undefined : stripped;
 }
+
+/**
+ * Distance d'édition entre deux textes (Damerau-Levenshtein restreinte) :
+ * lettre manquante, en trop, fausse, ou deux lettres voisines inversées.
+ */
+export function editDistance(a: string, b: string): number {
+  const rows = a.length + 1;
+  const columns = b.length + 1;
+  const distance: number[][] = Array.from({ length: rows }, (_, i) =>
+    Array.from({ length: columns }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
+  );
+  for (let i = 1; i < rows; i += 1) {
+    for (let j = 1; j < columns; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let best = Math.min(distance[i - 1]![j]! + 1, distance[i]![j - 1]! + 1, distance[i - 1]![j - 1]! + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        best = Math.min(best, distance[i - 2]![j - 2]! + 1);
+      }
+      distance[i]![j] = best;
+    }
+  }
+  return distance[a.length]![b.length]!;
+}
+
+/** Clé pour corriger un mot tapé : comme `comparisonKey`, tirets et apostrophes comptant pour des espaces. */
+export function answerKey(text: string): string {
+  return comparisonKey(text).replace(/[-'’\s]+/g, " ").trim();
+}
+
+/** Fautes tolérées selon la longueur du mot : aucune jusqu'à 3 lettres, une, puis deux à partir de 8. */
+export function toleratedTypos(word: string): number {
+  const length = answerKey(word).length;
+  if (length <= 3) return 0;
+  return length >= 8 ? 2 : 1;
+}

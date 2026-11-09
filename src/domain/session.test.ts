@@ -12,7 +12,12 @@ const cards = [
   card("nouveau-ancien", { box: 0, dueDay: today }, 10),
   card("bientot", { box: 1, dueDay: "2026-11-05" }),
 ];
-const bothDirections = () => ["vocabulary.word-to-definition", "vocabulary.definition-to-word"];
+/** Choix d'exercice qui alterne entre ceux de la liste. */
+const rotate =
+  (exercises: string[]) =>
+  (_card: unknown, rotation: number): string | undefined =>
+    exercises[rotation % Math.max(exercises.length, 1)];
+const bothDirections = rotate(["vocabulary.word-to-definition", "vocabulary.definition-to-word"]);
 
 describe("planSession", () => {
   it("prend les cartes à réviser, puis les nouvelles, puis l'entraînement", () => {
@@ -36,12 +41,12 @@ describe("planSession", () => {
   });
 
   it("respecte un exercice imposé", () => {
-    const exercises = planSession(cards, today, 6, () => ["vocabulary.definition-to-word"]).map((item) => item.exercise);
+    const exercises = planSession(cards, today, 6, rotate(["vocabulary.definition-to-word"])).map((item) => item.exercise);
     expect(new Set(exercises)).toEqual(new Set(["vocabulary.definition-to-word"]));
   });
 
   it("écarte une carte sans exercice possible", () => {
-    expect(planSession(cards, today, 6, () => [])).toEqual([]);
+    expect(planSession(cards, today, 6, rotate([]))).toEqual([]);
   });
 });
 
@@ -77,13 +82,13 @@ describe("entraînements", () => {
   });
 
   it("« Tout en vrac » : un tirage au hasard dans toute la collection, sans doublon", () => {
-    const plan = planPractice(pool, "random", 3, now, () => ["e"], seededRandom(2));
+    const plan = planPractice(pool, "random", 3, now, rotate(["e"]), seededRandom(2));
     expect(plan).toHaveLength(3);
     expect(new Set(plan.map((item) => item.itemId)).size).toBe(3);
   });
 
   it("respecte la taille de session et les exercices possibles", () => {
-    const plan = planPractice(pool, "forgotten", 2, now, () => ["a", "b"], seededRandom(1));
+    const plan = planPractice(pool, "forgotten", 2, now, rotate(["a", "b"]), seededRandom(1));
     expect(plan.map((item) => item.itemId).sort()).toEqual(["oublie-une-fois", "souvent-oublie"]);
     expect(plan[0]!.exercise).not.toBe(plan[1]!.exercise);
   });

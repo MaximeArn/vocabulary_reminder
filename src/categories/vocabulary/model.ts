@@ -88,6 +88,8 @@ export const vocabularyModel: CategoryModel<VocabularyContent, VocabularyDraft> 
   addedMessage: (title) => `« ${title} » ajouté à ta collection`,
   color: "var(--vocabulary)",
   softColor: "var(--vocabulary-soft)",
+  fillColor: "var(--vocabulary-fill)",
+  onFillColor: "var(--on-vocabulary-fill)",
   searchPlaceholder: "Rechercher un mot, une définition…",
   listStyle: "definition",
 

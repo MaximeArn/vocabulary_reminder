@@ -182,7 +182,7 @@ try {
     await safari.type(search, "zzz");
     await safari.waitForText("Rien ne correspond");
     await safari.clear(search);
-    await safari.clickButton("A → Z");
+    await safari.clickButton("Alphabétique ↑");
     await safari.waitFor("ordre alphabétique", async () => {
       const terms = await safari.script(`return [...document.querySelectorAll("li p:first-child")].map((p) => p.textContent);`);
       return terms.join(",") === "Dextre,Fruste,Senestre";

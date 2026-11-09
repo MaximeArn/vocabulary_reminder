@@ -32,6 +32,11 @@
   --vocabulary-soft: #e3e8f0;
   --dates: #a8452c;
   --dates-soft: #f3e2db;
+  /* Remplissage des sélecteurs de catégorie : bleu pâle (vocabulaire), orangé (dates) */
+  --vocabulary-fill: #c3cfe0;
+  --on-vocabulary-fill: #1d1a16;
+  --dates-fill: #b5532f;
+  --on-dates-fill: #fbf8f2;
   --level-new: #e1d9cb;
   --level-learning: #c3cfe0;
   --level-progressing: #7d97b9;
@@ -95,6 +100,10 @@
     --vocabulary-soft: #222f42;
     --dates: #d0775c;
     --dates-soft: #3a2620;
+    --vocabulary-fill: #34496a;
+    --on-vocabulary-fill: #ece5d8;
+    --dates-fill: #c96a4a;
+    --on-dates-fill: #18160f;
     --level-new: #3a3630;
     --level-learning: #34496a;
     --level-progressing: #6d8cb6;

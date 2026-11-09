@@ -58,6 +58,9 @@ export interface CategoryModel<Content, Draft> {
   /** Couleur d'identité de la catégorie (variable CSS de `tokens.css`) et sa version claire. */
   color: string;
   softColor: string;
+  /** Remplissage d'un sélecteur quand la catégorie est choisie, et couleur du texte dessus. */
+  fillColor: string;
+  onFillColor: string;
   /** Texte d'aide du champ de recherche. */
   searchPlaceholder: string;
   /**

@@ -63,3 +63,55 @@ export function nextDueDay(cards: Card[], today: string): string | undefined {
     .filter((day) => day > today)
     .sort()[0];
 }
+
+/* ---------- Entraînements (accès rapides) ---------- */
+
+/**
+ * Révisions ciblées, en plus de la révision du jour. Ce sont des entraînements :
+ * une bonne réponse sur une fiche pas encore due ne fait pas avancer son planning
+ * (règle de `nextSchedule`), une erreur compte toujours.
+ */
+export type PracticeKind = "forgotten" | "recent" | "random";
+
+/** Une fiche est une « nouveauté » pendant les 7 jours qui suivent son ajout. */
+export const RECENT_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Cartes concernées par un entraînement, par ordre de priorité. */
+export function practiceCandidates(cards: Card[], kind: PracticeKind, now: number): Card[] {
+  switch (kind) {
+    case "forgotten":
+      // Les plus souvent oubliées d'abord ; à égalité, celles revues il y a le plus longtemps.
+      return cards
+        .filter((card) => card.progress.lapses > 0)
+        .sort(
+          (a, b) =>
+            b.progress.lapses - a.progress.lapses || (a.progress.lastReviewedAt ?? 0) - (b.progress.lastReviewedAt ?? 0),
+        );
+    case "recent":
+      return cards.filter((card) => now - card.item.createdAt <= RECENT_DAYS * DAY_MS).sort((a, b) => b.item.createdAt - a.item.createdAt);
+    case "random":
+      return cards;
+  }
+}
+
+/** Compose un entraînement : les cartes prioritaires (ou tirées au hasard), questions mélangées. */
+export function planPractice(
+  cards: Card[],
+  kind: PracticeKind,
+  size: number,
+  now: number,
+  exercisesFor: (card: Card) => string[],
+  random: Random = Math.random,
+): SessionItem[] {
+  const candidates = practiceCandidates(cards, kind, now);
+  const chosen = kind === "random" ? shuffle(candidates, random).slice(0, size) : candidates.slice(0, size);
+  const offset = random() < 0.5 ? 0 : 1;
+  const items: SessionItem[] = [];
+  shuffle(chosen, random).forEach((card, index) => {
+    const exercises = exercisesFor(card);
+    const exercise = exercises[(index + offset) % Math.max(exercises.length, 1)];
+    if (exercise) items.push({ itemId: card.item.id, exercise });
+  });
+  return items;
+}

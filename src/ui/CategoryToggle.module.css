@@ -1,0 +1,5 @@
+/* L'option choisie prend la couleur de remplissage de sa catégorie (ou l'encre pour « Tout »). */
+.toggle [aria-checked="true"] {
+  background: var(--fill, var(--ink));
+  color: var(--on-fill, var(--paper));
+}

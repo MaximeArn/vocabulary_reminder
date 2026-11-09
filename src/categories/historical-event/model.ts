@@ -286,6 +286,8 @@ export const historicalEventModel: CategoryModel<HistoricalEventContent, Histori
   addedMessage: (title) => `Date ajoutée : « ${title} »`,
   color: "var(--dates)",
   softColor: "var(--dates-soft)",
+  fillColor: "var(--dates-fill)",
+  onFillColor: "var(--on-dates-fill)",
   searchPlaceholder: "Rechercher un événement, une date, un personnage…",
   listStyle: "timeline",
   chronologicalKey: (content) => chronologicalKey(content.start),

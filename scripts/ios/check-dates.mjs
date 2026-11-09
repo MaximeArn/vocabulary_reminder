@@ -173,7 +173,7 @@ try {
   });
 
   await step("Aujourd’hui, filtre Dates : 8 dates à réviser", async () => {
-    await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`);
+    await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
     await safari.waitForText("12 fiches à réviser.");
     await chooseSegment(safari, "Réviser", "Dates");
     await safari.waitForText("8 dates à réviser.");
@@ -213,7 +213,7 @@ try {
     await safari.waitForText("Dates : retrouver");
     await chooseSegment(safari, "Dates : retrouver", "La date");
     await pause(300);
-    await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`);
+    await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
     await safari.waitForText("3 dates à réviser.");
     await safari.clickButton("Commencer la révision");
     // 3 dates dues, complétées par de l'entraînement jusqu'à la taille de session.

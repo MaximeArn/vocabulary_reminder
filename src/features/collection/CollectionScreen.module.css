@@ -12,13 +12,9 @@
   color: var(--ink-faint);
 }
 
-/* Sélecteur de catégorie : l'option active prend la couleur d'identité de la catégorie. */
+/* Sélecteur de catégorie, séparé des outils de recherche et de tri */
 .categories {
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--rule);
 }
 
-.categories [aria-checked="true"] {
-  background: var(--category);
-  color: var(--paper);
-}

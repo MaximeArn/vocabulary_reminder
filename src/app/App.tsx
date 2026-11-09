@@ -5,7 +5,7 @@ import { ToastProvider } from "../ui/Toast";
 import { ActionSheet } from "../ui/ActionSheet";
 import { CATEGORIES } from "../categories/registry";
 import { UpdateBanner } from "../pwa/UpdateBanner";
-import { TodayScreen } from "../features/today/TodayScreen";
+import { ReviseScreen } from "../features/revise/ReviseScreen";
 import { CollectionScreen } from "../features/collection/CollectionScreen";
 import { ItemFormSheet } from "../features/collection/ItemFormSheet";
 import { ProgressScreen } from "../features/progress/ProgressScreen";
@@ -14,8 +14,8 @@ import styles from "./App.module.css";
 
 function CurrentScreen({ tab }: { tab: TabId }) {
   switch (tab) {
-    case "today":
-      return <TodayScreen />;
+    case "revise":
+      return <ReviseScreen />;
     case "collection":
       return <CollectionScreen />;
     case "progress":

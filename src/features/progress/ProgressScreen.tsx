@@ -88,7 +88,6 @@ export function ProgressScreen() {
         <ActivityChart activity={activityByDay(reviews, lastDays(today, HISTORY_DAYS))} />
       </section>
 
-      <CardSection title="À réviser aujourd’hui" cards={dueCards} empty="Rien à réviser aujourd’hui." />
       {difficult.length > 0 && <CardSection title="Les plus oubliées" cards={difficult} empty="" />}
     </Screen>
   );

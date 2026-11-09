@@ -83,7 +83,7 @@ try {
   });
 
   await step("Aujourd’hui : 6 mots à réviser", async () => {
-    await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`);
+    await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`); // ancienne adresse : doit ouvrir « Réviser »
     await safari.waitForText("6 mots à réviser.");
     await safari.waitForText("Une session de 5 questions");
   });
@@ -155,7 +155,7 @@ try {
   });
 
   await step("Aujourd’hui : 1 mot restant, 5 réponses, série d’1 jour", async () => {
-    await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`);
+    await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
     await safari.waitForText("1 mot à réviser.");
     await safari.waitForText("réponses aujourd’hui");
     const text = (await safari.bodyText()).replace(/\s+/g, " ");
@@ -174,8 +174,8 @@ try {
     screenshot("review-4-progress");
   });
 
-  await step("Tout révisé : proposition d’entraînement sans effet sur le planning", async () => {
-    await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`);
+  await step("Tout révisé : entraînement « Tout en vrac » sans effet sur le planning", async () => {
+    await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
     await safari.waitForText("1 mot à réviser.");
     await safari.clickButton("Commencer la révision");
     for (let index = 1; index <= 5; index++) {
@@ -188,7 +188,7 @@ try {
     await safari.clickButton("Terminer");
     await safari.waitForText("Tout est révisé pour aujourd’hui.");
     await safari.waitForText("Prochaine révision demain");
-    await safari.clickButton("S’entraîner");
+    await safari.clickButton("Tout en vrac");
     const question = await readQuestion();
     const expected = expectedAnswer(question);
     const trainedTerm = question.instruction.includes("définition") ? question.prompt : expected;

@@ -22,15 +22,6 @@ function Svg({ size = 24, children }: IconProps & { children: React.ReactNode })
   );
 }
 
-export function TodayIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" />
-    </Svg>
-  );
-}
-
 export function CollectionIcon(props: IconProps) {
   return (
     <Svg {...props}>
@@ -163,6 +154,30 @@ export function ClockIcon(props: IconProps) {
     <Svg {...props}>
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 7.5V12l3 2" />
+    </Svg>
+  );
+}
+
+export function RepeatIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5" />
+    </Svg>
+  );
+}
+
+export function SparkIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5" />
+    </Svg>
+  );
+}
+
+export function ShuffleIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 7h3.5c4.5 0 5.5 10 10 10H20M4 17h3.5c1.8 0 3-1.6 4-3.6M14.5 10.6c1-2 2.2-3.6 4-3.6H20M17.5 4.5 20 7l-2.5 2.5M17.5 14.5 20 17l-2.5 2.5" />
     </Svg>
   );
 }

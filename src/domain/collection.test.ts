@@ -34,17 +34,19 @@ describe("searchCards", () => {
 });
 
 describe("sortCards", () => {
-  it("trie par date d'ajout", () => {
-    expect(titles(sortCards(cards, "recent", describe_))).toEqual(["alacrité", "Écot", "Dilection"]);
-    expect(titles(sortCards(cards, "oldest", describe_))).toEqual(["Dilection", "Écot", "alacrité"]);
+  it("trie par date d'ajout, dans les deux sens", () => {
+    expect(titles(sortCards(cards, { key: "added", direction: "desc" }, describe_))).toEqual(["alacrité", "Écot", "Dilection"]);
+    expect(titles(sortCards(cards, { key: "added", direction: "asc" }, describe_))).toEqual(["Dilection", "Écot", "alacrité"]);
+  });
+
+  it("trie alphabétiquement à la française (accents et casse ignorés), dans les deux sens", () => {
+    expect(titles(sortCards(cards, { key: "alphabetical", direction: "asc" }, describe_))).toEqual(["alacrité", "Dilection", "Écot"]);
+    expect(titles(sortCards(cards, { key: "alphabetical", direction: "desc" }, describe_))).toEqual(["Écot", "Dilection", "alacrité"]);
   });
 
   it("trie chronologiquement quand la catégorie est datée", () => {
     const dated: Describer = { ...describe_, chronology: (c) => ({ "1": 1492, "2": -490, "3": 476 })[c.item.id] };
-    expect(titles(sortCards(cards, "chronological", dated))).toEqual(["alacrité", "Dilection", "Écot"]);
-  });
-
-  it("trie alphabétiquement à la française (accents et casse ignorés)", () => {
-    expect(titles(sortCards(cards, "alphabetical", describe_))).toEqual(["alacrité", "Dilection", "Écot"]);
+    expect(titles(sortCards(cards, { key: "chronological", direction: "asc" }, dated))).toEqual(["alacrité", "Dilection", "Écot"]);
+    expect(titles(sortCards(cards, { key: "chronological", direction: "desc" }, dated))).toEqual(["Écot", "Dilection", "alacrité"]);
   });
 });

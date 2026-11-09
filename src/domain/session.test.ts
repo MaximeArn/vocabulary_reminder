@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countDue, nextDueDay, planSession } from "./session";
+import { countDue, nextDueDay, planPractice, planSession, practiceCandidates } from "./session";
 import { seededRandom } from "./random";
 import { card } from "../test/factories";
 
@@ -53,5 +53,38 @@ describe("countDue / nextDueDay", () => {
   it("trouve le prochain jour de révision", () => {
     expect(nextDueDay(cards, today)).toBe("2026-11-05");
     expect(nextDueDay([], today)).toBeUndefined();
+  });
+});
+
+describe("entraînements", () => {
+  const now = new Date(2026, 10, 9, 12).getTime();
+  const day = 24 * 60 * 60 * 1000;
+  const pool = [
+    card("souvent-oublie", { lapses: 3, lastReviewedAt: 5 }, now - 30 * day),
+    card("oublie-une-fois", { lapses: 1 }, now - 20 * day),
+    card("jamais-oublie", { lapses: 0 }, now - 10 * day),
+    card("ajoute-hier", { lapses: 0 }, now - day),
+    card("ajoute-il-y-a-6-jours", { lapses: 1 }, now - 6 * day),
+  ];
+  const ids = (cards: { item: { id: string } }[]) => cards.map((c) => c.item.id);
+
+  it("« Les plus oubliées » : les fiches ratées, les plus souvent ratées d'abord", () => {
+    expect(ids(practiceCandidates(pool, "forgotten", now))).toEqual(["souvent-oublie", "oublie-une-fois", "ajoute-il-y-a-6-jours"]);
+  });
+
+  it("« Nouveautés » : les fiches ajoutées ces 7 derniers jours, les plus récentes d'abord", () => {
+    expect(ids(practiceCandidates(pool, "recent", now))).toEqual(["ajoute-hier", "ajoute-il-y-a-6-jours"]);
+  });
+
+  it("« Tout en vrac » : un tirage au hasard dans toute la collection, sans doublon", () => {
+    const plan = planPractice(pool, "random", 3, now, () => ["e"], seededRandom(2));
+    expect(plan).toHaveLength(3);
+    expect(new Set(plan.map((item) => item.itemId)).size).toBe(3);
+  });
+
+  it("respecte la taille de session et les exercices possibles", () => {
+    const plan = planPractice(pool, "forgotten", 2, now, () => ["a", "b"], seededRandom(1));
+    expect(plan.map((item) => item.itemId).sort()).toEqual(["oublie-une-fois", "souvent-oublie"]);
+    expect(plan[0]!.exercise).not.toBe(plan[1]!.exercise);
   });
 });

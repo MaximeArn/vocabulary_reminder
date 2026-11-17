@@ -163,11 +163,11 @@ try {
     }
   });
 
-  await step("Progrès : chiffres, niveaux par catégorie, activité", async () => {
+  await step("Progrès : activité, niveaux par catégorie, règles", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#progres`);
     await safari.waitForText("NIVEAUX");
     const text = (await safari.bodyText()).replace(/\s+/g, " ");
-    for (const expected of ["6 mots", "1 à réviser aujourd’hui", "Vocabulaire 6 mots", "Nouveau 1 En apprentissage 5", "5 réponses, dont 4 justes"]) {
+    for (const expected of ["Vocabulaire 6 mots", "Nouveau 1 En apprentissage 5", "5 réponses, dont 4 justes", "RÈGLES", "Marches 1 et 2 : revue après 1, puis 3 jours.", "Marches 5 et 6 : revue après 30, puis 90 jours."]) {
       if (!text.includes(expected)) throw new Error(`« ${expected} » absent de : ${text}`);
     }
     screenshot("review-4-progress");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MASTERED_BOX, applyReview, masteryLevel, nextSchedule, progressByItem, replayProgress } from "./srs";
+import { MASTERED_BOX, applyReview, levelBoxes, masteryLevel, nextSchedule, progressByItem, replayProgress } from "./srs";
 
 const today = "2026-11-04";
 
@@ -64,6 +64,15 @@ describe("masteryLevel", () => {
       "mastered",
       "mastered",
     ]);
+  });
+});
+
+describe("levelBoxes", () => {
+  it("donne les boîtes et intervalles de chaque niveau", () => {
+    expect(levelBoxes("new")).toEqual([{ box: 0, interval: 0 }]);
+    expect(levelBoxes("learning")).toEqual([{ box: 1, interval: 1 }, { box: 2, interval: 3 }]);
+    expect(levelBoxes("progressing")).toEqual([{ box: 3, interval: 7 }, { box: 4, interval: 15 }]);
+    expect(levelBoxes("mastered")).toEqual([{ box: 5, interval: 30 }, { box: 6, interval: 90 }]);
   });
 });
 

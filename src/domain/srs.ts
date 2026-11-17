@@ -125,3 +125,10 @@ export function masteryLevel(box: number): MasteryLevel {
   if (box < MASTERED_BOX) return "progressing";
   return "mastered";
 }
+
+/** Boîtes regroupées dans chaque niveau, et leurs intervalles (pour expliquer les règles). */
+export function levelBoxes(level: MasteryLevel): { box: number; interval: number }[] {
+  return Array.from({ length: MAX_BOX + 1 }, (_, box) => box)
+    .filter((box) => masteryLevel(box) === level)
+    .map((box) => ({ box, interval: intervalForBox(box) }));
+}

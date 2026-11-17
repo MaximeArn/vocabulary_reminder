@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Screen } from "../../ui/Screen";
 import { Placeholder } from "../../ui/Placeholder";
 import { dateOfDay } from "../../ui/format";
-import { CardsIcon, ClockIcon, FlameIcon, LaurelIcon } from "../../ui/icons";
-import { MASTERY_LABELS, MASTERY_LEVELS, isDue, type MasteryLevel } from "../../domain/srs";
-import { activityByDay, countByLevel, currentStreak, type DayActivity } from "../../domain/progress";
+import { MASTERY_LABELS, MASTERY_LEVELS, levelBoxes, type MasteryLevel } from "../../domain/srs";
+import { activityByDay, countByLevel, type DayActivity } from "../../domain/progress";
 import { lastDays } from "../../domain/studyDay";
 import type { Card } from "../../domain/card";
 import { formatCount, type Unit } from "../../categories/model";
-import { presentCategories, unitFor } from "../../categories/registry";
+import { presentCategories } from "../../categories/registry";
+import { TYPING_FROM_BOX } from "../../categories/exercisePlan";
 import { useCards } from "../collection/useCards";
 import { useReviews } from "../review/useReviews";
 import { useToday } from "../review/useToday";
@@ -16,7 +16,7 @@ import styles from "./ProgressScreen.module.css";
 
 const HISTORY_DAYS = 14;
 
-/** Gradation d'une seule teinte, du plus clair (nouveau) au plus soutenu (maîtrisé). */
+/** Du rouge (nouveau) au vert (maîtrisé) : la progression se lit d'un coup d'œil. */
 const LEVEL_COLORS: Record<MasteryLevel, string> = {
   new: "var(--level-new)",
   learning: "var(--level-learning)",
@@ -39,24 +39,14 @@ export function ProgressScreen() {
     );
   }
 
-  const unit = unitFor(cards);
   const categories = presentCategories(cards);
-  const levels = countByLevel(cards);
-  const dueCards = cards.filter((card) => isDue(card.progress, today));
-  const streak = currentStreak(reviews, today);
-  const breakdown =
-    categories.length > 1
-      ? categories.map((category) => formatCount(cards.filter((card) => card.item.kind === category.kind).length, category.unit)).join(" · ")
-      : undefined;
 
   return (
     <Screen title="Progrès">
-      <div className={styles.tiles}>
-        <Tile icon={<CardsIcon size={20} />} tone="var(--ink-faint)" value={cards.length} label={cards.length > 1 ? unit.plural : unit.singular} detail={breakdown} />
-        <Tile icon={<LaurelIcon size={20} />} tone="var(--success)" value={levels.mastered} label={levels.mastered > 1 ? "maîtrisées" : "maîtrisée"} />
-        <Tile icon={<ClockIcon size={20} />} tone="var(--accent)" value={dueCards.length} label="à réviser aujourd’hui" />
-        <Tile icon={<FlameIcon size={20} />} tone="var(--gold)" value={streak} label={streak > 1 ? "jours de suite" : "jour de suite"} />
-      </div>
+      <section className={styles.section}>
+        <h2 className={styles.heading}>{HISTORY_DAYS} derniers jours</h2>
+        <ActivityChart activity={activityByDay(reviews, lastDays(today, HISTORY_DAYS))} />
+      </section>
 
       <section className={styles.section}>
         <h2 className={styles.heading}>Niveaux</h2>
@@ -74,32 +64,50 @@ export function ProgressScreen() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.heading}>{HISTORY_DAYS} derniers jours</h2>
-        <ActivityChart activity={activityByDay(reviews, lastDays(today, HISTORY_DAYS))} />
+        <h2 className={styles.heading}>Règles</h2>
+        <LevelRules />
       </section>
-
     </Screen>
   );
 }
 
-interface TileProps {
-  icon: React.ReactNode;
-  /** Couleur de l'icône : le sens du chiffre (le chiffre lui-même reste couleur de texte). */
-  tone: string;
-  value: number;
-  label: string;
-  detail?: string;
-}
+/** « 1 », « 1 et 2 » : les marches d'un niveau. */
+const listSteps = (steps: number[]) =>
+  steps.length > 1 ? `${steps.slice(0, -1).join(", ")} et ${steps[steps.length - 1]}` : String(steps[0]);
 
-function Tile({ icon, tone, value, label, detail }: TileProps) {
+/** « 1 jour », « 7, puis 15 jours ». */
+const listIntervals = (days: number[]) =>
+  `${days.join(", puis ")} ${days[days.length - 1]! > 1 ? "jours" : "jour"}`;
+
+/**
+ * Les règles de progression, tirées des paramètres du moteur (intervalles,
+ * seuils) : elles ne peuvent pas contredire ce que fait l'app.
+ */
+function LevelRules() {
+  const describe = (level: MasteryLevel): string => {
+    const boxes = levelBoxes(level);
+    if (level === "new") return "Pas encore révisée.";
+    const steps = boxes.map(({ box }) => box);
+    const typed = steps[0] === TYPING_FROM_BOX ? " On tape désormais la réponse." : "";
+    return `Marches ${listSteps(steps)} : revue après ${listIntervals(boxes.map(({ interval }) => interval))}.${typed}`;
+  };
   return (
-    <div className={styles.tile}>
-      <span className={styles.tileIcon} style={{ color: tone }}>
-        {icon}
-      </span>
-      <div className={styles.tileValue}>{value}</div>
-      <div className={styles.tileLabel}>{label}</div>
-      {detail && <div className={styles.tileDetail}>{detail}</div>}
+    <div className={styles.rulesCard}>
+      <p className={styles.rulesIntro}>
+        Chaque bonne réponse fait monter la fiche d’une marche, au plus une fois par jour, et espace sa prochaine
+        révision. Une erreur la renvoie sur la première marche : elle revient le lendemain.
+      </p>
+      <dl className={styles.rules}>
+        {MASTERY_LEVELS.map((level) => (
+          <div key={level} className={styles.rule}>
+            <dt className={styles.ruleLevel}>
+              <span className={styles.swatch} style={{ background: LEVEL_COLORS[level] }} aria-hidden="true" />
+              {MASTERY_LABELS[level]}
+            </dt>
+            <dd className={styles.ruleText}>{describe(level)}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }

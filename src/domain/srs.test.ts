@@ -9,11 +9,13 @@ describe("nextSchedule", () => {
       box: 1,
       dueDay: "2026-11-05",
       lapses: 0,
+      movedOn: today,
     });
     expect(nextSchedule({ box: 3, dueDay: "2026-11-01", lapses: 1 }, true, today)).toEqual({
       box: 4,
       dueDay: "2026-11-19",
       lapses: 1,
+      movedOn: today,
     });
   });
 
@@ -22,6 +24,7 @@ describe("nextSchedule", () => {
       box: 6,
       dueDay: "2027-02-02",
       lapses: 0,
+      movedOn: today,
     });
   });
 
@@ -30,13 +33,23 @@ describe("nextSchedule", () => {
       box: 1,
       dueDay: "2026-11-05",
       lapses: 3,
+      movedOn: today,
     });
   });
 
-  it("ne fait pas monter un mot révisé en avance, mais compte une erreur", () => {
+  it("fait aussi monter une fiche révisée en avance (entraînement), et compte une erreur", () => {
     const early = { box: 3, dueDay: "2026-11-10", lapses: 0 };
-    expect(nextSchedule(early, true, today)).toEqual(early);
+    expect(nextSchedule(early, true, today)).toEqual({ box: 4, dueDay: "2026-11-19", lapses: 0, movedOn: today });
     expect(nextSchedule(early, false, today).box).toBe(1);
+  });
+
+  it("ne fait monter une fiche qu'une fois par jour, et pas après une erreur ce jour-là", () => {
+    const promoted = nextSchedule({ box: 2, dueDay: today, lapses: 0 }, true, today);
+    expect(nextSchedule(promoted, true, today)).toEqual(promoted);
+    const failed = nextSchedule({ box: 4, dueDay: "2026-11-20", lapses: 0 }, false, today);
+    expect(nextSchedule(failed, true, today)).toEqual(failed);
+    // Le lendemain, elle remonte normalement.
+    expect(nextSchedule(failed, true, "2026-11-05").box).toBe(2);
   });
 });
 
@@ -88,6 +101,7 @@ describe("replayProgress", () => {
       box: 2,
       dueDay: "2026-11-08",
       lapses: 1,
+      movedOn: "2026-11-05",
       correctCount: 2,
       wrongCount: 1,
       lastReviewedAt: history[0]!.answeredAt,

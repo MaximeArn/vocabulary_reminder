@@ -37,10 +37,15 @@
   --on-vocabulary-fill: #1d1a16;
   --dates-fill: #b5532f;
   --on-dates-fill: #fbf8f2;
-  --level-new: #e1d9cb;
-  --level-learning: #c3cfe0;
-  --level-progressing: #7d97b9;
-  --level-mastered: #1f3350;
+  /*
+   * Niveaux de maîtrise : du rouge (nouveau) au vert (maîtrisé), pour lire la
+   * progression d'un coup d'œil. Le rouge est plus sombre que le vert : les
+   * niveaux restent distincts pour les daltoniens (vérifié par simulation).
+   */
+  --level-new: #a62b25;
+  --level-learning: #cc6619;
+  --level-progressing: #bf9516;
+  --level-mastered: #4b9b4c;
   --gold: #b9832c;
 
   /* Typographie */
@@ -104,10 +109,10 @@
     --on-vocabulary-fill: #ece5d8;
     --dates-fill: #c96a4a;
     --on-dates-fill: #18160f;
-    --level-new: #3a3630;
-    --level-learning: #34496a;
-    --level-progressing: #6d8cb6;
-    --level-mastered: #c3d6f0;
+    --level-new: #c9463e;
+    --level-learning: #e2802f;
+    --level-progressing: #e6c450;
+    --level-mastered: #8ed986;
     --gold: #e3b45c;
   }
 }

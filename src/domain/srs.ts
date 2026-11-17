@@ -29,6 +29,8 @@ export interface Schedule {
   box: number;
   dueDay: string;
   lapses: number;
+  /** Dernier jour d'étude où la fiche a changé de boîte (montée ou erreur) : une seule montée par jour. */
+  movedOn?: string;
 }
 
 /** Progression d'une fiche, calculée à partir de son historique. */
@@ -44,19 +46,22 @@ export function isDue(schedule: Pick<Schedule, "dueDay">, today: string): boolea
 }
 
 /**
- * Nouveau planning après une réponse.
- * Une fiche révisée en avance (entraînement libre) ne monte pas de boîte :
- * l'algorithme reste honnête. Une erreur compte toujours.
+ * Nouveau planning après une réponse, en révision du jour comme en entraînement.
+ * - Une bonne réponse fait monter la fiche d'une boîte, même si elle n'était pas
+ *   encore due, mais une seule fois par jour : s'entraîner cinq fois de suite sur
+ *   une fiche ne la rend pas « maîtrisée » sans espacement.
+ * - Une erreur la renvoie toujours en boîte 1, pour le lendemain ; elle ne peut
+ *   alors plus remonter ce jour-là.
  */
 export function nextSchedule(schedule: Schedule, correct: boolean, today: string): Schedule {
   if (!correct) {
-    return { box: 1, dueDay: addDays(today, intervalForBox(1)), lapses: schedule.lapses + 1 };
+    return { box: 1, dueDay: addDays(today, intervalForBox(1)), lapses: schedule.lapses + 1, movedOn: today };
   }
-  if (!isDue(schedule, today)) {
-    return { box: schedule.box, dueDay: schedule.dueDay, lapses: schedule.lapses };
+  if (schedule.movedOn === today) {
+    return { box: schedule.box, dueDay: schedule.dueDay, lapses: schedule.lapses, movedOn: schedule.movedOn };
   }
   const box = Math.min(schedule.box + 1, MAX_BOX);
-  return { box, dueDay: addDays(today, intervalForBox(box)), lapses: schedule.lapses };
+  return { box, dueDay: addDays(today, intervalForBox(box)), lapses: schedule.lapses, movedOn: today };
 }
 
 /** Progression d'une fiche jamais révisée : à réviser dès le jour de son ajout. */

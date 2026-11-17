@@ -71,9 +71,9 @@ export function nextDueDay(cards: Card[], today: string): string | undefined {
 /* ---------- Entraînements (accès rapides) ---------- */
 
 /**
- * Révisions ciblées, en plus de la révision du jour. Ce sont des entraînements :
- * une bonne réponse sur une fiche pas encore due ne fait pas avancer son planning
- * (règle de `nextSchedule`), une erreur compte toujours.
+ * Révisions ciblées, en plus de la révision du jour. Leurs réponses comptent
+ * comme les autres : une bonne réponse fait progresser la fiche (une fois par
+ * jour au plus, règle de `nextSchedule`), une erreur la renvoie en apprentissage.
  */
 export type PracticeKind = "forgotten" | "recent" | "random";
 

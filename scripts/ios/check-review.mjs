@@ -174,7 +174,7 @@ try {
     screenshot("review-4-progress");
   });
 
-  await step("Tout révisé : entraînement « En vrac » sans effet sur le planning", async () => {
+  await step("Tout révisé : « En vrac » ne fait pas monter deux fois le même jour une fiche déjà révisée", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
     await safari.waitForText("1 mot à réviser.");
     await startDailyReview(safari);
@@ -197,9 +197,9 @@ try {
     await safari.clickButton("Quitter");
     const { reviews } = await readDatabase();
     if (reviews.length !== 11) throw new Error(`${reviews.length} réponses au lieu de 11`);
-    // Révisé en avance : il ne monte pas de boîte et revient toujours demain.
+    // Déjà monté aujourd'hui (révision du jour) : l'entraînement ne le fait pas monter une seconde fois.
     const text = await readDetail(trainedTerm);
-    if (!text.includes("En apprentissage · révision demain")) throw new Error(`Planning modifié par l’entraînement : ${text}`);
+    if (!text.includes("En apprentissage · révision demain")) throw new Error(`Fiche montée deux fois le même jour : ${text}`);
   });
 
   console.log(`\n${stepper.count} vérifications réussies.`);

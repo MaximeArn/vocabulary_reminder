@@ -229,7 +229,7 @@ export function ReviseScreen() {
               </span>
             </button>
           )}
-          <p className={styles.footnote}>Une bonne réponse en entraînement n’avance pas le planning ; une erreur, si.</p>
+          <p className={styles.footnote}>Les entraînements comptent aussi pour la maîtrise : une fiche progresse au plus une fois par jour.</p>
         </section>
       )}
 

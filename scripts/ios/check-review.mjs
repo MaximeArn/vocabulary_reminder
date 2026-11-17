@@ -84,8 +84,7 @@ try {
 
   await step("Aujourd’hui : 6 mots à réviser", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`); // ancienne adresse : doit ouvrir « Réviser »
-    await safari.waitForText("6 mots à réviser.");
-    await safari.waitForText("Commencer · 5 questions");
+    await safari.waitForText("6 mots à réviser");
   });
 
   let failedTerm;
@@ -156,7 +155,7 @@ try {
 
   await step("Aujourd’hui : 1 mot restant, 5 réponses, série d’1 jour", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
-    await safari.waitForText("1 mot à réviser.");
+    await safari.waitForText("1 mot à réviser");
     await safari.waitForText("réponses aujourd’hui");
     const text = (await safari.bodyText()).replace(/\s+/g, " ");
     if (!text.includes("5 réponses aujourd’hui") || !text.includes("1 jour de suite")) {
@@ -176,7 +175,7 @@ try {
 
   await step("Tout révisé : « En vrac » ne fait pas monter deux fois le même jour une fiche déjà révisée", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
-    await safari.waitForText("1 mot à réviser.");
+    await safari.waitForText("1 mot à réviser");
     await startDailyReview(safari);
     for (let index = 1; index <= 5; index++) {
       await safari.waitFor(`question ${index}`, async () => (await safari.bodyText()).includes(`${index} / `));
@@ -186,8 +185,8 @@ try {
       await safari.clickButton(index === 5 ? "Voir le bilan" : "Continuer");
     }
     await safari.clickButton("Terminer");
-    await safari.waitForText("Tout est révisé pour aujourd’hui.");
-    await safari.waitForText("Prochaine révision demain");
+    await safari.waitForText("Tout est révisé");
+    await safari.waitForText("suite demain");
     await safari.clickButton("En vrac");
     const question = await readQuestion();
     const expected = expectedAnswer(question);

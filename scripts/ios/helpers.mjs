@@ -146,10 +146,10 @@ export async function startLocalSession(safari, appUrl, hash = "") {
   await safari.open(`${appUrl}?test=${Date.now()}${hash}`);
 }
 
-/** Lance la révision du jour (bouton « Commencer · N questions »). */
+/** Lance la révision du jour (ligne « Révision du jour » de la page Réviser). */
 export async function startDailyReview(safari) {
-  await safari.waitFor("bouton Commencer", async () =>
-    safari.script(`return [...document.querySelectorAll("button")].some((b) => b.textContent.startsWith("Commencer ·"));`),
+  await safari.waitFor("révision du jour disponible", async () =>
+    safari.script(`return [...document.querySelectorAll("button")].some((b) => b.getAttribute("aria-label") === "Révision du jour" && !b.disabled);`),
   );
-  await safari.script(`[...document.querySelectorAll("button")].find((b) => b.textContent.startsWith("Commencer ·")).click();`);
+  await safari.clickButton("Révision du jour");
 }

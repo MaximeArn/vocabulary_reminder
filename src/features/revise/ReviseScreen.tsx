@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Screen } from "../../ui/Screen";
 import { Panel } from "../../ui/Panel";
-import { Button } from "../../ui/Button";
 import { CategoryToggle } from "../../ui/CategoryToggle";
 import { ActionSheet } from "../../ui/ActionSheet";
-import { ChevronRightIcon, FlameIcon, HourglassIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
+import { CheckIcon, ChevronRightIcon, DailyIcon, HourglassIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
 import { formatCardCount, formatRelativeDay } from "../../ui/format";
 import { InstallHint } from "../../pwa/InstallHint";
 import { CHOICE_COUNT } from "../../domain/quiz";
@@ -20,7 +19,6 @@ import {
   type PracticeKind,
   type SessionItem,
 } from "../../domain/session";
-import { activityByDay, currentStreak } from "../../domain/progress";
 import { addDays } from "../../domain/studyDay";
 import { CATEGORIES, findCategory, presentCategories, unitFor } from "../../categories/registry";
 import { chooseExercise } from "../../categories/exercisePlan";
@@ -32,13 +30,14 @@ import { useReviews } from "../review/useReviews";
 import { useToday } from "../review/useToday";
 import { useReviewSettings } from "../review/useReviewSettings";
 import { ReviewSession } from "../review/ReviewSession";
+import { RevisionRow } from "./RevisionRow";
+import { StreakPanel } from "./StreakPanel";
 import styles from "./ReviseScreen.module.css";
 
 /**
- * Couleurs de l'action principale et des icônes selon la catégorie révisée.
- * Pour « Tout », moitié vocabulaire, moitié dates : le bouton a une bordure
- * bicolore (texte d'une seule couleur, toujours lisible), et chaque icône a un
- * tracé de chaque couleur. Contrastes vérifiés en clair et en sombre.
+ * Les icônes prennent la couleur de la catégorie révisée. Pour « Tout », chaque
+ * icône a un tracé de chaque couleur (vocabulaire, dates), et la pastille de la
+ * révision du jour une bordure bicolore. Contrastes vérifiés en clair et en sombre.
  */
 const SPLIT_ICON_TONES: [string, string] = ["var(--vocabulary)", "var(--dates)"];
 
@@ -50,16 +49,16 @@ interface RunningSession {
   restart: () => void;
 }
 
-/** Les entraînements proposés en accès rapide (libellés courts : trois tuiles côte à côte). */
+/** Les révisions ciblées, après la révision du jour. */
 const PRACTICES: {
   kind: PracticeKind;
   title: string;
   Icon: (props: { size?: number; tones?: [string, string] }) => React.ReactNode;
   hint: string;
 }[] = [
-  { kind: "forgotten", title: "Oubliées", Icon: RepeatIcon, hint: "Les fiches déjà ratées, les plus souvent d’abord" },
-  { kind: "recent", title: "Nouveautés", Icon: SparkIcon, hint: `Les fiches ajoutées ces ${RECENT_DAYS} derniers jours` },
-  { kind: "random", title: "En vrac", Icon: ShuffleIcon, hint: "Un tirage au hasard dans la collection" },
+  { kind: "forgotten", title: "Oubliées", Icon: RepeatIcon, hint: "Les fiches que tu as déjà ratées" },
+  { kind: "recent", title: "Nouveautés", Icon: SparkIcon, hint: `Ajoutées ces ${RECENT_DAYS} derniers jours` },
+  { kind: "random", title: "En vrac", Icon: ShuffleIcon, hint: "Un tirage au hasard dans ta collection" },
 ];
 
 /** Cartes des catégories qui ont assez de fiches pour composer des questions. */
@@ -72,7 +71,7 @@ function reviewableCards(cards: Card[]): Card[] {
   return cards.filter((card) => reviewableKinds.has(card.item.kind));
 }
 
-/** Réviser : la révision du jour, puis des entraînements ciblés en accès rapide. */
+/** Réviser : la série en cours, puis les différentes révisions possibles. */
 export function ReviseScreen() {
   const cards = useCards();
   const reviews = useReviews();
@@ -91,9 +90,8 @@ export function ReviseScreen() {
   const selected = kind === "all" ? cards : cards.filter((card) => card.item.kind === kind);
   const reviewable = reviewableCards(selected);
   const dueCount = countDue(reviewable, today);
-  const streak = currentStreak(reviews, today);
   const category = findCategory(kind);
-  const answeredToday = activityByDay(reviews, [today])[0]?.answered ?? 0;
+  const iconTones = category ? undefined : SPLIT_ICON_TONES;
 
   // Exercice d'une carte : selon sa catégorie, son niveau et le réglage de l'utilisateur.
   const exerciseFor = (card: Card, rotation: number) =>
@@ -154,83 +152,64 @@ export function ReviseScreen() {
         </div>
       )}
 
-      <Panel>
-        <p className={styles.eyebrow}>Révision du jour</p>
-        <DailyMessage cards={selected} reviewable={reviewable} dueCount={dueCount} today={today} />
-        {dueCount > 0 && (
-          <Button
-            fullWidth
-            onClick={startDaily}
-            className={category ? undefined : styles.splitButton}
-            style={category ? { background: category.fillColor, color: category.onFillColor } : undefined}
-          >
-            Commencer · {Math.min(settings.sessionSize, reviewable.length)} questions
-          </Button>
-        )}
-        {reviews.length > 0 && (
-          <p className={styles.stats}>
-            <span className={styles.flame}>
-              <FlameIcon size={16} />
-            </span>
-            {streak} {streak > 1 ? "jours de suite" : "jour de suite"} · {answeredToday}{" "}
-            {answeredToday > 1 ? "réponses aujourd’hui" : "réponse aujourd’hui"}
-          </p>
-        )}
-      </Panel>
-
-      {reviewable.length > 0 && (
-        <section className={styles.practices}>
-          <h2 className={styles.heading}>Entraînements</h2>
-          <div className={styles.tiles}>
+      {reviewable.length === 0 ? (
+        <Panel>
+          <EmptyMessage cards={selected} />
+        </Panel>
+      ) : (
+        <>
+          <StreakPanel reviews={reviews} today={today} />
+          <ul className={styles.list} aria-label="Révisions">
+            <RevisionRow
+              icon={<DailyIcon size={24} tones={iconTones} />}
+              iconColor={category?.color}
+              title="Révision du jour"
+              detail={dailyDetail(reviewable, dueCount, today)}
+              trailing={
+                dueCount > 0 ? (
+                  <span
+                    className={`${styles.badge} ${category ? "" : styles.splitBadge}`}
+                    style={category ? { background: category.fillColor, color: category.onFillColor } : undefined}
+                  >
+                    {dueCount}
+                  </span>
+                ) : (
+                  <span className={styles.done} aria-label="Tout est révisé">
+                    <CheckIcon size={20} />
+                  </span>
+                )
+              }
+              disabled={dueCount === 0}
+              onClick={startDaily}
+            />
             {PRACTICES.map(({ kind: practice, title, Icon, hint }) => {
               const count = practiceCandidates(reviewable, practice, Date.now()).length;
               return (
-                <button
+                <RevisionRow
                   key={practice}
-                  type="button"
-                  className={styles.tile}
-                  onClick={() => startPractice(practice)}
+                  icon={<Icon size={24} tones={iconTones} />}
+                  iconColor={category?.color}
+                  title={title}
+                  detail={hint}
+                  trailing={count}
                   disabled={count === 0}
-                  aria-label={title}
-                  aria-describedby={`practice-${practice}`}
-                >
-                  <span className={styles.tileIcon} style={{ color: category?.color }}>
-                    <Icon size={22} tones={category ? undefined : SPLIT_ICON_TONES} />
-                  </span>
-                  <span className={styles.tileTitle}>{title}</span>
-                  <span className={styles.tileCount}>{count}</span>
-                  <span className={styles.hidden} id={`practice-${practice}`}>
-                    {hint}
-                  </span>
-                </button>
+                  onClick={() => startPractice(practice)}
+                />
               );
             })}
-          </div>
-          {eras.length > 0 && (
-            <button
-              type="button"
-              className={styles.eraRow}
-              onClick={() => setChoosingEra(true)}
-              aria-label="Par époque"
-              aria-describedby="practice-eras"
-              aria-haspopup="dialog"
-            >
-              <span className={styles.tileIcon} style={{ color: historicalEventModel.color }}>
-                <HourglassIcon size={22} />
-              </span>
-              <span className={styles.eraText}>
-                <span className={styles.tileTitle}>Par époque</span>
-                <span className={styles.tileCount} id="practice-eras">
-                  {eras.map((era) => era.label).join(", ")}
-                </span>
-              </span>
-              <span className={styles.chevron}>
-                <ChevronRightIcon size={18} />
-              </span>
-            </button>
-          )}
-          <p className={styles.footnote}>Les entraînements comptent aussi pour la maîtrise : une fiche progresse au plus une fois par jour.</p>
-        </section>
+            {eras.length > 0 && (
+              <RevisionRow
+                icon={<HourglassIcon size={24} />}
+                iconColor={historicalEventModel.color}
+                title="Par époque"
+                detail="Choisis une époque, ou au hasard"
+                trailing={<ChevronRightIcon size={18} />}
+                opensChoice
+                onClick={() => setChoosingEra(true)}
+              />
+            )}
+          </ul>
+        </>
       )}
 
       {choosingEra && (
@@ -261,15 +240,8 @@ export function ReviseScreen() {
   );
 }
 
-interface DailyMessageProps {
-  cards: Card[];
-  reviewable: Card[];
-  dueCount: number;
-  today: string;
-}
-
-/** Message de la révision du jour, selon l'état de la collection (une ou deux lignes). */
-function DailyMessage({ cards, reviewable, dueCount, today }: DailyMessageProps) {
+/** Collection vide, ou pas encore assez de fiches pour composer des questions. */
+function EmptyMessage({ cards }: { cards: Card[] }) {
   if (cards.length === 0) {
     return (
       <>
@@ -278,32 +250,23 @@ function DailyMessage({ cards, reviewable, dueCount, today }: DailyMessageProps)
       </>
     );
   }
-
-  if (reviewable.length === 0) {
-    const missing = Math.max(CHOICE_COUNT - cards.length, 1);
-    return (
-      <>
-        <p className={styles.lead}>Encore un peu de patience.</p>
-        <p className={styles.text}>
-          Il faut au moins {CHOICE_COUNT} mots aux définitions différentes. Ajoute-en encore {missing === 1 ? "un" : missing}.
-        </p>
-      </>
-    );
-  }
-
-  if (dueCount > 0) {
-    const dueCards = reviewable.filter((card) => card.progress.dueDay <= today);
-    return <p className={`${styles.lead} ${styles.leadWithButton}`}>{formatCardCount(dueCount, unitFor(dueCards))} à réviser.</p>;
-  }
-
-  const nextDay = nextDueDay(reviewable, today);
+  const missing = Math.max(CHOICE_COUNT - cards.length, 1);
   return (
     <>
-      <p className={styles.lead}>Tout est révisé pour aujourd’hui.</p>
+      <p className={styles.lead}>Encore un peu de patience.</p>
       <p className={styles.text}>
-        {nextDay ? `Prochaine révision ${formatRelativeDay(nextDay, today, addDays(today, 1))}. ` : ""}Un entraînement, en
-        attendant ?
+        Il faut au moins {CHOICE_COUNT} mots aux définitions différentes. Ajoute-en encore {missing === 1 ? "un" : missing}.
       </p>
     </>
   );
+}
+
+/** « 12 fiches à réviser », ou « Tout est révisé · suite demain ». */
+function dailyDetail(reviewable: Card[], dueCount: number, today: string): string {
+  if (dueCount > 0) {
+    const dueCards = reviewable.filter((card) => card.progress.dueDay <= today);
+    return `${formatCardCount(dueCount, unitFor(dueCards))} à réviser`;
+  }
+  const nextDay = nextDueDay(reviewable, today);
+  return nextDay ? `Tout est révisé · suite ${formatRelativeDay(nextDay, today, addDays(today, 1))}` : "Tout est révisé";
 }

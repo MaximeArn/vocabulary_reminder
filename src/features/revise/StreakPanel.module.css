@@ -1,0 +1,88 @@
+.panel {
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* La flamme s'allume (or) tant que la série est en cours */
+.flame {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--ink-faint);
+}
+
+.lit {
+  color: var(--gold);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.detail {
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+}
+
+/* Les 7 derniers jours, sur toute la largeur : une pastille par jour, pleine si l'on a révisé */
+.week {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-2) 0;
+  border-top: 1px solid var(--rule);
+  list-style: none;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--rule);
+}
+
+.done .dot {
+  background: var(--gold);
+  box-shadow: none;
+}
+
+/* Aujourd'hui, pas encore révisé : cercle doré à remplir */
+.today:not(.done) .dot {
+  box-shadow: inset 0 0 0 1.5px var(--gold);
+}
+
+.initial {
+  font-size: var(--text-xs);
+  line-height: 1;
+  color: var(--ink-faint);
+}
+
+.today .initial {
+  font-weight: 700;
+  color: var(--ink);
+}

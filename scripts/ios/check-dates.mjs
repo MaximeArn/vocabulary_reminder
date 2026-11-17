@@ -235,9 +235,9 @@ try {
 
   await step("Aujourd’hui, filtre Dates : 10 dates à réviser", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
-    await safari.waitForText("15 fiches à réviser.");
+    await safari.waitForText("15 fiches à réviser");
     await chooseSegment(safari, "Réviser", "Dates");
-    await safari.waitForText("10 dates à réviser.");
+    await safari.waitForText("10 dates à réviser");
   });
 
   await step("Session de dates : 5 questions cohérentes, les deux sens, explication après chaque réponse", async () => {
@@ -274,7 +274,7 @@ try {
     await safari.waitFor("score", async () => (await text()).includes("5 / 5"));
     await safari.clickButton("Terminer");
     // 5 dates révisées… ou plus : un classement juste fait aussi réviser les autres dates dues qu'il contient.
-    await safari.waitFor("dates restantes", async () => /([1-5]) dates? à réviser\.|Tout est révisé/.test(await text()));
+    await safari.waitFor("dates restantes", async () => /([1-5]) dates? à réviser|Tout est révisé/.test(await text()));
   });
 
   await step("Réglage par catégorie : « Dates : retrouver la date » seulement", async () => {
@@ -283,7 +283,7 @@ try {
     await chooseSegment(safari, "Dates : retrouver", "La date");
     await pause(300);
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
-    await safari.waitFor("révision", async () => /à réviser\.|Tout est révisé/.test(await text()));
+    await safari.waitFor("révision", async () => /à réviser|Tout est révisé/.test(await text()));
     // Plus rien à réviser (classements) : le réglage se vérifie sur un entraînement.
     const allDone = (await text()).includes("Tout est révisé");
     if (allDone) await safari.clickButton("En vrac");
@@ -302,7 +302,7 @@ try {
       await safari.clickButton(index === total ? "Voir le bilan" : "Continuer");
     }
     await safari.clickButton("Terminer");
-    await safari.waitForText("Tout est révisé pour aujourd’hui.");
+    await safari.waitForText("Tout est révisé");
   });
 
   console.log(`\n${stepper.count} vérifications réussies.`);

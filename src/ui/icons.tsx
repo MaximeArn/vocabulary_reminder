@@ -190,6 +190,17 @@ function TwoTone({ size, tones, first, second }: TwoToneProps & { first: string;
   );
 }
 
+/** Un calendrier coché : la révision du jour. */
+export function DailyIcon(props: TwoToneProps) {
+  return (
+    <TwoTone
+      {...props}
+      first="M4.5 6.5h15v13h-15zM4.5 10.5h15M8.5 4v4.5M15.5 4v4.5"
+      second="m9 15 2 2 4-4"
+    />
+  );
+}
+
 /** Deux flèches qui tournent en cycle : revenir sur ce qui a été oublié. */
 export function RepeatIcon(props: TwoToneProps) {
   return (

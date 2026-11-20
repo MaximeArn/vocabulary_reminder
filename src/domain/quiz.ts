@@ -22,14 +22,22 @@ export interface Choice {
   label: string;
 }
 
+/** Carte affichée avec la question (géographie) : la zone mise en évidence. */
+export interface MapDisplay {
+  /** Identifiant de la zone à mettre en évidence (« 15 » pour le Cantal). */
+  highlight?: string;
+}
+
 interface QuestionBase {
   /** Fiche interrogée (pour un classement : celle qui a motivé la question). */
   itemId: string;
   exercise: string;
-  /** Ce qui est demandé : un mot, une définition, un événement… */
+  /** Ce qui est demandé : un mot, une définition, un événement… (vide si la carte suffit) */
   prompt: string;
   /** Consigne propre à cette question (sinon, celle de l'exercice). */
   instruction?: string;
+  /** Carte à afficher au-dessus des réponses. */
+  map?: MapDisplay;
 }
 
 /** Choisir la bonne réponse parmi quatre. */
@@ -51,8 +59,8 @@ export interface TypedGrade {
 /** Retrouver la réponse et la taper : un mot, ou une année. */
 export interface TypedQuestion extends QuestionBase {
   type: "typed";
-  /** « text » : un mot ; « year » : une année, saisie avec son ère (av. / apr. J.-C.). */
-  input: "text" | "year";
+  /** « text » : un mot ; « year » : une année, avec son ère (av. / apr. J.-C.) ; « code » : un numéro (« 15 », « 2A »). */
+  input: "text" | "year" | "code";
   /** Réponse attendue, telle qu'on l'écrit (« alacrité », « 331 av. J.-C. »). */
   expected: string;
   /** Corrige une saisie (pour une année : l'année historienne, « -331 »). */
@@ -76,14 +84,22 @@ export interface OrderQuestion extends QuestionBase {
   entries: OrderEntry[];
 }
 
-export type Question = ChoiceQuestion | TypedQuestion | OrderQuestion;
+/** Toucher la bonne zone sur la carte (« Touche le Cantal »). */
+export interface LocateQuestion extends QuestionBase {
+  type: "locate";
+  /** Identifiant de la zone attendue. */
+  target: string;
+}
+
+export type Question = ChoiceQuestion | TypedQuestion | OrderQuestion | LocateQuestion;
 
 /* ---------- Réponses et correction ---------- */
 
 export type QuestionResponse =
   | { type: "choice"; choiceId: string }
   | { type: "typed"; text: string }
-  | { type: "order"; itemIds: string[] };
+  | { type: "order"; itemIds: string[] }
+  | { type: "locate"; zone: string };
 
 export interface ItemGrade {
   itemId: string;
@@ -111,6 +127,10 @@ export function gradeResponse(question: Question, response: QuestionResponse): O
   if (question.type === "order" && response.type === "order") {
     const grades = gradeOrder(question.entries, response.itemIds);
     return { response, grades, correct: grades.every((grade) => grade.correct) };
+  }
+  if (question.type === "locate" && response.type === "locate") {
+    const correct = response.zone === question.target;
+    return { response, grades: [{ itemId: question.itemId, correct }], correct };
   }
   throw new Error(`Réponse « ${response.type} » à une question « ${question.type} »`);
 }

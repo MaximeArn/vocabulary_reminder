@@ -1,0 +1,55 @@
+/* Fiche détaillée */
+.name {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.facts {
+  margin: var(--space-4) 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.factLabel {
+  color: var(--ink-faint);
+}
+
+.factValue {
+  margin: 0;
+  font-weight: 600;
+}
+
+.detailMap {
+  margin-top: var(--space-5);
+}
+
+/* Explication après une réponse */
+.answerName {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.answerCode {
+  margin-left: var(--space-1);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--geography);
+  font-variant-numeric: tabular-nums;
+}
+
+.answerFacts {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.answerMap {
+  margin-top: var(--space-3);
+}

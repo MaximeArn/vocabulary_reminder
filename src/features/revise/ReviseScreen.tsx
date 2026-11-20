@@ -36,10 +36,18 @@ import styles from "./ReviseScreen.module.css";
 
 /**
  * Les icônes prennent la couleur de la catégorie révisée. Pour « Tout », chaque
- * icône a un tracé de chaque couleur (vocabulaire, dates), et la pastille de la
- * révision du jour une bordure bicolore. Contrastes vérifiés en clair et en sombre.
+ * icône a deux tracés de couleurs différentes, et la pastille de la révision du
+ * jour une bordure aux couleurs de toutes les catégories. Contrastes vérifiés en clair et en sombre.
  */
-const SPLIT_ICON_TONES: [string, string] = ["var(--vocabulary)", "var(--dates)"];
+/** Bordure de la pastille « Tout » : une part par catégorie présente, séparées par de courtes transitions. */
+function splitBorder(colors: string[]): string {
+  const step = 100 / colors.length;
+  const stops = colors.flatMap((color, index) => [
+    `${color} ${index === 0 ? 0 : index * step + 6}%`,
+    `${color} ${index === colors.length - 1 ? 100 : (index + 1) * step - 6}%`,
+  ]);
+  return `linear-gradient(var(--paper-raised), var(--paper-raised)) padding-box, linear-gradient(135deg, ${stops.join(", ")}) border-box`;
+}
 
 interface RunningSession {
   id: number;
@@ -91,7 +99,9 @@ export function ReviseScreen() {
   const reviewable = reviewableCards(selected);
   const dueCount = countDue(reviewable, today);
   const category = findCategory(kind);
-  const iconTones = category ? undefined : SPLIT_ICON_TONES;
+  // « Tout » : les icônes ont deux tracés, aux couleurs de la première et de la dernière catégorie présentes.
+  const iconTones: [string, string] | undefined =
+    category || categories.length < 2 ? undefined : [categories[0]!.color, categories[categories.length - 1]!.color];
 
   // Exercice d'une carte : selon sa catégorie, son niveau et le réglage de l'utilisateur.
   const exerciseFor = (card: Card, rotation: number) =>
@@ -169,7 +179,11 @@ export function ReviseScreen() {
                 dueCount > 0 ? (
                   <span
                     className={`${styles.badge} ${category ? "" : styles.splitBadge}`}
-                    style={category ? { background: category.fillColor, color: category.onFillColor } : undefined}
+                    style={
+                      category
+                        ? { background: category.fillColor, color: category.onFillColor }
+                        : { background: splitBorder(categories.map((present) => present.color)) }
+                    }
                   >
                     {dueCount}
                   </span>

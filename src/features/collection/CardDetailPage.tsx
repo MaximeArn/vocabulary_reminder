@@ -46,9 +46,11 @@ export function CardDetailPage({ itemId, onClose }: CardDetailPageProps) {
       </article>
 
       <div className={styles.actions}>
-        <Button variant="secondary" fullWidth onClick={() => setEditing(true)}>
-          Modifier
-        </Button>
+        {category.editable !== false && (
+          <Button variant="secondary" fullWidth onClick={() => setEditing(true)}>
+            Modifier
+          </Button>
+        )}
         <Button variant="quiet" fullWidth className={styles.delete} onClick={remove}>
           Supprimer
         </Button>

@@ -3,7 +3,7 @@ import { TabBar } from "./TabBar";
 import { saveTabInLocation, tabFromLocation, type TabId } from "./tabs";
 import { ToastProvider } from "../ui/Toast";
 import { ActionSheet } from "../ui/ActionSheet";
-import { CATEGORIES } from "../categories/registry";
+import { CATEGORIES, findCategory } from "../categories/registry";
 import { UpdateBanner } from "../pwa/UpdateBanner";
 import { ReviseScreen } from "../features/revise/ReviseScreen";
 import { CollectionScreen } from "../features/collection/CollectionScreen";
@@ -24,6 +24,12 @@ function CurrentScreen({ tab }: { tab: TabId }) {
     case "settings":
       return <SettingsScreen />;
   }
+}
+
+/** Ajout dans une catégorie : sa feuille dédiée (géographie) ou le formulaire. */
+function AddFlow({ kind, onClose }: { kind: string; onClose: () => void }) {
+  const AddSheet = findCategory(kind)?.AddSheet;
+  return AddSheet ? <AddSheet onClose={onClose} /> : <ItemFormSheet kind={kind} onClose={onClose} />;
 }
 
 export function App() {
@@ -71,7 +77,7 @@ export function App() {
         />
       )}
       {adding === "batch" && <BatchAddSheet onClose={() => setAdding(null)} />}
-      {adding && adding !== "choosing" && adding !== "batch" && <ItemFormSheet kind={adding} onClose={() => setAdding(null)} />}
+      {adding && adding !== "choosing" && adding !== "batch" && <AddFlow kind={adding} onClose={() => setAdding(null)} />}
     </ToastProvider>
   );
 }

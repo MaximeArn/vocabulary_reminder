@@ -6,12 +6,14 @@ interface ChoiceAnswerProps {
   question: ChoiceQuestion;
   /** Propositions longues (des définitions) ou courtes (des mots, des dates). */
   longChoices: boolean;
+  /** Sur deux colonnes : la question montre une carte, la place manque. */
+  grid?: boolean;
   outcome: Outcome | null;
   onSubmit: (response: QuestionResponse) => void;
 }
 
 /** Quatre propositions ; après la réponse, la bonne et la mauvaise sont marquées. */
-export function ChoiceAnswer({ question, longChoices, outcome, onSubmit }: ChoiceAnswerProps) {
+export function ChoiceAnswer({ question, longChoices, grid, outcome, onSubmit }: ChoiceAnswerProps) {
   const selected = outcome?.response.type === "choice" ? outcome.response.choiceId : null;
   const answered = outcome !== null;
 
@@ -24,7 +26,7 @@ export function ChoiceAnswer({ question, longChoices, outcome, onSubmit }: Choic
   };
 
   return (
-    <div className={styles.choices} role="group" aria-label="Propositions">
+    <div className={`${styles.choices} ${grid ? styles.choiceGrid : ""}`} role="group" aria-label="Propositions">
       {question.choices.map((choice) => (
         <button
           key={choice.id}

@@ -40,12 +40,9 @@
   text-align: center;
 }
 
-/* « Tout » : bordure moitié vocabulaire, moitié dates (transition à 45°), texte d'encre */
+/* « Tout » : bordure aux couleurs des catégories présentes (dégradé calculé), texte d'encre */
 .splitBadge {
   border: 2px solid transparent;
-  background:
-    linear-gradient(var(--paper-raised), var(--paper-raised)) padding-box,
-    linear-gradient(135deg, var(--vocabulary) calc(50% - 4px), var(--dates) calc(50% + 4px)) border-box;
   color: var(--ink);
 }
 

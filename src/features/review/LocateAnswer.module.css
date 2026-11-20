@@ -1,0 +1,14 @@
+.map {
+  margin-top: var(--space-4);
+}
+
+.actions {
+  margin-top: var(--space-4);
+}
+
+.hint {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  text-align: center;
+  color: var(--ink-faint);
+}

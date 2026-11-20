@@ -37,6 +37,16 @@
   --on-vocabulary-fill: #1d1a16;
   --dates-fill: #b5532f;
   --on-dates-fill: #fbf8f2;
+  /* Géographie : vert-bleu canard, celui des cartes (contraste 5,9:1 sur le papier) */
+  --geography: #1f6b66;
+  --geography-soft: #dcece9;
+  --geography-fill: #b7d9d4;
+  --on-geography-fill: #1d1a16;
+  /* Carte : terres claires, mers à peine bleutées, frontières fines */
+  --map-land: #f7f3ea;
+  --map-water: #d9e5e8;
+  --map-border: #a3998a;
+  --map-border-strong: #5f574b;
   /*
    * Niveaux de maîtrise : du rouge (nouveau) au vert (maîtrisé), pour lire la
    * progression d'un coup d'œil. Le rouge est plus sombre que le vert : les
@@ -109,6 +119,14 @@
     --on-vocabulary-fill: #ece5d8;
     --dates-fill: #c96a4a;
     --on-dates-fill: #18160f;
+    --geography: #6cc0b7;
+    --geography-soft: #1f3331;
+    --geography-fill: #24524e;
+    --on-geography-fill: #ece5d8;
+    --map-land: #353029;
+    --map-water: #161d20;
+    --map-border: #7a7162;
+    --map-border-strong: #b3aa9a;
     --level-new: #c9463e;
     --level-learning: #e2802f;
     --level-progressing: #e6c450;

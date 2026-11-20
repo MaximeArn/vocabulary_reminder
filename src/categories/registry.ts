@@ -3,6 +3,7 @@ import type { Describer } from "../domain/collection";
 import type { Category } from "./views";
 import { vocabulary } from "./vocabulary";
 import { historicalEvent } from "./historical-event";
+import { geography } from "./geography";
 import type { Unit } from "./model";
 
 /**
@@ -12,7 +13,7 @@ import type { Unit } from "./model";
 /** Registre hétérogène : chaque catégorie est typée dans son propre module. */
 export type AnyCategory = Category<any, any>;
 
-export const CATEGORIES: AnyCategory[] = [vocabulary, historicalEvent];
+export const CATEGORIES: AnyCategory[] = [vocabulary, historicalEvent, geography];
 
 export function findCategory(kind: string): AnyCategory | undefined {
   return CATEGORIES.find((category) => category.kind === kind);

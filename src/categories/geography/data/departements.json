@@ -1,0 +1,1492 @@
+{
+ "regions": [
+  {
+   "code": "11",
+   "name": "Île-de-France"
+  },
+  {
+   "code": "24",
+   "name": "Centre-Val de Loire"
+  },
+  {
+   "code": "27",
+   "name": "Bourgogne-Franche-Comté"
+  },
+  {
+   "code": "28",
+   "name": "Normandie"
+  },
+  {
+   "code": "32",
+   "name": "Hauts-de-France"
+  },
+  {
+   "code": "44",
+   "name": "Grand Est"
+  },
+  {
+   "code": "52",
+   "name": "Pays de la Loire"
+  },
+  {
+   "code": "53",
+   "name": "Bretagne"
+  },
+  {
+   "code": "75",
+   "name": "Nouvelle-Aquitaine"
+  },
+  {
+   "code": "76",
+   "name": "Occitanie"
+  },
+  {
+   "code": "84",
+   "name": "Auvergne-Rhône-Alpes"
+  },
+  {
+   "code": "93",
+   "name": "Provence-Alpes-Côte d’Azur"
+  },
+  {
+   "code": "94",
+   "name": "Corse"
+  },
+  {
+   "code": "01",
+   "name": "Guadeloupe"
+  },
+  {
+   "code": "02",
+   "name": "Martinique"
+  },
+  {
+   "code": "03",
+   "name": "Guyane"
+  },
+  {
+   "code": "04",
+   "name": "La Réunion"
+  },
+  {
+   "code": "06",
+   "name": "Mayotte"
+  }
+ ],
+ "departments": [
+  {
+   "code": "01",
+   "name": "Ain",
+   "region": "84",
+   "prefecture": "Bourg-en-Bresse",
+   "prefecturePoint": [
+    783.9,
+    551.6
+   ],
+   "center": [
+    779.3,
+    560.4
+   ]
+  },
+  {
+   "code": "02",
+   "name": "Aisne",
+   "region": "32",
+   "prefecture": "Laon",
+   "prefecturePoint": [
+    654.3,
+    176.4
+   ],
+   "center": [
+    648.6,
+    170.2
+   ]
+  },
+  {
+   "code": "2A",
+   "name": "Corse-du-Sud",
+   "region": "94",
+   "prefecture": "Ajaccio",
+   "prefecturePoint": [
+    925.1,
+    928.5
+   ],
+   "center": [
+    949.3,
+    933.3
+   ]
+  },
+  {
+   "code": "2B",
+   "name": "Haute-Corse",
+   "region": "94",
+   "prefecture": "Bastia",
+   "prefecturePoint": [
+    978,
+    838.4
+   ],
+   "center": [
+    962.9,
+    871.9
+   ]
+  },
+  {
+   "code": "03",
+   "name": "Allier",
+   "region": "84",
+   "prefecture": "Moulins",
+   "prefecturePoint": [
+    634.8,
+    514.1
+   ],
+   "center": [
+    624.2,
+    532.7
+   ]
+  },
+  {
+   "code": "04",
+   "name": "Alpes-de-Haute-Provence",
+   "region": "93",
+   "prefecture": "Digne-les-Bains",
+   "prefecturePoint": [
+    871.3,
+    784.9
+   ],
+   "center": [
+    870.9,
+    784.5
+   ]
+  },
+  {
+   "code": "05",
+   "name": "Hautes-Alpes",
+   "region": "93",
+   "prefecture": "Gap",
+   "prefecturePoint": [
+    854.1,
+    731.3
+   ],
+   "center": [
+    888.7,
+    717.4
+   ]
+  },
+  {
+   "code": "06",
+   "name": "Alpes-Maritimes",
+   "region": "93",
+   "prefecture": "Nice",
+   "prefecturePoint": [
+    954.4,
+    825
+   ],
+   "center": [
+    945,
+    798.1
+   ]
+  },
+  {
+   "code": "07",
+   "name": "Ardèche",
+   "region": "84",
+   "prefecture": "Privas",
+   "prefecturePoint": [
+    736.7,
+    718.8
+   ],
+   "center": [
+    724.3,
+    719
+   ]
+  },
+  {
+   "code": "08",
+   "name": "Ardennes",
+   "region": "44",
+   "prefecture": "Charleville-Mézières",
+   "prefecturePoint": [
+    735.1,
+    151.8
+   ],
+   "center": [
+    728.4,
+    171.4
+   ]
+  },
+  {
+   "code": "09",
+   "name": "Ariège",
+   "region": "76",
+   "prefecture": "Foix",
+   "prefecturePoint": [
+    495.5,
+    915.5
+   ],
+   "center": [
+    486.9,
+    920
+   ]
+  },
+  {
+   "code": "10",
+   "name": "Aube",
+   "region": "44",
+   "prefecture": "Troyes",
+   "prefecturePoint": [
+    690,
+    319.4
+   ],
+   "center": [
+    696.3,
+    318
+   ]
+  },
+  {
+   "code": "11",
+   "name": "Aude",
+   "region": "76",
+   "prefecture": "Carcassonne",
+   "prefecturePoint": [
+    556.5,
+    889.6
+   ],
+   "center": [
+    561.6,
+    901.4
+   ]
+  },
+  {
+   "code": "12",
+   "name": "Aveyron",
+   "region": "76",
+   "prefecture": "Rodez",
+   "prefecturePoint": [
+    575.2,
+    760.6
+   ],
+   "center": [
+    585.6,
+    766.7
+   ]
+  },
+  {
+   "code": "13",
+   "name": "Bouches-du-Rhône",
+   "region": "93",
+   "prefecture": "Marseille",
+   "prefecturePoint": [
+    804.1,
+    878.8
+   ],
+   "center": [
+    762.3,
+    835.6
+   ]
+  },
+  {
+   "code": "14",
+   "name": "Calvados",
+   "region": "28",
+   "prefecture": "Caen",
+   "prefecturePoint": [
+    362.6,
+    214.7
+   ],
+   "center": [
+    359.6,
+    224.3
+   ]
+  },
+  {
+   "code": "15",
+   "name": "Cantal",
+   "region": "84",
+   "prefecture": "Aurillac",
+   "prefecturePoint": [
+    565.4,
+    696.8
+   ],
+   "center": [
+    579.2,
+    672.6
+   ]
+  },
+  {
+   "code": "16",
+   "name": "Charente",
+   "region": "75",
+   "prefecture": "Angoulême",
+   "prefecturePoint": [
+    386.1,
+    612.5
+   ],
+   "center": [
+    390.8,
+    603.9
+   ]
+  },
+  {
+   "code": "17",
+   "name": "Charente-Maritime",
+   "region": "75",
+   "prefecture": "La Rochelle",
+   "prefecturePoint": [
+    285.8,
+    550.1
+   ],
+   "center": [
+    317.2,
+    594.6
+   ]
+  },
+  {
+   "code": "18",
+   "name": "Cher",
+   "region": "24",
+   "prefecture": "Bourges",
+   "prefecturePoint": [
+    563.8,
+    455.9
+   ],
+   "center": [
+    571,
+    457.3
+   ]
+  },
+  {
+   "code": "19",
+   "name": "Corrèze",
+   "region": "75",
+   "prefecture": "Tulle",
+   "prefecturePoint": [
+    512.4,
+    658
+   ],
+   "center": [
+    521.3,
+    648.4
+   ]
+  },
+  {
+   "code": "21",
+   "name": "Côte-d’Or",
+   "region": "27",
+   "prefecture": "Dijon",
+   "prefecturePoint": [
+    764,
+    425.6
+   ],
+   "center": [
+    742.1,
+    420.1
+   ]
+  },
+  {
+   "code": "22",
+   "name": "Côtes-d’Armor",
+   "region": "53",
+   "prefecture": "Saint-Brieuc",
+   "prefecturePoint": [
+    181.9,
+    279.9
+   ],
+   "center": [
+    154.6,
+    279.3
+   ]
+  },
+  {
+   "code": "23",
+   "name": "Creuse",
+   "region": "75",
+   "prefecture": "Guéret",
+   "prefecturePoint": [
+    522.1,
+    558.4
+   ],
+   "center": [
+    533.5,
+    566.2
+   ]
+  },
+  {
+   "code": "24",
+   "name": "Dordogne",
+   "region": "75",
+   "prefecture": "Périgueux",
+   "prefecturePoint": [
+    428.9,
+    664.5
+   ],
+   "center": [
+    431.1,
+    674.6
+   ]
+  },
+  {
+   "code": "25",
+   "name": "Doubs",
+   "region": "27",
+   "prefecture": "Besançon",
+   "prefecturePoint": [
+    838.7,
+    431.3
+   ],
+   "center": [
+    864.7,
+    439.3
+   ]
+  },
+  {
+   "code": "26",
+   "name": "Drôme",
+   "region": "84",
+   "prefecture": "Valence",
+   "prefecturePoint": [
+    761.8,
+    695.6
+   ],
+   "center": [
+    782.1,
+    722.4
+   ]
+  },
+  {
+   "code": "27",
+   "name": "Eure",
+   "region": "28",
+   "prefecture": "Évreux",
+   "prefecturePoint": [
+    473,
+    237
+   ],
+   "center": [
+    462.2,
+    237.9
+   ]
+  },
+  {
+   "code": "28",
+   "name": "Eure-et-Loir",
+   "region": "24",
+   "prefecture": "Chartres",
+   "prefecturePoint": [
+    498.5,
+    301.5
+   ],
+   "center": [
+    488.5,
+    308.1
+   ]
+  },
+  {
+   "code": "29",
+   "name": "Finistère",
+   "region": "53",
+   "prefecture": "Quimper",
+   "prefecturePoint": [
+    78.2,
+    329.1
+   ],
+   "center": [
+    90.4,
+    301.9
+   ]
+  },
+  {
+   "code": "30",
+   "name": "Gard",
+   "region": "76",
+   "prefecture": "Nîmes",
+   "prefecturePoint": [
+    718.3,
+    818.9
+   ],
+   "center": [
+    710.7,
+    801.5
+   ]
+  },
+  {
+   "code": "31",
+   "name": "Haute-Garonne",
+   "region": "76",
+   "prefecture": "Toulouse",
+   "prefecturePoint": [
+    482.4,
+    844.5
+   ],
+   "center": [
+    481.5,
+    852.5
+   ]
+  },
+  {
+   "code": "32",
+   "name": "Gers",
+   "region": "76",
+   "prefecture": "Auch",
+   "prefecturePoint": [
+    412.3,
+    836.1
+   ],
+   "center": [
+    403.2,
+    832.1
+   ]
+  },
+  {
+   "code": "33",
+   "name": "Gironde",
+   "region": "75",
+   "prefecture": "Bordeaux",
+   "prefecturePoint": [
+    325,
+    697.8
+   ],
+   "center": [
+    325.1,
+    700.5
+   ]
+  },
+  {
+   "code": "34",
+   "name": "Hérault",
+   "region": "76",
+   "prefecture": "Montpellier",
+   "prefecturePoint": [
+    680.7,
+    844.3
+   ],
+   "center": [
+    639.7,
+    848.1
+   ]
+  },
+  {
+   "code": "35",
+   "name": "Ille-et-Vilaine",
+   "region": "53",
+   "prefecture": "Rennes",
+   "prefecturePoint": [
+    259.1,
+    329.4
+   ],
+   "center": [
+    263.5,
+    325.6
+   ]
+  },
+  {
+   "code": "36",
+   "name": "Indre",
+   "region": "24",
+   "prefecture": "Châteauroux",
+   "prefecturePoint": [
+    509.3,
+    486.1
+   ],
+   "center": [
+    500.5,
+    488.6
+   ]
+  },
+  {
+   "code": "37",
+   "name": "Indre-et-Loire",
+   "region": "24",
+   "prefecture": "Tours",
+   "prefecturePoint": [
+    434.9,
+    418.1
+   ],
+   "center": [
+    435,
+    429.1
+   ]
+  },
+  {
+   "code": "38",
+   "name": "Isère",
+   "region": "84",
+   "prefecture": "Grenoble",
+   "prefecturePoint": [
+    824.1,
+    664.6
+   ],
+   "center": [
+    828.5,
+    669.9
+   ]
+  },
+  {
+   "code": "39",
+   "name": "Jura",
+   "region": "27",
+   "prefecture": "Lons-le-Saunier",
+   "prefecturePoint": [
+    806.3,
+    497.9
+   ],
+   "center": [
+    818.6,
+    492.5
+   ]
+  },
+  {
+   "code": "40",
+   "name": "Landes",
+   "region": "75",
+   "prefecture": "Mont-de-Marsan",
+   "prefecturePoint": [
+    326.9,
+    806.7
+   ],
+   "center": [
+    304.2,
+    797.2
+   ]
+  },
+  {
+   "code": "41",
+   "name": "Loir-et-Cher",
+   "region": "24",
+   "prefecture": "Blois",
+   "prefecturePoint": [
+    481.6,
+    398.3
+   ],
+   "center": [
+    488,
+    400
+   ]
+  },
+  {
+   "code": "42",
+   "name": "Loire",
+   "region": "84",
+   "prefecture": "Saint-Étienne",
+   "prefecturePoint": [
+    717.2,
+    640.4
+   ],
+   "center": [
+    696.3,
+    604.7
+   ]
+  },
+  {
+   "code": "43",
+   "name": "Haute-Loire",
+   "region": "84",
+   "prefecture": "Le Puy-en-Velay",
+   "prefecturePoint": [
+    680.8,
+    685.3
+   ],
+   "center": [
+    674.1,
+    677
+   ]
+  },
+  {
+   "code": "44",
+   "name": "Loire-Atlantique",
+   "region": "52",
+   "prefecture": "Nantes",
+   "prefecturePoint": [
+    263,
+    428.1
+   ],
+   "center": [
+    254.6,
+    413.6
+   ]
+  },
+  {
+   "code": "45",
+   "name": "Loiret",
+   "region": "24",
+   "prefecture": "Orléans",
+   "prefecturePoint": [
+    527.9,
+    366.4
+   ],
+   "center": [
+    554.6,
+    358.9
+   ]
+  },
+  {
+   "code": "46",
+   "name": "Lot",
+   "region": "76",
+   "prefecture": "Cahors",
+   "prefecturePoint": [
+    484.8,
+    748.6
+   ],
+   "center": [
+    498.5,
+    729.9
+   ]
+  },
+  {
+   "code": "47",
+   "name": "Lot-et-Garonne",
+   "region": "75",
+   "prefecture": "Agen",
+   "prefecturePoint": [
+    419.3,
+    775.6
+   ],
+   "center": [
+    406.3,
+    756.4
+   ]
+  },
+  {
+   "code": "48",
+   "name": "Lozère",
+   "region": "76",
+   "prefecture": "Mende",
+   "prefecturePoint": [
+    648.9,
+    740.9
+   ],
+   "center": [
+    649.7,
+    743.3
+   ]
+  },
+  {
+   "code": "49",
+   "name": "Maine-et-Loire",
+   "region": "52",
+   "prefecture": "Angers",
+   "prefecturePoint": [
+    340,
+    404.7
+   ],
+   "center": [
+    339.8,
+    415
+   ]
+  },
+  {
+   "code": "50",
+   "name": "Manche",
+   "region": "28",
+   "prefecture": "Saint-Lô",
+   "prefecturePoint": [
+    310.2,
+    220.3
+   ],
+   "center": [
+    291.8,
+    222.9
+   ]
+  },
+  {
+   "code": "51",
+   "name": "Marne",
+   "region": "44",
+   "prefecture": "Châlons-en-Champagne",
+   "prefecturePoint": [
+    711.3,
+    243.6
+   ],
+   "center": [
+    700.1,
+    239.1
+   ]
+  },
+  {
+   "code": "52",
+   "name": "Haute-Marne",
+   "region": "44",
+   "prefecture": "Chaumont",
+   "prefecturePoint": [
+    771.1,
+    339.7
+   ],
+   "center": [
+    775.2,
+    339.5
+   ]
+  },
+  {
+   "code": "53",
+   "name": "Mayenne",
+   "region": "52",
+   "prefecture": "Laval",
+   "prefecturePoint": [
+    327.5,
+    339.5
+   ],
+   "center": [
+    336.4,
+    330.5
+   ]
+  },
+  {
+   "code": "54",
+   "name": "Meurthe-et-Moselle",
+   "region": "44",
+   "prefecture": "Nancy",
+   "prefecturePoint": [
+    844.5,
+    270.9
+   ],
+   "center": [
+    839.7,
+    270.4
+   ]
+  },
+  {
+   "code": "55",
+   "name": "Meuse",
+   "region": "44",
+   "prefecture": "Bar-le-Duc",
+   "prefecturePoint": [
+    770.3,
+    265
+   ],
+   "center": [
+    784.9,
+    239
+   ]
+  },
+  {
+   "code": "56",
+   "name": "Morbihan",
+   "region": "53",
+   "prefecture": "Vannes",
+   "prefecturePoint": [
+    176.2,
+    375.3
+   ],
+   "center": [
+    168.2,
+    351.6
+   ]
+  },
+  {
+   "code": "57",
+   "name": "Moselle",
+   "region": "44",
+   "prefecture": "Metz",
+   "prefecturePoint": [
+    844.3,
+    224.2
+   ],
+   "center": [
+    871,
+    234.6
+   ]
+  },
+  {
+   "code": "58",
+   "name": "Nièvre",
+   "region": "27",
+   "prefecture": "Nevers",
+   "prefecturePoint": [
+    621.9,
+    466.4
+   ],
+   "center": [
+    648.2,
+    451.8
+   ]
+  },
+  {
+   "code": "59",
+   "name": "Nord",
+   "region": "32",
+   "prefecture": "Lille",
+   "prefecturePoint": [
+    613,
+    57.6
+   ],
+   "center": [
+    637.2,
+    96.4
+   ]
+  },
+  {
+   "code": "60",
+   "name": "Oise",
+   "region": "32",
+   "prefecture": "Beauvais",
+   "prefecturePoint": [
+    543.2,
+    190.6
+   ],
+   "center": [
+    567.7,
+    195.9
+   ]
+  },
+  {
+   "code": "61",
+   "name": "Orne",
+   "region": "28",
+   "prefecture": "Alençon",
+   "prefecturePoint": [
+    393.5,
+    300.5
+   ],
+   "center": [
+    396.3,
+    274.3
+   ]
+  },
+  {
+   "code": "62",
+   "name": "Pas-de-Calais",
+   "region": "32",
+   "prefecture": "Arras",
+   "prefecturePoint": [
+    593.1,
+    96
+   ],
+   "center": [
+    538.3,
+    58.9
+   ]
+  },
+  {
+   "code": "63",
+   "name": "Puy-de-Dôme",
+   "region": "84",
+   "prefecture": "Clermont-Ferrand",
+   "prefecturePoint": [
+    618.5,
+    600.7
+   ],
+   "center": [
+    620.7,
+    607.5
+   ]
+  },
+  {
+   "code": "64",
+   "name": "Pyrénées-Atlantiques",
+   "region": "75",
+   "prefecture": "Pau",
+   "prefecturePoint": [
+    336.9,
+    871.3
+   ],
+   "center": [
+    309.5,
+    878.1
+   ]
+  },
+  {
+   "code": "65",
+   "name": "Hautes-Pyrénées",
+   "region": "76",
+   "prefecture": "Tarbes",
+   "prefecturePoint": [
+    369.9,
+    881.9
+   ],
+   "center": [
+    377.4,
+    903.2
+   ]
+  },
+  {
+   "code": "66",
+   "name": "Pyrénées-Orientales",
+   "region": "76",
+   "prefecture": "Perpignan",
+   "prefecturePoint": [
+    601.8,
+    947
+   ],
+   "center": [
+    570.2,
+    958
+   ]
+  },
+  {
+   "code": "67",
+   "name": "Bas-Rhin",
+   "region": "44",
+   "prefecture": "Strasbourg",
+   "prefecturePoint": [
+    962.7,
+    278.3
+   ],
+   "center": [
+    946.5,
+    267.8
+   ]
+  },
+  {
+   "code": "68",
+   "name": "Haut-Rhin",
+   "region": "44",
+   "prefecture": "Colmar",
+   "prefecturePoint": [
+    938.2,
+    331.1
+   ],
+   "center": [
+    930.9,
+    359.9
+   ]
+  },
+  {
+   "code": "69",
+   "name": "Rhône",
+   "region": "84",
+   "prefecture": "Lyon",
+   "prefecturePoint": [
+    753.1,
+    602.3
+   ],
+   "center": [
+    733.5,
+    594.8
+   ]
+  },
+  {
+   "code": "70",
+   "name": "Haute-Saône",
+   "region": "27",
+   "prefecture": "Vesoul",
+   "prefecturePoint": [
+    847.7,
+    389.2
+   ],
+   "center": [
+    842,
+    387
+   ]
+  },
+  {
+   "code": "71",
+   "name": "Saône-et-Loire",
+   "region": "27",
+   "prefecture": "Mâcon",
+   "prefecturePoint": [
+    749.6,
+    538.7
+   ],
+   "center": [
+    727.9,
+    506.1
+   ]
+  },
+  {
+   "code": "72",
+   "name": "Sarthe",
+   "region": "52",
+   "prefecture": "Le Mans",
+   "prefecturePoint": [
+    399.4,
+    351
+   ],
+   "center": [
+    401.5,
+    349.6
+   ]
+  },
+  {
+   "code": "73",
+   "name": "Savoie",
+   "region": "84",
+   "prefecture": "Chambéry",
+   "prefecturePoint": [
+    837.6,
+    619.4
+   ],
+   "center": [
+    882.8,
+    633.6
+   ]
+  },
+  {
+   "code": "74",
+   "name": "Haute-Savoie",
+   "region": "84",
+   "prefecture": "Annecy",
+   "prefecturePoint": [
+    853.4,
+    582.9
+   ],
+   "center": [
+    880.8,
+    556.9
+   ]
+  },
+  {
+   "code": "75",
+   "name": "Paris",
+   "region": "11",
+   "prefecture": "Paris",
+   "prefecturePoint": [
+    561.5,
+    256.3
+   ],
+   "center": [
+    561.3,
+    256.5
+   ]
+  },
+  {
+   "code": "76",
+   "name": "Seine-Maritime",
+   "region": "28",
+   "prefecture": "Rouen",
+   "prefecturePoint": [
+    470.5,
+    189.5
+   ],
+   "center": [
+    466.2,
+    165.9
+   ]
+  },
+  {
+   "code": "77",
+   "name": "Seine-et-Marne",
+   "region": "11",
+   "prefecture": "Melun",
+   "prefecturePoint": [
+    584.1,
+    291.9
+   ],
+   "center": [
+    604,
+    278.6
+   ]
+  },
+  {
+   "code": "78",
+   "name": "Yvelines",
+   "region": "11",
+   "prefecture": "Versailles",
+   "prefecturePoint": [
+    544.7,
+    262.3
+   ],
+   "center": [
+    524.2,
+    260.7
+   ]
+  },
+  {
+   "code": "79",
+   "name": "Deux-Sèvres",
+   "region": "75",
+   "prefecture": "Niort",
+   "prefecturePoint": [
+    342,
+    534.3
+   ],
+   "center": [
+    353.4,
+    508.2
+   ]
+  },
+  {
+   "code": "80",
+   "name": "Somme",
+   "region": "32",
+   "prefecture": "Amiens",
+   "prefecturePoint": [
+    558,
+    139.6
+   ],
+   "center": [
+    553,
+    135.2
+   ]
+  },
+  {
+   "code": "81",
+   "name": "Tarn",
+   "region": "76",
+   "prefecture": "Albi",
+   "prefecturePoint": [
+    539.6,
+    808.6
+   ],
+   "center": [
+    542.2,
+    824.6
+   ]
+  },
+  {
+   "code": "82",
+   "name": "Tarn-et-Garonne",
+   "region": "76",
+   "prefecture": "Montauban",
+   "prefecturePoint": [
+    477.8,
+    797.2
+   ],
+   "center": [
+    464.8,
+    795.4
+   ]
+  },
+  {
+   "code": "83",
+   "name": "Var",
+   "region": "93",
+   "prefecture": "Toulon",
+   "prefecturePoint": [
+    849.9,
+    893.4
+   ],
+   "center": [
+    873.9,
+    857.8
+   ]
+  },
+  {
+   "code": "84",
+   "name": "Vaucluse",
+   "region": "93",
+   "prefecture": "Avignon",
+   "prefecturePoint": [
+    757.7,
+    805.8
+   ],
+   "center": [
+    786,
+    799.2
+   ]
+  },
+  {
+   "code": "85",
+   "name": "Vendée",
+   "region": "52",
+   "prefecture": "La Roche-sur-Yon",
+   "prefecturePoint": [
+    270.4,
+    492.7
+   ],
+   "center": [
+    280.5,
+    494.8
+   ]
+  },
+  {
+   "code": "86",
+   "name": "Vienne",
+   "region": "75",
+   "prefecture": "Poitiers",
+   "prefecturePoint": [
+    407.4,
+    508
+   ],
+   "center": [
+    414,
+    510.4
+   ]
+  },
+  {
+   "code": "87",
+   "name": "Haute-Vienne",
+   "region": "75",
+   "prefecture": "Limoges",
+   "prefecturePoint": [
+    471.3,
+    591.3
+   ],
+   "center": [
+    472,
+    587.4
+   ]
+  },
+  {
+   "code": "88",
+   "name": "Vosges",
+   "region": "44",
+   "prefecture": "Épinal",
+   "prefecturePoint": [
+    870.3,
+    328.7
+   ],
+   "center": [
+    864.2,
+    326.8
+   ]
+  },
+  {
+   "code": "89",
+   "name": "Yonne",
+   "region": "27",
+   "prefecture": "Auxerre",
+   "prefecturePoint": [
+    653.5,
+    375.7
+   ],
+   "center": [
+    652.1,
+    370.5
+   ]
+  },
+  {
+   "code": "90",
+   "name": "Territoire de Belfort",
+   "region": "27",
+   "prefecture": "Belfort",
+   "prefecturePoint": [
+    899.6,
+    385.4
+   ],
+   "center": [
+    905.1,
+    384.8
+   ]
+  },
+  {
+   "code": "91",
+   "name": "Essonne",
+   "region": "11",
+   "prefecture": "Évry-Courcouronnes",
+   "prefecturePoint": [
+    567.6,
+    282.1
+   ],
+   "center": [
+    553.5,
+    293.9
+   ]
+  },
+  {
+   "code": "92",
+   "name": "Hauts-de-Seine",
+   "region": "11",
+   "prefecture": "Nanterre",
+   "prefecturePoint": [
+    550.9,
+    251.9
+   ],
+   "center": [
+    554.9,
+    262.7
+   ]
+  },
+  {
+   "code": "93",
+   "name": "Seine-Saint-Denis",
+   "region": "11",
+   "prefecture": "Bobigny",
+   "prefecturePoint": [
+    568.7,
+    250.9
+   ],
+   "center": [
+    572.2,
+    250.4
+   ]
+  },
+  {
+   "code": "94",
+   "name": "Val-de-Marne",
+   "region": "11",
+   "prefecture": "Créteil",
+   "prefecturePoint": [
+    569.2,
+    264.7
+   ],
+   "center": [
+    572.8,
+    264.6
+   ]
+  },
+  {
+   "code": "95",
+   "name": "Val-d’Oise",
+   "region": "11",
+   "prefecture": "Cergy",
+   "prefecturePoint": [
+    539.5,
+    236
+   ],
+   "center": [
+    550.2,
+    231.6
+   ]
+  },
+  {
+   "code": "971",
+   "name": "Guadeloupe",
+   "region": "01",
+   "prefecture": "Basse-Terre",
+   "prefecturePoint": [
+    23.2,
+    1110.4
+   ],
+   "center": [
+    31.8,
+    1081.6
+   ]
+  },
+  {
+   "code": "972",
+   "name": "Martinique",
+   "region": "02",
+   "prefecture": "Fort-de-France",
+   "prefecturePoint": [
+    234.9,
+    1075.6
+   ],
+   "center": [
+    244.4,
+    1065.4
+   ]
+  },
+  {
+   "code": "973",
+   "name": "Guyane",
+   "region": "03",
+   "prefecture": "Cayenne",
+   "prefecturePoint": [
+    443.8,
+    1042.7
+   ],
+   "center": [
+    416.7,
+    1077.3
+   ]
+  },
+  {
+   "code": "974",
+   "name": "La Réunion",
+   "region": "04",
+   "prefecture": "Saint-Denis",
+   "prefecturePoint": [
+    565.9,
+    1034.3
+   ],
+   "center": [
+    585.6,
+    1079.9
+   ]
+  },
+  {
+   "code": "976",
+   "name": "Mayotte",
+   "region": "06",
+   "prefecture": "Mamoudzou",
+   "prefecturePoint": [
+    763.1,
+    1059.8
+   ],
+   "center": [
+    746.4,
+    1067.4
+   ]
+  }
+ ]
+}

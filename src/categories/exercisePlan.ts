@@ -27,23 +27,25 @@ export function chooseExercise(
 ): string | undefined {
   const model = CATEGORY_MODELS.find((candidate) => candidate.kind === card.item.kind);
   if (!model) return undefined;
-  const choices = model.exercises.filter((exercise) => exercise.mode === "choice");
-  const allowed = choices.some((exercise) => exercise.id === preference)
-    ? choices.filter((exercise) => exercise.id === preference)
-    : choices;
+  const fits = (exercise: (typeof model.exercises)[number]) => exercise.accepts?.(card.item) ?? true;
+  // Exercices qui alternent : à choix, ou sur la carte.
+  const rotating = model.exercises.filter((exercise) => (exercise.mode === "choice" || exercise.mode === "map") && fits(exercise));
+  const allowed = rotating.some((exercise) => exercise.id === preference)
+    ? rotating.filter((exercise) => exercise.id === preference)
+    : rotating;
   if (allowed.length === 0) return undefined;
 
-  const order = model.exercises.find((exercise) => exercise.mode === "order");
+  const order = model.exercises.find((exercise) => exercise.mode === "order" && fits(exercise));
   if (order && random() < ORDER_SHARE) return order.id;
 
+  const base = allowed[rotation % allowed.length]!;
   if (card.progress.box >= TYPING_FROM_BOX) {
-    const typed = model.exercises.find(
-      (exercise) =>
-        exercise.mode === "typed" &&
-        allowed.some((choice) => choice.id === exercise.follows) &&
-        (exercise.accepts?.(card.item) ?? true),
-    );
+    const typedOf = (choice: { id: string }) =>
+      model.exercises.find((exercise) => exercise.mode === "typed" && exercise.follows === choice.id && fits(exercise));
+    // Sa propre version tapée ; sinon (exercice à choix sans saisie), celle d'un autre exercice autorisé.
+    // Un exercice sur la carte reste sur la carte.
+    const typed = typedOf(base) ?? (base.mode === "choice" ? allowed.map(typedOf).find(Boolean) : undefined);
     if (typed) return typed.id;
   }
-  return allowed[rotation % allowed.length]!.id;
+  return base.id;
 }

@@ -41,8 +41,8 @@ export function useRestoreBackup() {
   };
 }
 
-/** Accord du participe : « dates » et « fiches » sont féminins, « mots » masculin. */
+/** Accord du participe selon l'unité : « mots restaurés », « dates restaurées ». */
 function restoredLabel(kinds: string[], count: number): string {
-  const feminine = unitForKinds(kinds).plural !== "mots";
+  const feminine = !unitForKinds(kinds).masculine;
   return `restauré${feminine ? "e" : ""}${count > 1 ? "s" : ""}`;
 }

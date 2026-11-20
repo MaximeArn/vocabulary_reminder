@@ -18,12 +18,13 @@ export class InvalidContentError extends Error {}
  * - « choice » : choisir parmi quatre propositions (le sens se règle dans Réglages) ;
  * - « typed » : taper la réponse, version exigeante d'un exercice « choice » (`follows`),
  *   proposée une fois la fiche acquise ;
- * - « order » : remettre plusieurs fiches dans l'ordre, de temps en temps.
+ * - « order » : remettre plusieurs fiches dans l'ordre, de temps en temps ;
+ * - « map » : répondre sur la carte (géographie), en alternance avec les exercices à choix.
  */
 export interface Exercise<Content> {
   /** Identifiant stable, préfixé par la catégorie : « vocabulary.word-to-definition ». */
   id: string;
-  mode: "choice" | "typed" | "order";
+  mode: "choice" | "typed" | "order" | "map";
   /** Pour une saisie : l'exercice à choix dont elle est la version tapée. */
   follows?: string;
   /** L'exercice convient-il à cette fiche ? (Par défaut, oui.) */
@@ -49,6 +50,8 @@ export type DraftErrors = Record<string, string | undefined>;
 export interface Unit {
   singular: string;
   plural: string;
+  /** Pour les accords (« 3 mots ajoutés », « 3 dates ajoutées ») ; féminin par défaut. */
+  masculine?: boolean;
 }
 
 export function formatCount(count: number, unit: Unit): string {
@@ -74,6 +77,11 @@ export interface CategoryModel<Content, Draft> {
   onFillColor: string;
   /** Texte d'aide du champ de recherche. */
   searchPlaceholder: string;
+  /**
+   * Fiche modifiable avec un formulaire (par défaut, oui). Une fiche qui renvoie à
+   * un référentiel (un département) ne se modifie pas : on la supprime ou on l'ajoute.
+   */
+  editable?: boolean;
   /**
    * Présentation dans la liste : « definition » (titre, puis résumé) ou
    * « timeline » (résumé en tête, comme une date sur une frise, puis titre).

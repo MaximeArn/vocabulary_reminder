@@ -22,9 +22,10 @@ export function ReviewSettingsPanel() {
         />
       </div>
       {CATEGORIES.map((category) => {
-        // Seuls les exercices à choix se règlent ; saisie et classement s'y ajoutent d'eux-mêmes.
+        // Le sens des questions se règle pour les catégories à deux sens (mot ↔ définition, date ↔ événement) ;
+        // saisie, classement et carte s'y ajoutent d'eux-mêmes.
         const choices = category.exercises.filter((exercise) => exercise.mode === "choice");
-        if (choices.length < 2) return null;
+        if (choices.length !== 2) return null;
         const options: Record<string, string> = {
           mixed: "Les deux",
           ...Object.fromEntries(choices.map((exercise) => [exercise.id, exercise.label])),

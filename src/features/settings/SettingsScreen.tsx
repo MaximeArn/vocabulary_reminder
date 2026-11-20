@@ -34,6 +34,8 @@ export function SettingsScreen() {
             rows={[
               { label: "Version", value: __APP_VERSION__ },
               { label: "Publiée le", value: buildDateFormatter.format(new Date(__BUILD_TIME__)) },
+              // Licence Ouverte Etalab 2.0 : la source doit être citée.
+              { label: "Cartes", value: "IGN Admin Express et geo.api.gouv.fr (Licence Ouverte)" },
             ]}
           />
         </SettingsCard>

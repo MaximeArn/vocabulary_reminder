@@ -12,3 +12,6 @@ scripts/icons/candidates/
 scripts/icons/inspirations/
 # Illustration source de l’icône (licence de banque d’images) : hors du dépôt public
 scripts/icons/source/
+
+# Sources de la carte (téléchargées par scripts/geo/build-france.mjs)
+scripts/geo/source/

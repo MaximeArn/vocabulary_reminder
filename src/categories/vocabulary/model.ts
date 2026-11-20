@@ -1,13 +1,6 @@
 import { buildChoiceQuestion, hasEnoughDistinct, type TypedGrade, type TypedQuestion } from "../../domain/quiz";
-import {
-  answerKey,
-  cleanOptionalText,
-  cleanText,
-  comparisonKey,
-  editDistance,
-  stripSurroundingQuotes,
-  toleratedTypos,
-} from "../../domain/text";
+import { cleanOptionalText, cleanText, comparisonKey, stripSurroundingQuotes } from "../../domain/text";
+import { gradeTypedText } from "../../domain/typing";
 import type { Item } from "../../domain/types";
 import { expectRecord, expectText, optionalText, type CategoryModel, type Exercise } from "../model";
 
@@ -89,18 +82,9 @@ const definitionToWord: Exercise<VocabularyContent> = {
     }),
 };
 
-/**
- * Corrige un mot tapé. Majuscules, accents, tirets et apostrophes ne comptent pas ;
- * une petite faute (deux pour un mot long) est acceptée, l'orthographe exacte étant
- * alors affichée. Un autre mot de la collection n'est jamais accepté, même proche.
- */
+/** Corrige un mot tapé (voir `gradeTypedText`) : un autre mot de la collection n'est jamais accepté. */
 export function gradeTypedTerm(answer: string, expected: string, otherTerms: string[] = []): TypedGrade {
-  const typed = answerKey(answer);
-  const target = answerKey(expected);
-  const exact = cleanText(answer).toLocaleLowerCase("fr") === cleanText(expected).toLocaleLowerCase("fr");
-  if (typed === target) return { correct: true, exact };
-  if (otherTerms.some((term) => answerKey(term) === typed)) return { correct: false, exact: false };
-  return { correct: editDistance(typed, target) <= toleratedTypos(expected), exact: false };
+  return gradeTypedText(answer, expected, otherTerms);
 }
 
 /** Retrouver le mot à partir de sa définition, et le taper. */
@@ -131,7 +115,7 @@ const typedWord: Exercise<VocabularyContent> = {
 export const vocabularyModel: CategoryModel<VocabularyContent, VocabularyDraft> = {
   kind: "vocabulary",
   label: "Vocabulaire",
-  unit: { singular: "mot", plural: "mots" },
+  unit: { singular: "mot", plural: "mots", masculine: true },
   addLabel: "Un mot",
   newItemTitle: "Nouveau mot",
   addedMessage: (title) => `« ${title} » ajouté à ta collection`,

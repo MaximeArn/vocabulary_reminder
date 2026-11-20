@@ -57,7 +57,11 @@ export function TypedAnswer({ question, outcome, onSubmit }: TypedAnswerProps) {
           autoCapitalize="none"
           spellCheck={false}
           enterKeyHint="done"
-          {...(isYear ? { inputMode: "numeric" as const, pattern: "[0-9]*", placeholder: "Année" } : { placeholder: "Le mot" })}
+          {...(isYear
+            ? { inputMode: "numeric" as const, pattern: "[0-9]*", placeholder: "Année" }
+            : question.input === "code"
+              ? { autoCapitalize: "characters", placeholder: "Numéro" }
+              : { placeholder: "Ta réponse" })}
         />
         {isYear && (
           <SegmentedControl<Era>

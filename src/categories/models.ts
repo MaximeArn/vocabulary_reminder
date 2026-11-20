@@ -1,6 +1,7 @@
 import type { CategoryModel } from "./model";
 import { vocabularyModel } from "./vocabulary/model";
 import { historicalEventModel } from "./historical-event/model";
+import { geographyModel } from "./geography/model";
 
 /**
  * Registre des catégories (partie logique). Utilisé par le domaine (sauvegardes,
@@ -9,7 +10,7 @@ import { historicalEventModel } from "./historical-event/model";
 /** Registre hétérogène : chaque catégorie est typée dans son propre module. */
 export type AnyCategoryModel = CategoryModel<any, any>;
 
-export const CATEGORY_MODELS: AnyCategoryModel[] = [vocabularyModel, historicalEventModel];
+export const CATEGORY_MODELS: AnyCategoryModel[] = [vocabularyModel, historicalEventModel, geographyModel];
 
 export function findCategoryModel(kind: string): AnyCategoryModel | undefined {
   return CATEGORY_MODELS.find((model) => model.kind === kind);

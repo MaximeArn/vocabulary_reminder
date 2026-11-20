@@ -7,6 +7,7 @@ import { CheckIcon, CrossIcon } from "../../ui/icons";
 import { ChoiceAnswer } from "./ChoiceAnswer";
 import { TypedAnswer } from "./TypedAnswer";
 import { OrderAnswer } from "./OrderAnswer";
+import { LocateAnswer } from "./LocateAnswer";
 import styles from "./QuestionCard.module.css";
 
 interface QuestionCardProps {
@@ -42,21 +43,46 @@ export function QuestionCard({ question, card, isRetry, outcome, isLast, onSubmi
         {isRetry && <span className={styles.retry}>Deuxième chance · </span>}
         {question.instruction ?? exercise.instruction}
       </p>
-      <h2 className={question.type === "order" ? styles.orderPrompt : exercise.promptStyle === "headline" ? styles.term : styles.definition}>
-        {question.prompt}
-      </h2>
+      {question.prompt !== "" && (
+        <h2
+          className={
+            question.type === "order" ? styles.orderPrompt : exercise.promptStyle === "headline" ? styles.term : styles.definition
+          }
+        >
+          {question.prompt}
+        </h2>
+      )}
+
+      {/* Carte à lire (géographie) : la zone interrogée, puis la correction. */}
+      {question.map && question.type !== "locate" && category.Map && (
+        <div className={styles.map}>
+          <category.Map
+            tones={question.map.highlight ? { [question.map.highlight]: "highlight" } : {}}
+            label="Carte de France, une zone mise en évidence"
+          />
+        </div>
+      )}
+      {question.type === "locate" && category.Map && (
+        <LocateAnswer question={question} Map={category.Map} outcome={outcome} onSubmit={onSubmit} />
+      )}
 
       {question.type === "choice" && (
-        <ChoiceAnswer question={question} longChoices={exercise.choiceStyle === "long"} outcome={outcome} onSubmit={onSubmit} />
+        <ChoiceAnswer
+          question={question}
+          longChoices={exercise.choiceStyle === "long"}
+          grid={question.map !== undefined}
+          outcome={outcome}
+          onSubmit={onSubmit}
+        />
       )}
       {question.type === "typed" && <TypedAnswer question={question} outcome={outcome} onSubmit={onSubmit} />}
       {question.type === "order" && <OrderAnswer question={question} outcome={outcome} onSubmit={onSubmit} />}
 
       {outcome && card && (
         <div className={styles.feedback} ref={feedbackRef} aria-live="polite">
-          <Verdict question={question} outcome={outcome} />
+          <Verdict question={question} outcome={outcome} describeZone={category.describeZone} />
           {/* Un classement montre déjà les dates : pas d'explication d'une seule fiche. */}
-          {question.type !== "order" && <category.Explanation content={card.item.content} />}
+          {question.type !== "order" && <category.Explanation content={card.item.content} showMap={!question.map} />}
           <Button className={styles.next} fullWidth onClick={onNext}>
             {isLast ? "Voir le bilan" : "Continuer"}
           </Button>
@@ -67,7 +93,15 @@ export function QuestionCard({ question, card, isRetry, outcome, isLast, onSubmi
 }
 
 /** Verdict, et pour une réponse tapée : l'orthographe exacte ou la bonne réponse. */
-function Verdict({ question, outcome }: { question: Question; outcome: Outcome }) {
+function Verdict({
+  question,
+  outcome,
+  describeZone,
+}: {
+  question: Question;
+  outcome: Outcome;
+  describeZone?: (zone: string) => string;
+}) {
   let title = outcome.correct ? "Bonne réponse" : "Ce n’était pas ça";
   let detail: React.ReactNode = null;
 
@@ -88,6 +122,14 @@ function Verdict({ question, outcome }: { question: Question; outcome: Outcome }
         </>
       );
     }
+  }
+  if (question.type === "locate" && !outcome.correct && outcome.response.type === "locate") {
+    const touched = describeZone?.(outcome.response.zone) ?? outcome.response.zone;
+    detail = (
+      <>
+        Tu as touché : <strong>{touched}</strong>
+      </>
+    );
   }
   if (question.type === "order") {
     const misplaced = outcome.grades.filter((grade) => !grade.correct).length;

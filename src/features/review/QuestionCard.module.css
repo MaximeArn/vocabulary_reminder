@@ -39,6 +39,11 @@
   line-height: 1.5;
 }
 
+/* Carte de la question (géographie) */
+.map {
+  margin-top: var(--space-4);
+}
+
 /* Classement : la consigne précise, en petit */
 .orderPrompt {
   font-family: var(--font-serif);
@@ -52,6 +57,20 @@
   flex-direction: column;
   gap: var(--space-3);
   margin-top: var(--space-6);
+}
+
+/* Avec une carte : propositions courtes sur deux colonnes, pour tout voir sans défiler */
+.choiceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.choiceGrid .choice {
+  min-height: 52px;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-md);
 }
 
 .choice {

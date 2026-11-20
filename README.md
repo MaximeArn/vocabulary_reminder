@@ -1,6 +1,6 @@
 # Mnémé
 
-Carnet de mémorisation personnel (vocabulaire, dates historiques…) : une PWA installable sur iPhone,
+Carnet de mémorisation personnel (vocabulaire, dates historiques, géographie de la France…) : une PWA installable sur iPhone,
 hors ligne, sans compte ni serveur, avec un moteur de répétition espacée commun à toutes les catégories.
 
 ## Commandes
@@ -13,6 +13,7 @@ hors ligne, sans compte ni serveur, avec un moteur de répétition espacée comm
 | `npm test`          | Tests unitaires (Vitest) de la logique métier               |
 | `npm run check:ios` | Parcours de bout en bout dans Safari iOS : mots, révision, dates, exercices, synchronisation |
 | `npm run icons`     | Régénère les icônes depuis l'illustration (`scripts/icons/source/`, non versionnée) |
+| `npm run geo`       | Régénère la carte de France et la liste des départements (`src/categories/geography/data/`) |
 
 Le service worker n'est actif qu'avec `build` + `preview` (pas en `dev`).
 
@@ -23,7 +24,7 @@ src/
   domain/      Moteur de mémorisation, TypeScript pur et testé : fiches, historique,
                répétition espacée (Leitner, progression rejouée depuis l'historique),
                sessions, statistiques, sauvegardes
-  categories/  Une catégorie de connaissances par dossier (vocabulary/, historical-event/) :
+  categories/  Une catégorie de connaissances par dossier (vocabulary/, historical-event/, geography/) :
                model.ts (logique, exercices) + views.tsx (formulaire, fiche, explication)
   data/        Accès à IndexedDB via Dexie (schéma versionné, migrations, dépôts)
   features/    Un dossier par écran : today, collection, review, progress, settings
@@ -41,6 +42,13 @@ Principes :
 - Dates historiques : jamais de `Date` JavaScript. Années « historiennes » (-480 = 480 av. J.-C.,
   pas d'an 0), précision (jour → siècle), « vers », périodes ; calculs via la numérotation
   astronomique (`categories/historical-event/dates.ts`).
+
+Géographie : la carte est un dessin SVG préparé une fois pour toutes par `npm run geo`
+(`scripts/geo/build-france.mjs`) à partir des tracés IGN Admin Express et de geo.api.gouv.fr
+(Licence Ouverte Etalab 2.0, citée dans « À propos ») : simplification avec mapshaper (outil de
+développement seulement), projection Lambert-93, encarts pour l'outre-mer et Paris. L'app n'utilise
+aucune bibliothèque de cartographie et fonctionne hors ligne. Les fiches ne gardent qu'une référence
+(« département 15 ») vers le référentiel embarqué.
 
 Ajouter une catégorie :
 1. Créer `src/categories/<nom>/` avec `model.ts` (contrat `CategoryModel` : validation,

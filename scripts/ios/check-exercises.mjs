@@ -128,6 +128,8 @@ try {
     // Le sélecteur n'apparaît qu'une fois la page affichée.
     await safari.waitForText("Révision du jour");
     await chooseSegment(safari, "Réviser", "Dates");
+    // « Par époque » n'apparaît qu'une fois les dates choisies (pas en mode Tout).
+    await safari.waitForText("Choisis une époque");
     await safari.clickButton("Par époque");
     await safari.waitForText("Réviser une époque");
     for (const label of ["Époque au hasard", "Antiquité · 5 dates", "Moyen Âge · 1 date"]) await safari.waitForText(label);
@@ -167,6 +169,7 @@ try {
 
   await step("Vocabulaire : mot tapé, une faute de frappe acceptée avec l'orthographe exacte", async () => {
     await chooseSegment(safari, "Réviser", "Vocabulaire");
+    await safari.waitForText("5 mots à réviser");
     await startDailyReview(safari);
     let typoSeen = false;
     await runSession(async (question) => {

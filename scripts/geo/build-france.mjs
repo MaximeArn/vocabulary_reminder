@@ -131,30 +131,44 @@ function toPath(ringsList, transform) {
 
 /* ---------- Mise en page ---------- */
 
-// Métropole (Corse à sa place réelle) sur toute la hauteur ; à droite, une colonne réservée
-// aux boutons de zoom ; l'outre-mer en colonne à gauche, dans l'Atlantique, sous la Bretagne ;
-// l'encart de Paris en haut à gauche, dans la Manche.
+// Métropole centrée (Corse rapprochée) ; boutons de zoom dans une bande de mer au-dessus ;
+// l'outre-mer en colonne à gauche, dans l'Atlantique, sous la Bretagne ; l'encart de Paris
+// en haut à gauche, dans la Manche.
 const WIDTH = 1000;
-const ZOOM_COLUMN = 110;
 const MAP_MARGIN = 10;
 const INSET_GAP = 12;
 const isOverseas = (code) => code.startsWith("97");
 const PETITE_COURONNE = ["75", "92", "93", "94"];
 
+// La Corse, rapprochée horizontalement (à sa hauteur réelle) : son bord droit s'aligne sur
+// celui du continent. L'hexagone peut ainsi être centré sans réduire la carte.
+const isCorsica = (code) => code === "2A" || code === "2B";
+const projectedBox = (filter) =>
+  bounds(shapes.filter((f) => filter(f.properties.code)).flatMap((f) => rings(f.geometry).flat().map(lambert93)));
+const continentBox = projectedBox((code) => !isOverseas(code) && !isCorsica(code));
+const corsicaShift = continentBox.maxX - projectedBox(isCorsica).maxX;
+const placed = (code) => (p) => {
+  const [x, y] = lambert93(p);
+  return isCorsica(code) ? [x + corsicaShift, y] : [x, y];
+};
+
 const mainland = shapes.filter((f) => !isOverseas(f.properties.code));
-const mainlandBox = bounds(mainland.flatMap((f) => rings(f.geometry).flat().map(lambert93)));
-const mapWidth = WIDTH - ZOOM_COLUMN;
-const HEIGHT = Math.round(
-  ((mapWidth - 2 * MAP_MARGIN) * (mainlandBox.maxY - mainlandBox.minY)) / (mainlandBox.maxX - mainlandBox.minX) + 2 * MAP_MARGIN,
-);
-const mainlandTransform = fit(mainlandBox, [0, 0, mapWidth, HEIGHT], MAP_MARGIN);
+const mainlandBox = bounds(mainland.flatMap((f) => rings(f.geometry).flat().map(placed(f.properties.code))));
+// Métropole centrée, sur toute la largeur. Au-dessus, une bande de mer réservée aux
+// boutons de zoom (une rangée en haut à droite, ~125 unités de haut à la taille d'un
+// iPhone) : ils ne cachent jamais un département.
+const ZOOM_BAND = 125;
+const mainlandWidth = WIDTH - 2 * MAP_MARGIN;
+const mainlandHeight = mainlandWidth * ((mainlandBox.maxY - mainlandBox.minY) / (mainlandBox.maxX - mainlandBox.minX));
+const HEIGHT = Math.round(ZOOM_BAND + mainlandHeight + MAP_MARGIN);
+const mainlandTransform = fit(mainlandBox, [MAP_MARGIN, ZOOM_BAND, mainlandWidth, mainlandHeight], 0);
 
 /** Emprise de quelques départements, une fois placés sur la carte. */
 const placedBox = (codes) =>
   bounds(
     shapes
       .filter((f) => codes.includes(f.properties.code))
-      .flatMap((f) => rings(f.geometry).flat().map((p) => mainlandTransform(lambert93(p)))),
+      .flatMap((f) => rings(f.geometry).flat().map((p) => mainlandTransform(placed(f.properties.code)(p)))),
   );
 const atlanticCoast = placedBox(["44", "85", "17", "33", "40", "64"]);
 const brittany = placedBox(["29", "56", "22"]);
@@ -192,7 +206,7 @@ const transforms = new Map();
 for (const feature of shapes) {
   const code = feature.properties.code;
   if (!isOverseas(code)) {
-    transforms.set(code, (p) => mainlandTransform(lambert93(p)));
+    transforms.set(code, (p) => mainlandTransform(placed(code)(p)));
     continue;
   }
   const all = rings(feature.geometry).flat();
@@ -245,8 +259,6 @@ const list = {
 const roundBox = (box) => box.map((value) => Math.round(value * 10) / 10);
 const map = {
   viewBox: [0, 0, WIDTH, HEIGHT],
-  /** Largeur réservée à droite aux boutons de zoom (repère de la carte). */
-  zoomColumn: ZOOM_COLUMN,
   insets: Object.entries(insetBoxes).map(([id, box]) => ({ id, title: INSET_TITLES[id], box: roundBox(box) })),
   paths: Object.fromEntries(departments.map((d) => [d.code, d.insetPath ? [d.path, d.insetPath] : [d.path]])),
 };

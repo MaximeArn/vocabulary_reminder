@@ -17,7 +17,7 @@
 
 /* Proportions de la carte pendant le chargement des tracés (évite un saut de mise en page) */
 .loading {
-  aspect-ratio: 1000 / 830;
+  aspect-ratio: 1000 / 1197;
   border-radius: var(--radius-md);
   background: var(--map-water);
 }
@@ -65,14 +65,12 @@
   vector-effect: non-scaling-stroke;
 }
 
-/* Boutons de zoom : une colonne en haut à droite, dans la marge réservée de la carte */
+/* Boutons de zoom : une rangée en haut à droite, dans la bande de mer au-dessus de la métropole */
 .controls {
   position: absolute;
   top: var(--space-2);
   right: var(--space-2);
   display: flex;
-  flex-direction: column;
-  max-width: 44px;
   border-radius: var(--radius-sm);
   background: var(--paper-raised);
   box-shadow:
@@ -84,13 +82,13 @@
 .control {
   display: grid;
   place-items: center;
-  aspect-ratio: 1;
-  min-height: 36px;
+  width: 40px;
+  height: 36px;
   color: var(--ink-soft);
 }
 
 .control + .control {
-  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
 }
 
 .control:disabled {

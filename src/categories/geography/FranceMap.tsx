@@ -10,13 +10,12 @@ import styles from "./FranceMap.module.css";
  *
  * Gestes : toucher un département le choisit ; pincer zoome ; une fois zoomé, un
  * doigt déplace la carte ; un double toucher zoome sur l'endroit touché. Les
- * boutons +, − et « recentrer », à droite, font de même sans geste.
+ * boutons +, − et « recentrer », en haut à droite (dans une bande de mer réservée,
+ * au-dessus de la métropole), font de même sans geste.
  */
 
 interface MapData {
   viewBox: [number, number, number, number];
-  /** Largeur réservée à droite aux boutons de zoom. */
-  zoomColumn: number;
   insets: { id: string; title: string; box: [number, number, number, number] }[];
   /** Tracés par département : sur la carte, puis (Paris et environs) dans l'encart agrandi. */
   paths: Record<string, string[]>;
@@ -228,7 +227,7 @@ export function FranceMap({ tones = {}, onSelect, label }: MapViewProps) {
           </g>
         </g>
       </svg>
-      <div className={styles.controls} style={{ width: `${(data.zoomColumn / width) * 100}%` }}>
+      <div className={styles.controls}>
         <button type="button" className={styles.control} onClick={() => zoomBy(BUTTON_STEP)} disabled={view.scale >= MAX_SCALE} aria-label="Zoomer">
           <PlusIcon size={20} />
         </button>

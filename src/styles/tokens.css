@@ -37,10 +37,10 @@
   --on-vocabulary-fill: #1d1a16;
   --dates-fill: #b5532f;
   --on-dates-fill: #fbf8f2;
-  /* Géographie : vert-bleu canard, celui des cartes (contraste 5,9:1 sur le papier) */
-  --geography: #1f6b66;
-  --geography-soft: #dcece9;
-  --geography-fill: #b7d9d4;
+  /* Géographie : vert sapin, profond et bleuté, distinct du vert « Maîtrisé » (contraste 7,6:1 sur le papier) */
+  --geography: #1f5a3d;
+  --geography-soft: #dce8df;
+  --geography-fill: #b5d1bd;
   --on-geography-fill: #1d1a16;
   /* Carte : terres claires, mers à peine bleutées, frontières fines */
   --map-land: #f7f3ea;
@@ -119,9 +119,9 @@
     --on-vocabulary-fill: #ece5d8;
     --dates-fill: #c96a4a;
     --on-dates-fill: #18160f;
-    --geography: #6cc0b7;
-    --geography-soft: #1f3331;
-    --geography-fill: #24524e;
+    --geography: #74b58a;
+    --geography-soft: #1d2f24;
+    --geography-fill: #244a35;
     --on-geography-fill: #ece5d8;
     --map-land: #353029;
     --map-water: #161d20;

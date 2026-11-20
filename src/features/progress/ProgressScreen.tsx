@@ -7,7 +7,10 @@ import { activityByDay, countByLevel, type DayActivity } from "../../domain/prog
 import { lastDays } from "../../domain/studyDay";
 import type { Card } from "../../domain/card";
 import { formatCount, type Unit } from "../../categories/model";
-import { presentCategories } from "../../categories/registry";
+import { presentCategories, type AnyCategory } from "../../categories/registry";
+import { categoryBorder } from "../../ui/categoryBorder";
+import { CategoryFilter, chosenCategory } from "../revise/CategoryFilter";
+import { useReviewSettings } from "../review/useReviewSettings";
 import { TYPING_FROM_BOX } from "../../categories/exercisePlan";
 import { useCards } from "../collection/useCards";
 import { useReviews } from "../review/useReviews";
@@ -28,6 +31,7 @@ export function ProgressScreen() {
   const cards = useCards();
   const reviews = useReviews();
   const today = useToday();
+  const settings = useReviewSettings();
 
   if (cards === undefined || reviews === undefined) return <Screen title="Progrès" />;
 
@@ -39,34 +43,29 @@ export function ProgressScreen() {
     );
   }
 
+  // Même choix de catégorie que sur Réviser : l'activité et les niveaux de cette catégorie, ou de toutes.
   const categories = presentCategories(cards);
+  const { kind, category } = chosenCategory(categories, settings.categoryFilter);
+  const shown = category ? [category] : categories;
+  const shownItems = new Set(cards.filter((card) => card.item.kind === category?.kind).map((card) => card.item.id));
+  const shownReviews = category ? reviews.filter((review) => shownItems.has(review.itemId)) : reviews;
 
   return (
     <Screen title="Progrès">
+      <CategoryFilter label="Progrès" categories={categories} value={kind} onChange={settings.setCategoryFilter} />
+
       <section className={styles.section}>
         <h2 className={styles.heading}>{HISTORY_DAYS} derniers jours</h2>
-        <ActivityChart activity={activityByDay(reviews, lastDays(today, HISTORY_DAYS))} />
+        <ActivityChart
+          activity={activityByDay(shownReviews, lastDays(today, HISTORY_DAYS))}
+          color={category?.color ?? "var(--ink)"}
+        />
       </section>
 
       <section className={styles.section}>
         <h2 className={styles.heading}>Niveaux</h2>
         <div className={styles.levelCards}>
-          {categories.flatMap((category) => {
-            const ofKind = cards.filter((card) => card.item.kind === category.kind);
-            // Catégorie à volets (géographie) : un niveau par volet, chacun progresse à part.
-            if (!category.tracks) {
-              return [<LevelCard key={category.kind} name={category.label} color={category.color} unit={category.unit} cards={ofKind} />];
-            }
-            return category.tracks.map((track) => (
-              <LevelCard
-                key={`${category.kind}#${track.id}`}
-                name={`${category.label} · ${track.shortLabel}`}
-                color={category.color}
-                unit={category.unit}
-                cards={ofKind.filter((card) => card.track === track.id)}
-              />
-            ));
-          })}
+          {shown.flatMap((shownCategory) => levelCards(shownCategory, cards.filter((card) => card.item.kind === shownCategory.kind)))}
         </div>
       </section>
 
@@ -76,6 +75,29 @@ export function ProgressScreen() {
       </section>
     </Screen>
   );
+}
+
+/**
+ * Les cartes de niveaux d'une catégorie, dans sa couleur : une seule, ou une par volet
+ * (géographie : les mêmes révisions que sur Réviser, avec leur icône).
+ */
+function levelCards(category: AnyCategory, cards: Card[]) {
+  if (!category.tracks) {
+    return [<LevelCard key={category.kind} name={category.label} color={category.color} unit={category.unit} cards={cards} />];
+  }
+  return category.tracks.map((track) => {
+    const Icon = category.trackIcons?.[track.id];
+    return (
+      <LevelCard
+        key={`${category.kind}#${track.id}`}
+        name={track.label}
+        icon={Icon && <Icon size={24} />}
+        color={category.color}
+        unit={category.unit}
+        cards={cards.filter((card) => card.track === track.id)}
+      />
+    );
+  });
 }
 
 /** « 1 », « 1 et 2 » : les marches d'un niveau. */
@@ -120,20 +142,26 @@ function LevelRules() {
 }
 
 /**
- * Niveaux d'une catégorie : une carte avec la barre de répartition, puis les
- * quatre niveaux alignés dessous (nuance, nombre, libellé), qui servent aussi de légende.
+ * Niveaux d'une catégorie (ou d'un volet) : une carte au contour de sa couleur, comme
+ * le bloc des révisions, avec la barre de répartition, puis les quatre niveaux alignés
+ * dessous (nuance, nombre, libellé), qui servent aussi de légende.
  */
-function LevelCard({ name, color, unit, cards }: { name: string; color: string; unit: Unit; cards: Card[] }) {
+function LevelCard({ name, icon, color, unit, cards }: { name: string; icon?: React.ReactNode; color: string; unit: Unit; cards: Card[] }) {
   const counts = countByLevel(cards);
   const total = cards.length;
   return (
-    <div className={styles.levelCard}>
+    <div className={styles.levelCard} style={{ background: categoryBorder([color], "var(--paper-raised)") }}>
+      {/* Comme une ligne de Réviser : l'icône du volet, le nom, puis le nombre de fiches. */}
       <div className={styles.levelHeader}>
-        <span className={styles.levelName}>
-          <span className={styles.dot} style={{ background: color }} aria-hidden="true" />
-          {name}
+        {icon && (
+          <span className={styles.levelIcon} style={{ color }} aria-hidden="true">
+            {icon}
+          </span>
+        )}
+        <span className={styles.levelText}>
+          <span className={styles.levelName}>{name}</span>
+          <span className={styles.levelTotal}>{formatCount(total, unit)}</span>
         </span>
-        <span className={styles.levelTotal}>{formatCount(total, unit)}</span>
       </div>
       <div className={styles.stack} aria-hidden="true">
         {MASTERY_LEVELS.filter((level) => counts[level] > 0).map((level) => (
@@ -159,10 +187,10 @@ const shortDayFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", mon
 const longDayFormatter = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 
 /**
- * Réponses par jour. Une seule série : la couleur d'accent suffit, sans légende.
+ * Réponses par jour. Une seule série, dans la couleur de la catégorie choisie (neutre pour « Tout »), sans légende.
  * Toucher une colonne affiche le détail du jour (aujourd'hui par défaut).
  */
-function ActivityChart({ activity }: { activity: DayActivity[] }) {
+function ActivityChart({ activity, color }: { activity: DayActivity[]; color: string }) {
   const [selectedDay, setSelectedDay] = useState(activity[activity.length - 1]?.day);
   const max = Math.max(...activity.map((day) => day.answered), 1);
   const selected = activity.find((day) => day.day === selectedDay);
@@ -170,7 +198,7 @@ function ActivityChart({ activity }: { activity: DayActivity[] }) {
 
   return (
     <>
-      <div className={styles.chart}>
+      <div className={styles.chart} style={{ "--bar": color } as React.CSSProperties}>
         {activity.map((day) => (
           <button
             key={day.day}

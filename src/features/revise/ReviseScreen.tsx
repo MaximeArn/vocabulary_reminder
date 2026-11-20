@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Screen } from "../../ui/Screen";
 import { Panel } from "../../ui/Panel";
-import { CategoryToggle } from "../../ui/CategoryToggle";
 import { ActionSheet } from "../../ui/ActionSheet";
 import { categoryBorder } from "../../ui/categoryBorder";
 import { CheckIcon, ChevronRightIcon, DailyIcon, HourglassIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
@@ -35,6 +34,7 @@ import { useReviewSettings } from "../review/useReviewSettings";
 import { ReviewSession } from "../review/ReviewSession";
 import { RevisionRow } from "./RevisionRow";
 import { StreakPanel } from "./StreakPanel";
+import { CategoryFilter, chosenCategory } from "./CategoryFilter";
 import styles from "./ReviseScreen.module.css";
 
 /**
@@ -88,12 +88,10 @@ export function ReviseScreen() {
 
   // Catégorie révisée : proposée seulement si plusieurs catégories ont des fiches.
   const categories = presentCategories(cards);
-  const kind = categories.some((category) => category.kind === settings.categoryFilter) ? settings.categoryFilter : "all";
+  const { kind, category } = chosenCategory(categories, settings.categoryFilter);
   const selected = kind === "all" ? cards : cards.filter((card) => card.item.kind === kind);
   const reviewable = reviewableCards(selected);
   const dueCount = countDue(reviewable, today, newPerDay);
-  // Catégorie révisée : celle choisie, ou la seule présente. Sinon, « Tout » mélange plusieurs catégories.
-  const category = findCategory(kind) ?? (categories.length === 1 ? categories[0] : undefined);
   const borderColors = category ? [category.color] : categories.map((present) => present.color);
 
   // Exercice d'une carte : selon sa catégorie, son niveau et le réglage de l'utilisateur.
@@ -146,24 +144,7 @@ export function ReviseScreen() {
     <Screen title="Réviser">
       <InstallHint />
 
-      {categories.length > 1 && (
-        <div className={styles.filter}>
-          <CategoryToggle
-            label="Réviser"
-            options={[
-              { value: "all", label: "Tout", mix: categories.map((present) => present.color) },
-              ...categories.map((category) => ({
-                value: category.kind,
-                label: category.label,
-                fill: category.fillColor,
-                onFill: category.onFillColor,
-              })),
-            ]}
-            value={kind}
-            onChange={settings.setCategoryFilter}
-          />
-        </div>
-      )}
+      <CategoryFilter label="Réviser" categories={categories} value={kind} onChange={settings.setCategoryFilter} />
 
       {reviewable.length === 0 ? (
         <Panel>

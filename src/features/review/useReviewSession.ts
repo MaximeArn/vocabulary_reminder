@@ -17,6 +17,8 @@ interface SessionEntry {
 
 /** Résultat d'une question : une note par fiche concernée (plusieurs pour un classement). */
 export interface AnswerResult {
+  /** Exercice de la question : il désigne le volet travaillé (géographie). */
+  exercise: string;
   grades: ItemGrade[];
   correct: boolean;
   isRetry: boolean;
@@ -41,7 +43,7 @@ export function useReviewSession(cards: Card[], plan: SessionItem[], today: stri
     const graded = gradeResponse(question, response);
 
     setOutcome(graded);
-    setResults((previous) => [...previous, { grades: graded.grades, correct: graded.correct, isRetry }]);
+    setResults((previous) => [...previous, { exercise: question.exercise, grades: graded.grades, correct: graded.correct, isRetry }]);
 
     if (isRetry) return;
     // Une réponse par fiche : un classement note chacun de ses événements.
@@ -79,7 +81,8 @@ export function useReviewSession(cards: Card[], plan: SessionItem[], today: stri
 /**
  * Construit la question d'une carte avec l'exercice prévu, parmi les fiches de sa
  * catégorie (pour un classement : sans `excluded`, si possible). Si c'est impossible, essaie
- * l'exercice à choix correspondant, puis les autres exercices à choix.
+ * l'exercice à choix correspondant, puis les autres exercices à choix (du même volet :
+ * la réponse doit compter pour le volet prévu).
  */
 function buildQuestion(sessionItem: SessionItem, cards: Card[], excluded: Set<string> = new Set()): Question | null {
   const found = findExercise(sessionItem.exercise);
@@ -91,7 +94,9 @@ function buildQuestion(sessionItem: SessionItem, cards: Card[], excluded: Set<st
   const fallbacks = [
     exercise,
     ...category.exercises.filter((candidate) => candidate.id === exercise.follows),
-    ...category.exercises.filter((candidate) => candidate.mode === "choice" && candidate !== exercise),
+    ...category.exercises.filter(
+      (candidate) => candidate.mode === "choice" && candidate !== exercise && candidate.track === exercise.track,
+    ),
   ];
   for (const candidate of fallbacks) {
     const question =

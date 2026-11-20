@@ -27,6 +27,8 @@ export interface Exercise<Content> {
   mode: "choice" | "typed" | "order" | "map";
   /** Pour une saisie : l'exercice à choix dont elle est la version tapée. */
   follows?: string;
+  /** Volet de la fiche que l'exercice fait travailler (catégorie à volets, voir `tracks`). */
+  track?: string;
   /** L'exercice convient-il à cette fiche ? (Par défaut, oui.) */
   accepts?(target: Item<Content>): boolean;
   /** Libellé court, pour le choix du type de question (« La définition »). */
@@ -41,6 +43,20 @@ export interface Exercise<Content> {
   choiceStyle: "short" | "long";
   /** Construit une question pour `target`, ou `null` si c'est impossible. */
   build(target: Item<Content>, pool: Item<Content>[], random?: Random): Question | null;
+}
+
+/**
+ * Volet d'une fiche suivi séparément (géographie : placer un département, son
+ * numéro, sa préfecture) : il a sa propre progression et sa propre révision.
+ */
+export interface Track {
+  id: string;
+  /** Nom de la révision : « Départements sur la carte ». */
+  label: string;
+  /** Nom court, à côté d'une fiche : « Carte ». */
+  shortLabel: string;
+  /** Ce que l'on révise : « Les reconnaître et les placer ». */
+  hint: string;
 }
 
 /** Erreurs de saisie, par champ du formulaire. */
@@ -91,6 +107,12 @@ export interface CategoryModel<Content, Draft> {
     key: (content: Content) => string;
     newPerDay: number;
   };
+  /**
+   * Volets suivis séparément : chaque fiche a une progression par volet, et chaque
+   * volet sa propre révision (à la place des entraînements « Oubliées », « En vrac »…).
+   * Chaque exercice indique son volet (`Exercise.track`).
+   */
+  tracks?: Track[];
   /** Numéro de référence (département) : tri « Numéro » dans la collection. */
   referenceKey?(content: Content): string;
   /**

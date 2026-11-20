@@ -84,16 +84,28 @@ describe("questions sur les départements", () => {
 });
 
 describe("choix de l'exercice (géographie)", () => {
-  const card = (box: number) => ({ item: item("15"), progress: { ...initialProgress(0), box } });
+  const card = (box: number, track: string) => ({ item: item("15"), track, progress: { ...initialProgress(0), box } });
   const never = () => 0.99;
+  const choose = (box: number, track: string) =>
+    [0, 1, 2, 3, 4].map((rotation) => chooseExercise(card(box, track), rotation, "mixed", never));
 
-  it("alterne questions à choix et carte, puis fait taper les réponses, la carte restant la carte", () => {
-    const early = new Set([0, 1, 2, 3, 4].map((rotation) => chooseExercise(card(1), rotation, "mixed", never)));
-    expect(early).toContain("geography.department-on-map");
-    expect(early).toContain("geography.department-to-number");
-    const acquired = [0, 1, 2, 3, 4].map((rotation) => chooseExercise(card(TYPING_FROM_BOX), rotation, "mixed", never));
-    expect(acquired).toContain("geography.department-on-map");
-    expect(acquired.filter((id) => id !== "geography.department-on-map").every((id) => id?.endsWith("-typed"))).toBe(true);
+  it("carte : alterne question et toucher, puis fait taper le nom, le toucher restant le toucher", () => {
+    expect(new Set(choose(1, "map"))).toEqual(new Set(["geography.map-to-department", "geography.department-on-map"]));
+    expect(new Set(choose(TYPING_FROM_BOX, "map"))).toEqual(
+      new Set(["geography.map-to-department-typed", "geography.department-on-map"]),
+    );
+  });
+
+  it("chaque volet reste dans ses exercices", () => {
+    expect(new Set(choose(1, "number"))).toEqual(new Set(["geography.department-to-number", "geography.number-to-department"]));
+    expect(new Set(choose(TYPING_FROM_BOX, "prefecture"))).toEqual(
+      new Set(["geography.department-to-prefecture-typed", "geography.prefecture-to-department-typed"]),
+    );
+  });
+
+  it("chaque exercice appartient à un volet de la catégorie", () => {
+    const tracks = new Set(geographyModel.tracks!.map((track) => track.id));
+    expect(geographyModel.exercises.every((exercise) => exercise.track && tracks.has(exercise.track))).toBe(true);
   });
 });
 

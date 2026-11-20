@@ -4,6 +4,7 @@ import { SearchField } from "../../ui/SearchField";
 import { CategoryToggle } from "../../ui/CategoryToggle";
 import { formatCardCount } from "../../ui/format";
 import { searchCards, sortCards, type CardSort, type SortDirection, type SortKey } from "../../domain/collection";
+import { oneCardPerItem } from "../../domain/card";
 import { describeCard, presentCategories, type AnyCategory } from "../../categories/registry";
 import { useCards } from "./useCards";
 import { CardList } from "./CardList";
@@ -64,7 +65,8 @@ export function CollectionScreen() {
 
   const sortOptions = sortOptionsFor(category);
   const sort: CardSort = sorts[category.kind] ?? sortOptions[0]!;
-  const ofKind = cards.filter((card) => card.item.kind === category.kind);
+  // Une ligne par fiche, même pour une fiche suivie en plusieurs volets (géographie).
+  const ofKind = oneCardPerItem(cards.filter((card) => card.item.kind === category.kind));
   const visibleCards = sortCards(searchCards(ofKind, query, describeCard), sort, describeCard);
 
   return (

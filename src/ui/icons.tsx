@@ -177,6 +177,24 @@ export function MapIcon(props: IconProps) {
   );
 }
 
+/** Un dièse : les numéros (des départements). */
+export function HashIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9.5 4 8 20M16 4l-1.5 16M4.5 9h15M4 15h15" />
+    </Svg>
+  );
+}
+
+/** Un édifice à colonnes : les préfectures. */
+export function LandmarkIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 9.5 12 4l8 5.5zM5.5 20h13M4 20.5h16M7 12v5.5M10.3 12v5.5M13.7 12v5.5M17 12v5.5" />
+    </Svg>
+  );
+}
+
 /** Un sablier : le temps long, pour réviser par époque. */
 export function HourglassIcon(props: IconProps) {
   return (

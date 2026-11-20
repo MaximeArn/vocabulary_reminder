@@ -9,6 +9,7 @@ import { CATEGORY_MODELS } from "./models";
  * - Une fois acquise (« En bonne voie », boîte 3), elle est à taper quand sa
  *   catégorie le permet : la difficulté monte avec la maîtrise.
  * - De temps en temps, une question de classement (dates) remplace la question.
+ * - Pour une catégorie à volets (géographie), seuls les exercices du volet de la carte.
  *
  * `preference` : réglage de l'utilisateur, « mixed » ou l'exercice à choix imposé.
  * Une saisie n'est proposée que si elle suit un exercice autorisé.
@@ -27,7 +28,9 @@ export function chooseExercise(
 ): string | undefined {
   const model = CATEGORY_MODELS.find((candidate) => candidate.kind === card.item.kind);
   if (!model) return undefined;
-  const fits = (exercise: (typeof model.exercises)[number]) => exercise.accepts?.(card.item) ?? true;
+  // Un exercice adapté à la fiche et, pour une catégorie à volets, au volet de la carte.
+  const fits = (exercise: (typeof model.exercises)[number]) =>
+    (exercise.accepts?.(card.item) ?? true) && exercise.track === card.track;
   // Exercices qui alternent : à choix, ou sur la carte.
   const rotating = model.exercises.filter((exercise) => (exercise.mode === "choice" || exercise.mode === "map") && fits(exercise));
   const allowed = rotating.some((exercise) => exercise.id === preference)

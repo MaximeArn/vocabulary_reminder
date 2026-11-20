@@ -3,7 +3,7 @@ import { shuffle, type Random } from "../../domain/random";
 import { comparisonKey } from "../../domain/text";
 import { gradeTypedText } from "../../domain/typing";
 import type { Item } from "../../domain/types";
-import { InvalidContentError, expectRecord, expectText, type CategoryModel, type Exercise } from "../model";
+import { InvalidContentError, expectRecord, expectText, type CategoryModel, type Exercise, type Track } from "../model";
 import { DEPARTMENTS, findDepartment, nearestDepartments, regionName, type Department } from "./referential";
 
 /**
@@ -101,12 +101,27 @@ function typedQuestion(
   return { type: "typed", itemId: target.id, exercise, ...options };
 }
 
+/* ---------- Volets ---------- */
+
+/**
+ * Chaque département se révise sous trois angles, suivis séparément : savoir le
+ * numéro du Cantal n'est pas savoir le placer. Chaque volet a sa révision.
+ */
+export const GEOGRAPHY_TRACKS = {
+  map: { id: "map", label: "Départements sur la carte", shortLabel: "Carte", hint: "Les reconnaître et les placer" },
+  number: { id: "number", label: "Numéros des départements", shortLabel: "Numéro", hint: "Du nom au numéro, et l’inverse" },
+  prefecture: { id: "prefecture", label: "Préfectures", shortLabel: "Préfecture", hint: "D’un département à sa préfecture" },
+} satisfies Record<string, Track>;
+
 /* ---------- Exercices ---------- */
 
 const DEPARTMENT_EXERCISE = { accepts: isDepartment, promptStyle: "headline" as const, choiceStyle: "short" as const };
+const NUMBER = { ...DEPARTMENT_EXERCISE, track: GEOGRAPHY_TRACKS.number.id };
+const MAP = { ...DEPARTMENT_EXERCISE, track: GEOGRAPHY_TRACKS.map.id };
+const PREFECTURE = { ...DEPARTMENT_EXERCISE, track: GEOGRAPHY_TRACKS.prefecture.id };
 
 const departmentToNumber: Exercise<GeographyContent> = {
-  ...DEPARTMENT_EXERCISE,
+  ...NUMBER,
   id: "geography.department-to-number",
   mode: "choice",
   label: "Le numéro",
@@ -120,7 +135,7 @@ const departmentToNumber: Exercise<GeographyContent> = {
 };
 
 const departmentToNumberTyped: Exercise<GeographyContent> = {
-  ...DEPARTMENT_EXERCISE,
+  ...NUMBER,
   id: "geography.department-to-number-typed",
   mode: "typed",
   follows: departmentToNumber.id,
@@ -138,7 +153,7 @@ const departmentToNumberTyped: Exercise<GeographyContent> = {
 };
 
 const numberToDepartment: Exercise<GeographyContent> = {
-  ...DEPARTMENT_EXERCISE,
+  ...NUMBER,
   id: "geography.number-to-department",
   mode: "choice",
   label: "Le département",
@@ -152,7 +167,7 @@ const numberToDepartment: Exercise<GeographyContent> = {
 };
 
 const numberToDepartmentTyped: Exercise<GeographyContent> = {
-  ...DEPARTMENT_EXERCISE,
+  ...NUMBER,
   id: "geography.number-to-department-typed",
   mode: "typed",
   follows: numberToDepartment.id,
@@ -170,7 +185,7 @@ const numberToDepartmentTyped: Exercise<GeographyContent> = {
 };
 
 const mapToDepartment: Exercise<GeographyContent> = {
-  ...DEPARTMENT_EXERCISE,
+  ...MAP,
   id: "geography.map-to-department",
   mode: "choice",
   label: "Sur la carte",
@@ -186,7 +201,7 @@ const mapToDepartment: Exercise<GeographyContent> = {
 };
 
 const mapToDepartmentTyped: Exercise<GeographyContent> = {
-  ...DEPARTMENT_EXERCISE,
+  ...MAP,
   id: "geography.map-to-department-typed",
   mode: "typed",
   follows: mapToDepartment.id,
@@ -205,7 +220,7 @@ const mapToDepartmentTyped: Exercise<GeographyContent> = {
 };
 
 const departmentOnMap: Exercise<GeographyContent> = {
-  ...DEPARTMENT_EXERCISE,
+  ...MAP,
   id: "geography.department-on-map",
   mode: "map",
   label: "Le placer",
@@ -224,7 +239,7 @@ const departmentOnMap: Exercise<GeographyContent> = {
 };
 
 const departmentToPrefecture: Exercise<GeographyContent> = {
-  ...DEPARTMENT_EXERCISE,
+  ...PREFECTURE,
   id: "geography.department-to-prefecture",
   mode: "choice",
   label: "La préfecture",
@@ -238,7 +253,7 @@ const departmentToPrefecture: Exercise<GeographyContent> = {
 };
 
 const departmentToPrefectureTyped: Exercise<GeographyContent> = {
-  ...DEPARTMENT_EXERCISE,
+  ...PREFECTURE,
   id: "geography.department-to-prefecture-typed",
   mode: "typed",
   follows: departmentToPrefecture.id,
@@ -251,6 +266,38 @@ const departmentToPrefectureTyped: Exercise<GeographyContent> = {
       input: "text",
       expected: department.prefecture,
       grade: (answer) => gradeTypedText(answer, department.prefecture, otherPrefectures(department)),
+    });
+  },
+};
+
+const prefectureToDepartment: Exercise<GeographyContent> = {
+  ...PREFECTURE,
+  id: "geography.prefecture-to-department",
+  mode: "choice",
+  label: "Le département de la préfecture",
+  instruction: "De quel département est-ce la préfecture ?",
+  build: (target, _pool, random) =>
+    buildDepartmentChoice(
+      target,
+      { exercise: prefectureToDepartment.id, prompt: departmentOf(target.content).prefecture, label: (d) => d.name },
+      random,
+    ),
+};
+
+const prefectureToDepartmentTyped: Exercise<GeographyContent> = {
+  ...PREFECTURE,
+  id: "geography.prefecture-to-department-typed",
+  mode: "typed",
+  follows: prefectureToDepartment.id,
+  label: "Le département de la préfecture, tapé",
+  instruction: "Tape le département dont c’est la préfecture",
+  build: (target) => {
+    const department = departmentOf(target.content);
+    return typedQuestion(target, prefectureToDepartmentTyped.id, {
+      prompt: department.prefecture,
+      input: "text",
+      expected: department.name,
+      grade: (answer) => gradeTypedText(answer, department.name, otherNames(department)),
     });
   },
 };
@@ -279,7 +326,9 @@ export const geographyModel: CategoryModel<GeographyContent, GeographyDraft> = {
   onFillColor: "var(--on-geography-fill)",
   searchPlaceholder: "Rechercher un département, un numéro, une préfecture…",
   listStyle: "definition",
-  // Les 101 départements sont disponibles d'office ; 10 nouveaux par jour dans la révision du jour.
+  tracks: [GEOGRAPHY_TRACKS.map, GEOGRAPHY_TRACKS.number, GEOGRAPHY_TRACKS.prefecture],
+  // Les 101 départements sont disponibles d'office ; 10 nouvelles cartes (département × volet)
+  // par jour dans la révision du jour, et autant par volet dans sa propre révision.
   builtIn: {
     entries: () => DEPARTMENTS.map((department) => ({ type: "department" as const, code: department.code })),
     key: (content) => `${content.type}:${content.code}`,
@@ -309,6 +358,8 @@ export const geographyModel: CategoryModel<GeographyContent, GeographyDraft> = {
     departmentOnMap,
     departmentToPrefecture,
     departmentToPrefectureTyped,
+    prefectureToDepartment,
+    prefectureToDepartmentTyped,
   ],
   // Les mauvaises réponses viennent du référentiel : une seule fiche suffit.
   canBuildQuestions: (items) => items.length > 0,

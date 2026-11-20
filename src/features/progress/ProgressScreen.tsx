@@ -51,15 +51,22 @@ export function ProgressScreen() {
       <section className={styles.section}>
         <h2 className={styles.heading}>Niveaux</h2>
         <div className={styles.levelCards}>
-          {categories.map((category) => (
-            <LevelCard
-              key={category.kind}
-              name={category.label}
-              color={category.color}
-              unit={category.unit}
-              cards={cards.filter((card) => card.item.kind === category.kind)}
-            />
-          ))}
+          {categories.flatMap((category) => {
+            const ofKind = cards.filter((card) => card.item.kind === category.kind);
+            // Catégorie à volets (géographie) : un niveau par volet, chacun progresse à part.
+            if (!category.tracks) {
+              return [<LevelCard key={category.kind} name={category.label} color={category.color} unit={category.unit} cards={ofKind} />];
+            }
+            return category.tracks.map((track) => (
+              <LevelCard
+                key={`${category.kind}#${track.id}`}
+                name={`${category.label} · ${track.shortLabel}`}
+                color={category.color}
+                unit={category.unit}
+                cards={ofKind.filter((card) => card.track === track.id)}
+              />
+            ));
+          })}
         </div>
       </section>
 

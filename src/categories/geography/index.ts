@@ -1,6 +1,7 @@
+import { HashIcon, LandmarkIcon, MapIcon } from "../../ui/icons";
 import type { Category } from "../views";
 import { FranceMap } from "./FranceMap";
-import { geographyModel, type GeographyContent, type GeographyDraft } from "./model";
+import { GEOGRAPHY_TRACKS, geographyModel, type GeographyContent, type GeographyDraft } from "./model";
 import { findDepartment } from "./referential";
 import { GeographyDetail, GeographyExplanation, GeographyFields } from "./views";
 
@@ -11,4 +12,9 @@ export const geography: Category<GeographyContent, GeographyDraft> = {
   Explanation: GeographyExplanation,
   Map: FranceMap,
   describeZone: (zone) => findDepartment(zone)?.name ?? zone,
+  trackIcons: {
+    [GEOGRAPHY_TRACKS.map.id]: MapIcon,
+    [GEOGRAPHY_TRACKS.number.id]: HashIcon,
+    [GEOGRAPHY_TRACKS.prefecture.id]: LandmarkIcon,
+  },
 };

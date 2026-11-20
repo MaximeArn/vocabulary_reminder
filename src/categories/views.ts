@@ -39,6 +39,8 @@ export interface CategoryViews<Content, Draft> {
   /** Carte des questions de cette catégorie (géographie), et le nom de chaque zone. */
   Map?: ComponentType<MapViewProps>;
   describeZone?: (zone: string) => string;
+  /** Icône de la révision de chaque volet (catégorie à volets), par identifiant de volet. */
+  trackIcons?: Record<string, ComponentType<{ size?: number }>>;
 }
 
 export type Category<Content, Draft> = CategoryModel<Content, Draft> & CategoryViews<Content, Draft>;

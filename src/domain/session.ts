@@ -21,7 +21,9 @@ export interface SessionItem {
 export type NewPerDay = (kind: string) => number | undefined;
 const noLimit: NewPerDay = () => undefined;
 
-const byCreation = (a: Card, b: Card) => a.item.createdAt - b.item.createdAt || a.item.id.localeCompare(b.item.id);
+/** Ordre d'arrivée des nouvelles cartes : par ajout ; les volets d'une même fiche arrivent ensemble. */
+const byCreation = (a: Card, b: Card) =>
+  a.item.createdAt - b.item.createdAt || a.item.id.localeCompare(b.item.id) || (a.track ?? "").localeCompare(b.track ?? "");
 
 /** Nouvelles fiches (jamais révisées, ajoutées), en séparant celles admises aujourd'hui des autres. */
 function freshCards(cards: Card[], today: string, newPerDay: NewPerDay): { allowed: Card[]; waiting: Card[] } {

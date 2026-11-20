@@ -1,5 +1,6 @@
 import { db } from "../data/db";
-import { buildCards, type Card } from "../domain/card";
+import { keyOfCard, type Card } from "../domain/card";
+import { buildCards } from "../categories/cards";
 import { reminderSummary } from "../domain/reminder";
 import { dailyCards } from "../domain/session";
 import { studyDayOf } from "../domain/studyDay";
@@ -28,8 +29,8 @@ function reviewable(cards: Card[]): Card[] {
  */
 function announced(cards: Card[]): Card[] {
   const newPerDay = (kind: string) => CATEGORY_MODELS.find((model) => model.kind === kind)?.builtIn?.newPerDay;
-  const admitted = new Set(dailyCards(cards, studyDayOf(new Date()), newPerDay).map((card) => card.item.id));
-  return cards.filter((card) => card.progress.box > 0 || !newPerDay(card.item.kind) || admitted.has(card.item.id));
+  const admitted = new Set(dailyCards(cards, studyDayOf(new Date()), newPerDay).map(keyOfCard));
+  return cards.filter((card) => card.progress.box > 0 || !newPerDay(card.item.kind) || admitted.has(keyOfCard(card)));
 }
 
 /**

@@ -53,7 +53,9 @@ export function unitForKinds(kinds: string[]): Unit {
   return (distinct.size === 1 && only && findCategory(only)?.unit) || GENERIC_UNIT;
 }
 
+/** Unité pour compter des cartes : « fiches » dès qu'une fiche compte plusieurs volets (une carte n'est plus un lieu). */
 export function unitFor(cards: Card[]): Unit {
+  if (cards.some((card) => card.track !== undefined)) return GENERIC_UNIT;
   return unitForKinds(cards.map((card) => card.item.kind));
 }
 

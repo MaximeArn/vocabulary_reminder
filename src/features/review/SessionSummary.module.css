@@ -61,6 +61,14 @@
   font-size: var(--text-md);
 }
 
+/* Volet travaillé (géographie : « Carte », « Numéro »…) */
+.track {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+}
+
 .level {
   font-size: var(--text-xs);
   color: var(--ink-faint);

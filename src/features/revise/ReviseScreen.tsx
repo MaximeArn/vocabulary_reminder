@@ -3,6 +3,7 @@ import { Screen } from "../../ui/Screen";
 import { Panel } from "../../ui/Panel";
 import { CategoryToggle } from "../../ui/CategoryToggle";
 import { ActionSheet } from "../../ui/ActionSheet";
+import { categoryBorder } from "../../ui/categoryBorder";
 import { CheckIcon, ChevronRightIcon, DailyIcon, HourglassIcon, MapIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
 import { formatCardCount, formatRelativeDay } from "../../ui/format";
 import { InstallHint } from "../../pwa/InstallHint";
@@ -39,19 +40,10 @@ import { StreakPanel } from "./StreakPanel";
 import styles from "./ReviseScreen.module.css";
 
 /**
- * Les icônes prennent la couleur de la catégorie révisée. Pour « Tout », elles
- * restent à la couleur du texte et c'est le bloc des révisions qui porte le
- * mélange : une bordure aux couleurs de toutes les catégories présentes.
+ * Les icônes et le contour du bloc des révisions prennent la couleur de la
+ * catégorie révisée. Pour « Tout », les icônes restent à la couleur du texte et
+ * le contour porte le mélange : les couleurs de toutes les catégories présentes.
  */
-/** Bordure du mode « Tout » : de gauche à droite, une part par catégorie présente (dans l’ordre du sélecteur). */
-function splitBorder(colors: string[]): string {
-  const step = 100 / colors.length;
-  const stops = colors.flatMap((color, index) => [
-    `${color} ${index === 0 ? 0 : index * step + 4}%`,
-    `${color} ${index === colors.length - 1 ? 100 : (index + 1) * step - 4}%`,
-  ]);
-  return `linear-gradient(var(--paper-raised), var(--paper-raised)) padding-box, linear-gradient(90deg, ${stops.join(", ")}) border-box`;
-}
 
 interface RunningSession {
   id: number;
@@ -105,7 +97,7 @@ export function ReviseScreen() {
   const dueCount = countDue(reviewable, today, newPerDay);
   // Catégorie révisée : celle choisie, ou la seule présente. Sinon, « Tout » mélange plusieurs catégories.
   const category = findCategory(kind) ?? (categories.length === 1 ? categories[0] : undefined);
-  const mixed = !category && categories.length > 1;
+  const borderColors = category ? [category.color] : categories.map((present) => present.color);
 
   // Exercice d'une carte : selon sa catégorie, son niveau et le réglage de l'utilisateur.
   const exerciseFor = (card: Card, rotation: number) =>
@@ -168,7 +160,7 @@ export function ReviseScreen() {
           <CategoryToggle
             label="Réviser"
             options={[
-              { value: "all", label: "Tout" },
+              { value: "all", label: "Tout", mix: categories.map((present) => present.color) },
               ...categories.map((category) => ({
                 value: category.kind,
                 label: category.label,
@@ -190,8 +182,8 @@ export function ReviseScreen() {
         <>
           <StreakPanel reviews={reviews} today={today} />
           <ul
-            className={`${styles.list} ${mixed ? styles.mixed : ""}`}
-            style={mixed ? { background: splitBorder(categories.map((present) => present.color)) } : undefined}
+            className={styles.list}
+            style={{ background: categoryBorder(borderColors, "var(--paper-raised)") }}
             aria-label="Révisions"
           >
             <RevisionRow

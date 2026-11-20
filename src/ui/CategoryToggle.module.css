@@ -1,5 +1,11 @@
-/* L'option choisie prend la couleur de remplissage de sa catégorie (ou l'encre pour « Tout »). */
+/* L'option choisie prend la couleur de remplissage de sa catégorie (ou l'encre, par défaut). */
 .toggle [aria-checked="true"] {
   background: var(--fill, var(--ink));
   color: var(--on-fill, var(--paper));
+}
+
+/* « Tout » : contour aux couleurs des catégories (dégradé calculé en ligne), même taille qu'une option pleine */
+.mixed [aria-checked="true"] {
+  border: 2px solid transparent;
+  padding: calc(var(--space-1) - 2px) calc(var(--space-3) - 2px);
 }

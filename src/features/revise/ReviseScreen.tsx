@@ -39,18 +39,18 @@ import { StreakPanel } from "./StreakPanel";
 import styles from "./ReviseScreen.module.css";
 
 /**
- * Les icônes prennent la couleur de la catégorie révisée. Pour « Tout », chaque
- * icône a deux tracés de couleurs différentes, et la pastille de la révision du
- * jour une bordure aux couleurs de toutes les catégories. Contrastes vérifiés en clair et en sombre.
+ * Les icônes prennent la couleur de la catégorie révisée. Pour « Tout », elles
+ * restent à la couleur du texte et c'est le bloc des révisions qui porte le
+ * mélange : une bordure aux couleurs de toutes les catégories présentes.
  */
-/** Bordure de la pastille « Tout » : une part par catégorie présente, séparées par de courtes transitions. */
+/** Bordure du mode « Tout » : de gauche à droite, une part par catégorie présente (dans l’ordre du sélecteur). */
 function splitBorder(colors: string[]): string {
   const step = 100 / colors.length;
   const stops = colors.flatMap((color, index) => [
-    `${color} ${index === 0 ? 0 : index * step + 6}%`,
-    `${color} ${index === colors.length - 1 ? 100 : (index + 1) * step - 6}%`,
+    `${color} ${index === 0 ? 0 : index * step + 4}%`,
+    `${color} ${index === colors.length - 1 ? 100 : (index + 1) * step - 4}%`,
   ]);
-  return `linear-gradient(var(--paper-raised), var(--paper-raised)) padding-box, linear-gradient(135deg, ${stops.join(", ")}) border-box`;
+  return `linear-gradient(var(--paper-raised), var(--paper-raised)) padding-box, linear-gradient(90deg, ${stops.join(", ")}) border-box`;
 }
 
 interface RunningSession {
@@ -65,7 +65,7 @@ interface RunningSession {
 const PRACTICES: {
   kind: PracticeKind;
   title: string;
-  Icon: (props: { size?: number; tones?: [string, string] }) => React.ReactNode;
+  Icon: (props: { size?: number }) => React.ReactNode;
   hint: string;
 }[] = [
   { kind: "forgotten", title: "Oubliées", Icon: RepeatIcon, hint: "Les fiches que tu as déjà ratées" },
@@ -103,10 +103,9 @@ export function ReviseScreen() {
   const selected = kind === "all" ? cards : cards.filter((card) => card.item.kind === kind);
   const reviewable = reviewableCards(selected);
   const dueCount = countDue(reviewable, today, newPerDay);
-  const category = findCategory(kind);
-  // « Tout » : les icônes ont deux tracés, aux couleurs de la première et de la dernière catégorie présentes.
-  const iconTones: [string, string] | undefined =
-    category || categories.length < 2 ? undefined : [categories[0]!.color, categories[categories.length - 1]!.color];
+  // Catégorie révisée : celle choisie, ou la seule présente. Sinon, « Tout » mélange plusieurs catégories.
+  const category = findCategory(kind) ?? (categories.length === 1 ? categories[0] : undefined);
+  const mixed = !category && categories.length > 1;
 
   // Exercice d'une carte : selon sa catégorie, son niveau et le réglage de l'utilisateur.
   const exerciseFor = (card: Card, rotation: number) =>
@@ -190,21 +189,21 @@ export function ReviseScreen() {
       ) : (
         <>
           <StreakPanel reviews={reviews} today={today} />
-          <ul className={styles.list} aria-label="Révisions">
+          <ul
+            className={`${styles.list} ${mixed ? styles.mixed : ""}`}
+            style={mixed ? { background: splitBorder(categories.map((present) => present.color)) } : undefined}
+            aria-label="Révisions"
+          >
             <RevisionRow
-              icon={<DailyIcon size={24} tones={iconTones} />}
+              icon={<DailyIcon size={24} />}
               iconColor={category?.color}
               title="Révision du jour"
               detail={dailyDetail(reviewable, dueCount, today, newPerDay)}
               trailing={
                 dueCount > 0 ? (
                   <span
-                    className={`${styles.badge} ${category ? "" : styles.splitBadge}`}
-                    style={
-                      category
-                        ? { background: category.fillColor, color: category.onFillColor }
-                        : { background: splitBorder(categories.map((present) => present.color)) }
-                    }
+                    className={`${styles.badge} ${category ? "" : styles.neutralBadge}`}
+                    style={category ? { background: category.fillColor, color: category.onFillColor } : undefined}
                   >
                     {dueCount}
                   </span>
@@ -222,7 +221,7 @@ export function ReviseScreen() {
               return (
                 <RevisionRow
                   key={practice}
-                  icon={<Icon size={24} tones={iconTones} />}
+                  icon={<Icon size={24} />}
                   iconColor={category?.color}
                   title={title}
                   detail={hint}
@@ -232,7 +231,7 @@ export function ReviseScreen() {
                 />
               );
             })}
-            {regions.length > 0 && (
+            {category?.kind === geographyModel.kind && regions.length > 0 && (
               <RevisionRow
                 icon={<MapIcon size={24} />}
                 iconColor={geographyModel.color}
@@ -243,7 +242,7 @@ export function ReviseScreen() {
                 onClick={() => setChoosingRegion(true)}
               />
             )}
-            {eras.length > 0 && (
+            {category?.kind === historicalEventModel.kind && eras.length > 0 && (
               <RevisionRow
                 icon={<HourglassIcon size={24} />}
                 iconColor={historicalEventModel.color}

@@ -26,6 +26,12 @@
   overflow: hidden;
 }
 
+/* « Tout » : bordure aux couleurs des catégories présentes (dégradé calculé en ligne) */
+.mixed {
+  border: 2px solid transparent;
+  box-shadow: none;
+}
+
 .list > li + li {
   border-top: 1px solid var(--rule);
 }
@@ -40,10 +46,10 @@
   text-align: center;
 }
 
-/* « Tout » : bordure aux couleurs des catégories présentes (dégradé calculé), texte d'encre */
-.splitBadge {
-  border: 2px solid transparent;
-  color: var(--ink);
+/* « Tout » : pastille neutre, le mélange se lit sur la bordure du bloc */
+.neutralBadge {
+  background: var(--ink);
+  color: var(--paper-raised);
 }
 
 /* Tout est révisé */

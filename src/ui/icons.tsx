@@ -195,69 +195,47 @@ export function ClockIcon(props: IconProps) {
   );
 }
 
-
-
-
-/* ---------- Icônes en deux parties ----------
- * Chaque icône d'entraînement est dessinée en deux tracés qui ont un sens
- * (deux flèches, deux familles de rayons). En mode « Tout », chaque tracé prend
- * la couleur d'une catégorie ; sinon, les deux suivent la couleur du texte.
+/* ---------- Icônes des révisions ----------
+ * Couleur de la catégorie révisée ; en mode « Tout », couleur du texte (le
+ * mélange se lit sur la bordure du bloc des révisions).
  */
 
-interface TwoToneProps extends IconProps {
-  /** Couleurs des deux tracés ; par défaut, la couleur du texte. */
-  tones?: [string, string];
-}
-
-function TwoTone({ size, tones, first, second }: TwoToneProps & { first: string; second: string }) {
+/** Un calendrier coché : la révision du jour. */
+export function DailyIcon(props: IconProps) {
   return (
-    <Svg size={size}>
-      <path d={first} style={tones ? { stroke: tones[0] } : undefined} />
-      <path d={second} style={tones ? { stroke: tones[1] } : undefined} />
+    <Svg {...props}>
+      <path d="M4.5 6.5h15v13h-15zM4.5 10.5h15M8.5 4v4.5M15.5 4v4.5" />
+      <path d="m9 15 2 2 4-4" />
     </Svg>
   );
 }
 
-/** Un calendrier coché : la révision du jour. */
-export function DailyIcon(props: TwoToneProps) {
-  return (
-    <TwoTone
-      {...props}
-      first="M4.5 6.5h15v13h-15zM4.5 10.5h15M8.5 4v4.5M15.5 4v4.5"
-      second="m9 15 2 2 4-4"
-    />
-  );
-}
-
 /** Deux flèches qui tournent en cycle : revenir sur ce qui a été oublié. */
-export function RepeatIcon(props: TwoToneProps) {
+export function RepeatIcon(props: IconProps) {
   return (
-    <TwoTone
-      {...props}
-      first="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5"
-      second="M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"
-    />
+    <Svg {...props}>
+      <path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5" />
+      <path d="M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5" />
+    </Svg>
   );
 }
 
 /** Une étincelle : rayons droits d'un côté, rayons diagonaux de l'autre. */
-export function SparkIcon(props: TwoToneProps) {
+export function SparkIcon(props: IconProps) {
   return (
-    <TwoTone
-      {...props}
-      first="M12 3v4M12 17v4M3 12h4M17 12h4"
-      second="M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5"
-    />
+    <Svg {...props}>
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+      <path d="M6.3 6.3l2.5 2.5M15.2 15.2l2.5 2.5M6.3 17.7l2.5-2.5M15.2 8.8l2.5-2.5" />
+    </Svg>
   );
 }
 
 /** Deux flèches qui se croisent : un tirage mélangé. */
-export function ShuffleIcon(props: TwoToneProps) {
+export function ShuffleIcon(props: IconProps) {
   return (
-    <TwoTone
-      {...props}
-      first="M4 7h3.5c4.5 0 5.5 10 10 10H20M17.5 14.5 20 17l-2.5 2.5"
-      second="M4 17h3.5c1.8 0 3-1.6 4-3.6M14.5 10.6c1-2 2.2-3.6 4-3.6H20M17.5 4.5 20 7l-2.5 2.5"
-    />
+    <Svg {...props}>
+      <path d="M4 7h3.5c4.5 0 5.5 10 10 10H20M17.5 14.5 20 17l-2.5 2.5" />
+      <path d="M4 17h3.5c1.8 0 3-1.6 4-3.6M14.5 10.6c1-2 2.2-3.6 4-3.6H20M17.5 4.5 20 7l-2.5 2.5" />
+    </Svg>
   );
 }

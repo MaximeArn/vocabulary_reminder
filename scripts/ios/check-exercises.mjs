@@ -125,6 +125,8 @@ try {
 
   await step("« Par époque » : choix de l'époque, avec le nombre de dates", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
+    // Le sélecteur n'apparaît qu'une fois la page affichée.
+    await safari.waitForText("Révision du jour");
     await chooseSegment(safari, "Réviser", "Dates");
     await safari.clickButton("Par époque");
     await safari.waitForText("Réviser une époque");

@@ -41,7 +41,7 @@ export function LocateAnswer({ question, Map, outcome, onSubmit }: LocateAnswerP
           <Button fullWidth disabled={selected === null} onClick={() => selected && onSubmit({ type: "locate", zone: selected })}>
             Valider
           </Button>
-          <p className={styles.hint}>Pince la carte pour zoomer ; Paris et l’outre-mer sont en encarts.</p>
+          <p className={styles.hint}>Pince la carte ou utilise + et − pour zoomer ; Paris et l’outre-mer sont en encarts.</p>
         </div>
       )}
     </>

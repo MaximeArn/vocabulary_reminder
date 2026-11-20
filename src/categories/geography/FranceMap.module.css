@@ -17,7 +17,7 @@
 
 /* Proportions de la carte pendant le chargement des tracés (évite un saut de mise en page) */
 .loading {
-  aspect-ratio: 1000 / 1154;
+  aspect-ratio: 1000 / 830;
   border-radius: var(--radius-md);
   background: var(--map-water);
 }
@@ -57,8 +57,7 @@
   stroke: var(--map-border-strong);
 }
 
-/* Cadres : la Corse rapprochée, les encarts (outre-mer, Paris agrandi) */
-.corsica,
+/* Cadres des encarts (outre-mer, Paris agrandi) */
 .inset {
   fill: none;
   stroke: var(--map-border);
@@ -66,21 +65,39 @@
   vector-effect: non-scaling-stroke;
 }
 
-.corsica {
-  stroke-dasharray: 4 3;
-}
-
-.reset {
+/* Boutons de zoom : une colonne en haut à droite, dans la marge réservée de la carte */
+.controls {
   position: absolute;
+  top: var(--space-2);
   right: var(--space-2);
-  bottom: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  max-width: 44px;
+  border-radius: var(--radius-sm);
   background: var(--paper-raised);
   box-shadow:
     inset 0 0 0 1px var(--rule),
-    0 1px 3px rgb(0 0 0 / 0.12);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--ink);
+    0 1px 3px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+}
+
+.control {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-height: 36px;
+  color: var(--ink-soft);
+}
+
+.control + .control {
+  border-top: 1px solid var(--rule);
+}
+
+.control:disabled {
+  color: var(--ink-faint);
+  opacity: 0.5;
+}
+
+.control:active:not(:disabled) {
+  background: var(--rule);
 }

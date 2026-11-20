@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { MapViewProps, ZoneTone } from "../views";
+import { MinusIcon, PlusIcon, RecenterIcon } from "../../ui/icons";
 import styles from "./FranceMap.module.css";
 
 /**
@@ -8,13 +9,15 @@ import styles from "./FranceMap.module.css";
  * en cache (service worker).
  *
  * Gestes : toucher un département le choisit ; pincer zoome ; une fois zoomé, un
- * doigt déplace la carte ; un double toucher zoome sur l'endroit touché.
+ * doigt déplace la carte ; un double toucher zoome sur l'endroit touché. Les
+ * boutons +, − et « recentrer », à droite, font de même sans geste.
  */
 
 interface MapData {
   viewBox: [number, number, number, number];
+  /** Largeur réservée à droite aux boutons de zoom. */
+  zoomColumn: number;
   insets: { id: string; title: string; box: [number, number, number, number] }[];
-  corsicaFrame: [number, number, number, number];
   /** Tracés par département : sur la carte, puis (Paris et environs) dans l'encart agrandi. */
   paths: Record<string, string[]>;
 }
@@ -46,6 +49,8 @@ interface View {
 const IDENTITY: View = { scale: 1, x: 0, y: 0 };
 const MAX_SCALE = 6;
 const DOUBLE_TAP_SCALE = 2.5;
+/** Un toucher sur + ou − multiplie (ou divise) le zoom par ce facteur. */
+const BUTTON_STEP = 1.8;
 /** Au-delà de ce déplacement (en pixels), ce n'est plus un toucher mais un geste. */
 const TAP_SLOP = 8;
 const DOUBLE_TAP_MS = 300;
@@ -166,6 +171,13 @@ export function FranceMap({ tones = {}, onSelect, label }: MapViewProps) {
     g.lastTap = { time: now, x: event.clientX, y: event.clientY };
   };
 
+  /** Zoom des boutons : autour du centre de la vue. */
+  const zoomBy = (factor: number) => {
+    const center: [number, number] = [width / 2, height / 2];
+    const point: [number, number] = [(center[0] - view.x) / view.scale, (center[1] - view.y) / view.scale];
+    setView(zoomAt(view.scale * factor, point, center));
+  };
+
   const select = (code: string) => {
     // Un geste (déplacement, pincement) n'est pas un choix.
     if (gesture.current.moved || !onSelect) return;
@@ -208,7 +220,6 @@ export function FranceMap({ tones = {}, onSelect, label }: MapViewProps) {
         </defs>
         <g transform={`translate(${view.x} ${view.y}) scale(${view.scale})`}>
           {ordered.map((code) => zone(code, data.paths[code]![0]!, code))}
-          <rect className={styles.corsica} x={data.corsicaFrame[0]} y={data.corsicaFrame[1]} width={data.corsicaFrame[2]} height={data.corsicaFrame[3]} rx={10} />
           {data.insets.map((inset) => (
             <rect key={inset.id} className={styles.inset} x={inset.box[0]} y={inset.box[1]} width={inset.box[2]} height={inset.box[3]} rx={12} />
           ))}
@@ -217,11 +228,17 @@ export function FranceMap({ tones = {}, onSelect, label }: MapViewProps) {
           </g>
         </g>
       </svg>
-      {view.scale > 1 && (
-        <button type="button" className={styles.reset} onClick={() => setView(IDENTITY)}>
-          Recentrer
+      <div className={styles.controls} style={{ width: `${(data.zoomColumn / width) * 100}%` }}>
+        <button type="button" className={styles.control} onClick={() => zoomBy(BUTTON_STEP)} disabled={view.scale >= MAX_SCALE} aria-label="Zoomer">
+          <PlusIcon size={20} />
         </button>
-      )}
+        <button type="button" className={styles.control} onClick={() => zoomBy(1 / BUTTON_STEP)} disabled={view.scale <= 1} aria-label="Dézoomer">
+          <MinusIcon size={20} />
+        </button>
+        <button type="button" className={styles.control} onClick={() => setView(IDENTITY)} disabled={view.scale <= 1} aria-label="Recentrer la carte">
+          <RecenterIcon size={20} />
+        </button>
+      </div>
     </div>
   );
 }

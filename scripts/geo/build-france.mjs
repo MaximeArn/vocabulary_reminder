@@ -131,37 +131,54 @@ function toPath(ringsList, transform) {
 
 /* ---------- Mise en page ---------- */
 
+// Métropole (Corse à sa place réelle) sur toute la hauteur ; à droite, une colonne réservée
+// aux boutons de zoom ; l'outre-mer en colonne à gauche, dans l'Atlantique, sous la Bretagne ;
+// l'encart de Paris en haut à gauche, dans la Manche.
 const WIDTH = 1000;
-const INSET_GAP = 10;
-const INSET_HEIGHT = 150;
+const ZOOM_COLUMN = 110;
+const MAP_MARGIN = 10;
+const INSET_GAP = 12;
 const isOverseas = (code) => code.startsWith("97");
 const PETITE_COURONNE = ["75", "92", "93", "94"];
 
-const isCorsica = (code) => code === "2A" || code === "2B";
-const continent = shapes.filter((f) => !isOverseas(f.properties.code) && !isCorsica(f.properties.code));
-const continentBox = bounds(continent.flatMap((f) => rings(f.geometry).flat().map(lambert93)));
-const corsicaBox = bounds(
-  shapes.filter((f) => isCorsica(f.properties.code)).flatMap((f) => rings(f.geometry).flat().map(lambert93)),
-);
-// Corse rapprochée : son bas aligné sur celui du continent, son bord droit sur le sien.
-const corsicaShift = [continentBox.maxX - corsicaBox.maxX, continentBox.maxY - corsicaBox.maxY];
-const placed = (code) => (p) => {
-  const [x, y] = lambert93(p);
-  return isCorsica(code) ? [x + corsicaShift[0], y + corsicaShift[1]] : [x, y];
-};
 const mainland = shapes.filter((f) => !isOverseas(f.properties.code));
-const mainlandBox = bounds(mainland.flatMap((f) => rings(f.geometry).flat().map(placed(f.properties.code))));
-// Hauteur selon les proportions réelles : toute la largeur est utilisée.
-const MAP_MARGIN = 6;
-const MAINLAND_HEIGHT = Math.round(
-  ((WIDTH - 2 * MAP_MARGIN) * (mainlandBox.maxY - mainlandBox.minY)) / (mainlandBox.maxX - mainlandBox.minX) + 2 * MAP_MARGIN,
+const mainlandBox = bounds(mainland.flatMap((f) => rings(f.geometry).flat().map(lambert93)));
+const mapWidth = WIDTH - ZOOM_COLUMN;
+const HEIGHT = Math.round(
+  ((mapWidth - 2 * MAP_MARGIN) * (mainlandBox.maxY - mainlandBox.minY)) / (mainlandBox.maxX - mainlandBox.minX) + 2 * MAP_MARGIN,
 );
-const mainlandTransform = fit(mainlandBox, [0, 0, WIDTH, MAINLAND_HEIGHT], MAP_MARGIN);
+const mainlandTransform = fit(mainlandBox, [0, 0, mapWidth, HEIGHT], MAP_MARGIN);
 
-// Rangée d'encarts sous la métropole : les 5 départements d'outre-mer, puis Paris.
-const insetIds = ["971", "972", "973", "974", "976", "idf"];
-const insetWidth = (WIDTH - INSET_GAP * (insetIds.length - 1)) / insetIds.length;
-const insetBox = (index) => [index * (insetWidth + INSET_GAP), MAINLAND_HEIGHT + INSET_GAP, insetWidth, INSET_HEIGHT];
+/** Emprise de quelques départements, une fois placés sur la carte. */
+const placedBox = (codes) =>
+  bounds(
+    shapes
+      .filter((f) => codes.includes(f.properties.code))
+      .flatMap((f) => rings(f.geometry).flat().map((p) => mainlandTransform(lambert93(p)))),
+  );
+const atlanticCoast = placedBox(["44", "85", "17", "33", "40", "64"]);
+const brittany = placedBox(["29", "56", "22"]);
+const cotentin = placedBox(["50"]);
+
+// Colonne de l'outre-mer : sous la Bretagne, sans toucher la côte atlantique.
+const OVERSEAS = ["971", "972", "973", "974", "976"];
+const columnTop = brittany.maxY + INSET_GAP;
+const columnBottom = HEIGHT - MAP_MARGIN;
+const overseasHeight = (columnBottom - columnTop - INSET_GAP * (OVERSEAS.length - 1)) / OVERSEAS.length;
+const overseasWidth = Math.min(atlanticCoast.minX - INSET_GAP - MAP_MARGIN, overseasHeight * 1.25);
+const overseasBox = (index) => [MAP_MARGIN, columnTop + index * (overseasHeight + INSET_GAP), overseasWidth, overseasHeight];
+
+// Encart de Paris : en haut à gauche, avant le Cotentin et au-dessus de la Bretagne.
+const parisBox = [
+  MAP_MARGIN,
+  MAP_MARGIN,
+  Math.min(cotentin.minX - INSET_GAP - MAP_MARGIN, 200),
+  Math.min(brittany.minY - INSET_GAP - MAP_MARGIN, 170),
+];
+const insetBoxes = { ...Object.fromEntries(OVERSEAS.map((code, index) => [code, overseasBox(index)])), idf: parisBox };
+for (const [id, box] of Object.entries(insetBoxes)) {
+  if (box[2] < 60 || box[3] < 60) throw new Error(`Encart ${id} trop petit : ${box.map(Math.round)}`);
+}
 const INSET_TITLES = {
   "971": "Guadeloupe",
   "972": "Martinique",
@@ -175,14 +192,13 @@ const transforms = new Map();
 for (const feature of shapes) {
   const code = feature.properties.code;
   if (!isOverseas(code)) {
-    transforms.set(code, (p) => mainlandTransform(placed(code)(p)));
+    transforms.set(code, (p) => mainlandTransform(lambert93(p)));
     continue;
   }
   const all = rings(feature.geometry).flat();
   const project = localProjection(bounds(all).minY + (bounds(all).maxY - bounds(all).minY) / 2);
   const box = bounds(all.map(project));
-  const [x, y, w, h] = insetBox(insetIds.indexOf(code));
-  const local = fit(box, [x, y, w, h], 10);
+  const local = fit(box, insetBoxes[code], 8);
   transforms.set(code, (p) => local(project(p)));
 }
 
@@ -190,8 +206,7 @@ for (const feature of shapes) {
 const idfBox = bounds(
   shapes.filter((f) => PETITE_COURONNE.includes(f.properties.code)).flatMap((f) => rings(f.geometry).flat().map(lambert93)),
 );
-const [ix, iy, iw, ih] = insetBox(insetIds.indexOf("idf"));
-const idfTransform = fit(idfBox, [ix, iy, iw, ih], 6);
+const idfTransform = fit(idfBox, parisBox, 6);
 const IDF_CONTEXT = ["77", "78", "91", "95"];
 
 const regionName = new Map(regions.map((r) => [r.code, r.nom]));
@@ -221,32 +236,18 @@ const departments = shapes
   })
   .sort((a, b) => a.code.localeCompare(b.code, "fr", { numeric: true }));
 
-// Cadre de la Corse déplacée.
-const corsicaFrame = (() => {
-  const corners = [
-    [corsicaBox.minX + corsicaShift[0], corsicaBox.minY + corsicaShift[1]],
-    [corsicaBox.maxX + corsicaShift[0], corsicaBox.maxY + corsicaShift[1]],
-  ].map(mainlandTransform);
-  const margin = 10;
-  const round = (value) => Math.round(value);
-  // Le cadre reste dans la carte (la Corse est collée au bord droit).
-  const left = round(corners[0][0] - margin);
-  const top = round(corners[0][1] - margin);
-  const right = Math.min(round(corners[1][0] + margin), WIDTH - 1);
-  const bottom = Math.min(round(corners[1][1] + margin), MAINLAND_HEIGHT - 1);
-  return [left, top, right - left, bottom - top];
-})();
-
 mkdirSync(dataDir, { recursive: true });
 // Généré par scripts/geo/build-france.mjs : ne pas modifier à la main.
 const list = {
   regions: regions.map((r) => ({ code: r.code, name: typographic(r.nom) })),
   departments: departments.map(({ path, insetPath, ...rest }) => rest),
 };
+const roundBox = (box) => box.map((value) => Math.round(value * 10) / 10);
 const map = {
-  viewBox: [0, 0, WIDTH, MAINLAND_HEIGHT + INSET_GAP + INSET_HEIGHT],
-  insets: insetIds.map((id, index) => ({ id, title: INSET_TITLES[id], box: insetBox(index) })),
-  corsicaFrame,
+  viewBox: [0, 0, WIDTH, HEIGHT],
+  /** Largeur réservée à droite aux boutons de zoom (repère de la carte). */
+  zoomColumn: ZOOM_COLUMN,
+  insets: Object.entries(insetBoxes).map(([id, box]) => ({ id, title: INSET_TITLES[id], box: roundBox(box) })),
   paths: Object.fromEntries(departments.map((d) => [d.code, d.insetPath ? [d.path, d.insetPath] : [d.path]])),
 };
 writeFileSync(listFile, JSON.stringify(list, null, 1));

@@ -40,21 +40,27 @@ export function CardDetailPage({ itemId, onClose }: CardDetailPageProps) {
         <p className={styles.meta}>
           {MASTERY_LABELS[masteryLevel(card.progress.box)]} · révision{" "}
           {formatRelativeDay(card.progress.dueDay, today, addDays(today, 1))}
-          <br />
-          Ajouté le {formatLongDate(card.item.createdAt)}
+          {/* Une fiche intégrée n'a pas été « ajoutée » : elle fait partie de l'app. */}
+          {!category.builtIn && (
+            <>
+              <br />
+              Ajouté le {formatLongDate(card.item.createdAt)}
+            </>
+          )}
         </p>
       </article>
 
-      <div className={styles.actions}>
-        {category.editable !== false && (
+      {/* Une fiche intégrée (département) ne se modifie ni ne se supprime : elle fait partie de l'app. */}
+      {!category.builtIn && (
+        <div className={styles.actions}>
           <Button variant="secondary" fullWidth onClick={() => setEditing(true)}>
             Modifier
           </Button>
-        )}
-        <Button variant="quiet" fullWidth className={styles.delete} onClick={remove}>
-          Supprimer
-        </Button>
-      </div>
+          <Button variant="quiet" fullWidth className={styles.delete} onClick={remove}>
+            Supprimer
+          </Button>
+        </div>
+      )}
 
       {editing && <ItemFormSheet kind={card.item.kind} item={card.item} onClose={() => setEditing(false)} />}
     </Page>

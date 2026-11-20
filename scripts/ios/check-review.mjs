@@ -2,7 +2,7 @@
 // Prérequis et usage : voir check-words.mjs. Le scénario efface les données de l'app.
 
 import { IosSafari } from "./webdriver.mjs";
-import { chooseBackupFile, createStepper, makeBackup, startLocalSession, screenshot, startDailyReview } from "./helpers.mjs";
+import { chooseBackupFile, chooseSegment, createStepper, makeBackup, startLocalSession, screenshot, startDailyReview } from "./helpers.mjs";
 
 const appUrl = process.argv[2] ?? "http://localhost:4173/";
 const safari = new IosSafari("http://localhost:4444");
@@ -82,8 +82,11 @@ try {
     await safari.waitForText("6 mots restaurés");
   });
 
-  await step("Aujourd’hui : 6 mots à réviser", async () => {
+  await step("Aujourd’hui : 6 mots à réviser (et 10 départements du jour en mode Tout)", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#aujourdhui`); // ancienne adresse : doit ouvrir « Réviser »
+    await safari.waitForText("16 fiches à réviser");
+    // La suite ne concerne que le vocabulaire (le choix est retenu d'une page à l'autre).
+    await chooseSegment(safari, "Réviser", "Vocabulaire");
     await safari.waitForText("6 mots à réviser");
   });
 

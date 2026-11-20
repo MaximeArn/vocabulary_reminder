@@ -36,8 +36,6 @@ export interface CategoryViews<Content, Draft> {
    * n'avait pas de carte, l'explication peut en montrer une (géographie).
    */
   Explanation: ComponentType<{ content: Content; showMap?: boolean }>;
-  /** Ajout par une feuille dédiée (choix dans un référentiel) plutôt que par le formulaire. */
-  AddSheet?: ComponentType<{ onClose: () => void }>;
   /** Carte des questions de cette catégorie (géographie), et le nom de chaque zone. */
   Map?: ComponentType<MapViewProps>;
   describeZone?: (zone: string) => string;

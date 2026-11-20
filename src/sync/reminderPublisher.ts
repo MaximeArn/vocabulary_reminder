@@ -1,6 +1,8 @@
 import { db } from "../data/db";
 import { buildCards, type Card } from "../domain/card";
 import { reminderSummary } from "../domain/reminder";
+import { dailyCards } from "../domain/session";
+import { studyDayOf } from "../domain/studyDay";
 import { CATEGORY_MODELS } from "../categories/models";
 import { supabase } from "./supabase";
 
@@ -21,6 +23,16 @@ function reviewable(cards: Card[]): Card[] {
 }
 
 /**
+ * Fiches à annoncer : les nouvelles fiches d'une catégorie intégrée n'entrent dans la
+ * révision du jour que par petits groupes ; on n'annonce que celles admises aujourd'hui.
+ */
+function announced(cards: Card[]): Card[] {
+  const newPerDay = (kind: string) => CATEGORY_MODELS.find((model) => model.kind === kind)?.builtIn?.newPerDay;
+  const admitted = new Set(dailyCards(cards, studyDayOf(new Date()), newPerDay).map((card) => card.item.id));
+  return cards.filter((card) => card.progress.box > 0 || !newPerDay(card.item.kind) || admitted.has(card.item.id));
+}
+
+/**
  * Publie l'état utile au rappel quotidien (heure, fuseau, fiches dues par jour,
  * dernier jour révisé, série), après chaque synchronisation réussie : le serveur
  * décide ensuite seul, même si l'app reste fermée.
@@ -36,7 +48,7 @@ export async function publishReminder(userId: string): Promise<void> {
     user_id: userId,
     time: typeof timeSetting?.value === "string" ? timeSetting.value : DEFAULT_REMINDER_TIME,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Paris",
-    ...reminderSummary(reviewable(buildCards(items, reviews)), reviews),
+    ...reminderSummary(announced(reviewable(buildCards(items, reviews))), reviews),
   };
   // Le compte fait partie de la signature : un autre compte sur l'appareil republie.
   const signature = JSON.stringify(row);

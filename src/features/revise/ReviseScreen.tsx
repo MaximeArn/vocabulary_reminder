@@ -3,7 +3,7 @@ import { Screen } from "../../ui/Screen";
 import { Panel } from "../../ui/Panel";
 import { CategoryToggle } from "../../ui/CategoryToggle";
 import { ActionSheet } from "../../ui/ActionSheet";
-import { CheckIcon, ChevronRightIcon, DailyIcon, HourglassIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
+import { CheckIcon, ChevronRightIcon, DailyIcon, HourglassIcon, MapIcon, RepeatIcon, ShuffleIcon, SparkIcon } from "../../ui/icons";
 import { formatCardCount, formatRelativeDay } from "../../ui/format";
 import { InstallHint } from "../../pwa/InstallHint";
 import { CHOICE_COUNT } from "../../domain/quiz";
@@ -11,6 +11,7 @@ import type { Card } from "../../domain/card";
 import {
   RECENT_DAYS,
   countDue,
+  dailyCards,
   nextDueDay,
   planDraw,
   planPractice,
@@ -25,6 +26,9 @@ import { chooseExercise } from "../../categories/exercisePlan";
 import { formatCount } from "../../categories/model";
 import { historicalEventModel, ORDER_SIZE, type HistoricalEventContent } from "../../categories/historical-event/model";
 import { ERAS, eraOf } from "../../categories/historical-event/eras";
+import { geographyModel, departmentOf, type GeographyContent } from "../../categories/geography/model";
+import { REGIONS } from "../../categories/geography/referential";
+import type { NewPerDay } from "../../domain/session";
 import { useCards } from "../collection/useCards";
 import { useReviews } from "../review/useReviews";
 import { useToday } from "../review/useToday";
@@ -87,6 +91,7 @@ export function ReviseScreen() {
   const settings = useReviewSettings();
   const [session, setSession] = useState<RunningSession | null>(null);
   const [choosingEra, setChoosingEra] = useState(false);
+  const [choosingRegion, setChoosingRegion] = useState(false);
 
   if (cards === undefined || reviews === undefined) {
     return <Screen title="Réviser" />;
@@ -97,7 +102,7 @@ export function ReviseScreen() {
   const kind = categories.some((category) => category.kind === settings.categoryFilter) ? settings.categoryFilter : "all";
   const selected = kind === "all" ? cards : cards.filter((card) => card.item.kind === kind);
   const reviewable = reviewableCards(selected);
-  const dueCount = countDue(reviewable, today);
+  const dueCount = countDue(reviewable, today, newPerDay);
   const category = findCategory(kind);
   // « Tout » : les icônes ont deux tracés, aux couleurs de la première et de la dernière catégorie présentes.
   const iconTones: [string, string] | undefined =
@@ -106,6 +111,14 @@ export function ReviseScreen() {
   // Exercice d'une carte : selon sa catégorie, son niveau et le réglage de l'utilisateur.
   const exerciseFor = (card: Card, rotation: number) =>
     chooseExercise(card, rotation, settings.exercisePreference(card.item.kind));
+
+  // Par région : les départements, rangés par région (métropole d'abord, puis l'outre-mer).
+  const places = reviewable.filter((card) => card.item.kind === geographyModel.kind);
+  const placesByRegion = new Map(REGIONS.map((region) => [region.code, [] as Card[]]));
+  for (const card of places) placesByRegion.get(departmentOf(card.item.content as GeographyContent).region)?.push(card);
+  const regions = [...REGIONS]
+    .filter((region) => placesByRegion.get(region.code)!.length > 0)
+    .sort((a, b) => Number(Number(a.code) < 10) - Number(Number(b.code) < 10) || a.name.localeCompare(b.name, "fr"));
 
   // Par époque : les dates révisables, rangées par époque.
   const dates = reviewable.filter((card) => card.item.kind === historicalEventModel.kind);
@@ -124,9 +137,17 @@ export function ReviseScreen() {
     };
     launch();
   };
-  const startDaily = () => start(() => planSession(reviewable, today, settings.sessionSize, exerciseFor));
+  const startDaily = () => start(() => planSession(reviewable, today, settings.sessionSize, exerciseFor, undefined, newPerDay));
   const startPractice = (practice: PracticeKind) =>
-    start(() => planPractice(reviewable, practice, settings.sessionSize, Date.now(), exerciseFor));
+    start(() => planPractice(practiceCards(reviewable, practice), practice, settings.sessionSize, Date.now(), exerciseFor));
+  /** Une région donnée, ou tirée au hasard (à chaque session). */
+  const startRegion = (regionCode: string | "random") => {
+    setChoosingRegion(false);
+    start(() => {
+      const code = regionCode === "random" ? regions[Math.floor(Math.random() * regions.length)]!.code : regionCode;
+      return planDraw(placesByRegion.get(code) ?? [], settings.sessionSize, exerciseFor);
+    });
+  };
   /** Une époque donnée, ou tirée au hasard (à chaque session) parmi celles qui ont des dates. */
   const startEra = (eraId: string | "random") => {
     setChoosingEra(false);
@@ -174,7 +195,7 @@ export function ReviseScreen() {
               icon={<DailyIcon size={24} tones={iconTones} />}
               iconColor={category?.color}
               title="Révision du jour"
-              detail={dailyDetail(reviewable, dueCount, today)}
+              detail={dailyDetail(reviewable, dueCount, today, newPerDay)}
               trailing={
                 dueCount > 0 ? (
                   <span
@@ -197,7 +218,7 @@ export function ReviseScreen() {
               onClick={startDaily}
             />
             {PRACTICES.map(({ kind: practice, title, Icon, hint }) => {
-              const count = practiceCandidates(reviewable, practice, Date.now()).length;
+              const count = practiceCandidates(practiceCards(reviewable, practice), practice, Date.now()).length;
               return (
                 <RevisionRow
                   key={practice}
@@ -211,6 +232,17 @@ export function ReviseScreen() {
                 />
               );
             })}
+            {regions.length > 0 && (
+              <RevisionRow
+                icon={<MapIcon size={24} />}
+                iconColor={geographyModel.color}
+                title="Par région"
+                detail="Choisis une région, ou au hasard"
+                trailing={<ChevronRightIcon size={18} />}
+                opensChoice
+                onClick={() => setChoosingRegion(true)}
+              />
+            )}
             {eras.length > 0 && (
               <RevisionRow
                 icon={<HourglassIcon size={24} />}
@@ -224,6 +256,20 @@ export function ReviseScreen() {
             )}
           </ul>
         </>
+      )}
+
+      {choosingRegion && (
+        <ActionSheet
+          title="Réviser une région"
+          options={[
+            ...(regions.length > 1 ? [{ label: "Région au hasard", onSelect: () => startRegion("random") }] : []),
+            ...regions.map((region) => ({
+              label: `${region.name} · ${placesByRegion.get(region.code)!.length}`,
+              onSelect: () => startRegion(region.code),
+            })),
+          ]}
+          onCancel={() => setChoosingRegion(false)}
+        />
       )}
 
       {choosingEra && (
@@ -275,12 +321,22 @@ function EmptyMessage({ cards }: { cards: Card[] }) {
   );
 }
 
+/** Nouvelles fiches par jour : limitées pour les catégories intégrées (101 départements d'un coup). */
+const newPerDay: NewPerDay = (kind) => findCategory(kind)?.builtIn?.newPerDay;
+
+/**
+ * Fiches d'un entraînement. « Nouveautés » ne concerne que les fiches ajoutées :
+ * celles d'une catégorie intégrée sont toutes là depuis le premier jour.
+ */
+function practiceCards(cards: Card[], practice: PracticeKind): Card[] {
+  return practice === "recent" ? cards.filter((card) => !findCategory(card.item.kind)?.builtIn) : cards;
+}
+
 /** « 12 fiches à réviser », ou « Tout est révisé · suite demain ». */
-function dailyDetail(reviewable: Card[], dueCount: number, today: string): string {
+function dailyDetail(reviewable: Card[], dueCount: number, today: string, limit: NewPerDay): string {
   if (dueCount > 0) {
-    const dueCards = reviewable.filter((card) => card.progress.dueDay <= today);
-    return `${formatCardCount(dueCount, unitFor(dueCards))} à réviser`;
+    return `${formatCardCount(dueCount, unitFor(dailyCards(reviewable, today, limit)))} à réviser`;
   }
-  const nextDay = nextDueDay(reviewable, today);
+  const nextDay = nextDueDay(reviewable, today, limit);
   return nextDay ? `Tout est révisé · suite ${formatRelativeDay(nextDay, today, addDays(today, 1))}` : "Tout est révisé";
 }

@@ -47,8 +47,12 @@ Géographie : la carte est un dessin SVG préparé une fois pour toutes par `npm
 (`scripts/geo/build-france.mjs`) à partir des tracés IGN Admin Express et de geo.api.gouv.fr
 (Licence Ouverte Etalab 2.0, citée dans « À propos ») : simplification avec mapshaper (outil de
 développement seulement), projection Lambert-93, encarts pour l'outre-mer et Paris. L'app n'utilise
-aucune bibliothèque de cartographie et fonctionne hors ligne. Les fiches ne gardent qu'une référence
-(« département 15 ») vers le référentiel embarqué.
+aucune bibliothèque de cartographie et fonctionne hors ligne. C'est une catégorie **intégrée** : ses
+fiches (une par département, simple référence « département 15 » vers le référentiel embarqué) sont
+créées automatiquement pour chaque compte, avec des identifiants déterministes (UUID v5) pour éviter
+les doublons entre appareils ; ni ajout, ni modification, ni suppression. Les fiches jamais révisées
+entrent dans la révision du jour à raison de 10 par jour ; toutes restent accessibles par les autres
+révisions (En vrac, Par région…).
 
 Ajouter une catégorie :
 1. Créer `src/categories/<nom>/` avec `model.ts` (contrat `CategoryModel` : validation,

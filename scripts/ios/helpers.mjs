@@ -30,6 +30,13 @@ export const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Efface données, service worker et cache de l'app, puis la recharge. */
 export async function resetApp(safari, appUrl, hash = "") {
+  // Session effacée d'abord, depuis une page statique du site (une icône) : l'app, chargée
+  // ensuite pour l'effacement, n'a plus de compte et ne fait rien (ni synchronisation ni
+  // création de fiches). Sinon, relancée avec l'ancienne session, elle recrée sa base et y
+  // écrit, et Safari peut figer cette page en pleine transaction (cache de navigation),
+  // bloquant les suivantes. On repart ainsi d'un appareil neuf.
+  await safari.open(new URL("icons/icon-192.png", appUrl).href);
+  await safari.script("localStorage.clear();");
   await safari.open(appUrl);
   // Sans cela, le service worker pourrait servir un build précédent.
   await safari.scriptAsync(

@@ -4,7 +4,7 @@ import { comparisonKey } from "./text";
 /** Recherche et tri de la collection, côté affichage, quelle que soit la catégorie. */
 
 /** Critère de tri, et son sens : croissant (↑) ou décroissant (↓). */
-export type SortKey = "added" | "alphabetical" | "chronological";
+export type SortKey = "added" | "alphabetical" | "chronological" | "reference";
 export type SortDirection = "asc" | "desc";
 
 export interface CardSort {
@@ -16,6 +16,7 @@ export const SORT_KEY_LABELS: Record<SortKey, string> = {
   added: "Ajout",
   alphabetical: "Alphabétique",
   chronological: "Chronologique",
+  reference: "Numéro",
 };
 
 /** Ce qu'il faut savoir d'une catégorie pour chercher et trier ses cartes. */
@@ -24,6 +25,8 @@ export interface Describer {
   searchTexts: (card: Card) => string[];
   /** Position dans le temps (catégories datées) ; absente sinon. */
   chronology?: (card: Card) => number | undefined;
+  /** Numéro de référence (département : « 01 »… « 2A »… « 976 ») ; absent sinon. */
+  reference?: (card: Card) => string | undefined;
 }
 
 /** Garde les cartes dont l'un des textes contient la recherche (sans accents ni casse). */
@@ -34,6 +37,8 @@ export function searchCards(cards: Card[], query: string, describe: Describer): 
 }
 
 const frenchCollator = new Intl.Collator("fr", { sensitivity: "base" });
+/** « 2 » avant « 10 », « 2A » entre « 19 » et « 21 ». */
+const numberCollator = new Intl.Collator("fr", { numeric: true });
 
 /**
  * Trie les cartes. Croissant : de la plus ancienne ajoutée à la plus récente,
@@ -49,6 +54,7 @@ export function sortCards(cards: Card[], sort: CardSort, describe: Describer): C
       const position = (card: Card) => describe.chronology?.(card) ?? Number.POSITIVE_INFINITY;
       return position(a) - position(b) || byTitle(a, b);
     },
+    reference: (a: Card, b: Card) => numberCollator.compare(describe.reference?.(a) ?? "", describe.reference?.(b) ?? ""),
   }[sort.key];
   const sign = sort.direction === "asc" ? 1 : -1;
   return [...cards].sort((a, b) => sign * compare(a, b));

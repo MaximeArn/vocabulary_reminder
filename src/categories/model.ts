@@ -78,10 +78,21 @@ export interface CategoryModel<Content, Draft> {
   /** Texte d'aide du champ de recherche. */
   searchPlaceholder: string;
   /**
-   * Fiche modifiable avec un formulaire (par défaut, oui). Une fiche qui renvoie à
-   * un référentiel (un département) ne se modifie pas : on la supprime ou on l'ajoute.
+   * Catégorie intégrée (géographie) : ses fiches viennent d'un référentiel embarqué
+   * et sont toutes disponibles d'office (créées automatiquement), sans ajout, ni
+   * modification, ni suppression. Les fiches jamais révisées entrent dans la
+   * révision du jour au rythme de `newPerDay` par jour ; elles restent accessibles
+   * à tout moment par les autres révisions.
    */
-  editable?: boolean;
+  builtIn?: {
+    /** Contenu de chaque fiche du référentiel. */
+    entries: () => Content[];
+    /** Clé stable d'un contenu (« department:15 ») : une seule fiche par clé. */
+    key: (content: Content) => string;
+    newPerDay: number;
+  };
+  /** Numéro de référence (département) : tri « Numéro » dans la collection. */
+  referenceKey?(content: Content): string;
   /**
    * Présentation dans la liste : « definition » (titre, puis résumé) ou
    * « timeline » (résumé en tête, comme une date sur une frise, puis titre).

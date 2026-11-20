@@ -53,9 +53,24 @@ async function fillLogin(email, password) {
 
 /** Attend « À jour » sans modification en attente (panneau Compte des Réglages). */
 async function waitSynced() {
-  await safari.open(`${appUrl}?t=${Date.now()}#reglages`);
+  // Déjà sur les Réglages : pas de rechargement (il interromprait le travail en cours de l'app).
+  if (!(await text()).includes("Synchronisation automatique")) await safari.open(`${appUrl}?t=${Date.now()}#reglages`);
   try {
-    await safari.waitFor("synchronisation terminée", async () => /État À jour/.test(await text()), 25000);
+    let last = "";
+    const startedAt = Date.now();
+    await safari.waitFor(
+      "synchronisation terminée",
+      async () => {
+        const current = await text();
+        if (process.env.DEBUG_STACK) {
+          const shown = current.match(/État (.{0,60}?) (Réessayer|Se déconnecter)/)?.[1] ?? current.slice(0, 50);
+          if (shown !== last) console.error(`  état : ${(last = shown)}`);
+        }
+        return /État À jour/.test(current);
+      },
+      Number(process.env.SYNC_TIMEOUT ?? 25000),
+    );
+    if (process.env.DEBUG_STACK) console.error(`  à jour après ${Math.round((Date.now() - startedAt) / 1000)} s`);
   } catch (error) {
     // Diagnostic : état affiché et file d'envoi au moment de l'échec.
     const shown = (await text()).match(/État (.{0,120}?) (Réessayer|Se déconnecter)/)?.[1];
@@ -75,16 +90,28 @@ async function localItemCount() {
 }
 
 /** Textes des fiches de la collection, toutes catégories (elles s'affichent une à la fois). */
+/** Départements actifs dans la base de l'appareil (101 attendus, sans doublon). */
+function geographyCount() {
+  return safari.scriptAsync(`const r = indexedDB.open("lexique");
+    r.onsuccess = () => {
+      const all = r.result.transaction("items").objectStore("items").getAll();
+      all.onsuccess = () => { done(all.result.filter((i) => i.kind === "geography" && i.deletedAt === undefined).length); r.result.close(); };
+    };`);
+}
+
 async function collectionTitles() {
   await safari.open(`${appUrl}?t=${Date.now()}#collection`);
-  await safari.waitFor("collection chargée", async () => /FICHES?|MOTS?|DATES?|Ta collection est vide/.test(await text()));
+  // Après un rechargement juste après une écriture, Safari garde un moment l'ancienne page (gelée)
+  // et sa transaction : la nouvelle page attend qu'elle soit libérée. Rien de tel dans l'app installée.
+  await safari.waitFor("collection chargée", async () => /FICHES?|MOTS?|DATES?|LIEUX?|Ta collection est vide/.test(await text()), 15000);
   const read = () => safari.script(`return [...document.querySelectorAll("li button")].map((b) => [...b.querySelectorAll("p")].map((p) => p.textContent).join(" "));`);
   const categories = await safari.script(
     `return [...document.querySelectorAll('[role=radiogroup][aria-label="Catégorie"] [role=radio]')].map((o) => o.textContent);`,
   );
   if (categories.length === 0) return read();
   const all = [];
-  for (const category of categories) {
+  // Les départements (intégrés à l'app) sont vérifiés à part : voir geographyCount.
+  for (const category of categories.filter((name) => name !== "Géographie")) {
     await chooseSegment(safari, "Catégorie", category);
     await pause(300);
     all.push(...(await read()));
@@ -163,6 +190,10 @@ try {
       const shown = await collectionTitles();
       for (const title of titles) if (!shown.some((entry) => entry.includes(title))) throw new Error(`« ${title} » absent : ${shown}`);
       if (shown.length !== 4) throw new Error(`Fiches en trop : ${shown}`);
+      // Mêmes identifiants sur les deux appareils : les départements ne sont pas en double.
+      await waitSynced();
+      const departments = await geographyCount();
+      if (departments !== 101) throw new Error(`${departments} départements au lieu de 101`);
       await safari.open(`${appUrl}?t=${Date.now()}#progres`);
       await safari.waitForText("NIVEAUX");
       if ((await text()) !== progressOnFirstDevice) throw new Error("La progression diffère d’un appareil à l’autre");
@@ -228,6 +259,7 @@ try {
 } catch (error) {
   screenshot("echec");
   console.error(`\n✗ Échec après ${stepper.count} étape(s) : ${error.message}`);
+  if (process.env.DEBUG_STACK) console.error(error.stack);
   process.exitCode = 1;
 } finally {
   await safari.stop().catch(() => {});

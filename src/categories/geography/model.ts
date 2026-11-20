@@ -7,9 +7,9 @@ import { InvalidContentError, expectRecord, expectText, type CategoryModel, type
 import { DEPARTMENTS, findDepartment, nearestDepartments, regionName, type Department } from "./referential";
 
 /**
- * Catégorie « Géographie » : des lieux de France, tirés du référentiel embarqué.
- * Pour l'instant les départements ; les fleuves et les villes suivront, avec leur
- * propre `type` dans le contenu.
+ * Catégorie « Géographie » : des lieux de France, tirés du référentiel embarqué et
+ * tous disponibles d'office (catégorie intégrée, sans ajout). Pour l'instant les
+ * départements ; les fleuves et les villes suivront, avec leur propre `type`.
  */
 
 export interface DepartmentContent {
@@ -269,16 +269,24 @@ export const geographyModel: CategoryModel<GeographyContent, GeographyDraft> = {
   kind: "geography",
   label: "Géographie",
   unit: { singular: "lieu", plural: "lieux", masculine: true },
-  addLabel: "Des départements",
-  newItemTitle: "Départements",
-  addedMessage: (title) => `${title} ajouté à ta collection`,
+  // Catégorie intégrée : pas d'ajout (voir `builtIn`), ces libellés ne sont pas affichés.
+  addLabel: "Des lieux",
+  newItemTitle: "Lieux",
+  addedMessage: (title) => title,
   color: "var(--geography)",
   softColor: "var(--geography-soft)",
   fillColor: "var(--geography-fill)",
   onFillColor: "var(--on-geography-fill)",
   searchPlaceholder: "Rechercher un département, un numéro, une préfecture…",
   listStyle: "definition",
-  editable: false,
+  // Les 101 départements sont disponibles d'office ; 10 nouveaux par jour dans la révision du jour.
+  builtIn: {
+    entries: () => DEPARTMENTS.map((department) => ({ type: "department" as const, code: department.code })),
+    key: (content) => `${content.type}:${content.code}`,
+    newPerDay: 10,
+  },
+  // Clé de tri : la Corse (2A, 2B) entre le 19 et le 21, comme dans la numérotation d'origine (20).
+  referenceKey: (content) => (/^2[AB]$/.test(content.code) ? `020${content.code[1]}` : content.code.padStart(3, "0")),
 
   validateContent: validateGeographyContent,
   title: (content) => departmentOf(content).name,

@@ -3,6 +3,7 @@ import { clearLocalData } from "../data/localData";
 import { onPendingChange } from "../data/outbox";
 import { synchronize } from "./engine";
 import { publishReminder } from "./reminderPublisher";
+import { ensureBuiltInItems } from "../data/builtInItems";
 import { disableReminder } from "../pwa/push";
 import { AUTH_STORAGE_KEY, supabase } from "./supabase";
 
@@ -60,7 +61,7 @@ export const syncStore = {
 
 /* ---------- Session enregistrée sur l'appareil ---------- */
 
-function storedSession(): { user?: { email?: string } } | null {
+function storedSession(): { user?: { id?: string; email?: string } } | null {
   try {
     const raw = localStorage.getItem(AUTH_STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
@@ -77,7 +78,7 @@ export function syncNow(): Promise<void> {
     rerunRequested = true;
     return running;
   }
-  running = runSync().finally(() => {
+  running = enqueue(runSync).finally(() => {
     running = null;
     if (rerunRequested) {
       rerunRequested = false;
@@ -96,6 +97,8 @@ async function runSync(): Promise<void> {
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw new Error("Connexion au serveur impossible pour l’instant.");
     await synchronize(data.session.user.id);
+    // Fiches intégrées (départements) : celles venues d'un autre appareil remplacent un éventuel doublon.
+    await ensureBuiltInItems(data.session.user.id);
     // Rappel quotidien : sans effet sur la synchronisation s'il échoue (il sera republié à la suivante).
     await publishReminder(data.session.user.id).catch((error) => console.warn("Rappel quotidien non publié", error));
     const now = Date.now();
@@ -120,6 +123,7 @@ export function startSyncService(): void {
   supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
       setState({ auth: "signed-in", email: session.user.email });
+      prepareBuiltInItems(session.user.id);
       // Jamais d'appel à supabase dans ce gestionnaire (risque d'interblocage) : on diffère.
       if (event === "SIGNED_IN" || event === "INITIAL_SESSION") scheduleSync(0);
     } else if (event === "SIGNED_OUT") {
@@ -129,6 +133,7 @@ export function startSyncService(): void {
       // Session illisible au lancement (hors ligne, jeton expiré) : on garde l'accès si elle est enregistrée.
       const stored = storedSession();
       setState({ auth: stored ? "signed-in" : "signed-out", email: stored?.user?.email });
+      if (stored?.user?.id) prepareBuiltInItems(stored.user.id);
       if (stored) scheduleSync(0);
     }
   });
@@ -142,6 +147,38 @@ export function startSyncService(): void {
   setInterval(() => {
     if (document.visibilityState === "visible") void syncNow();
   }, PERIODIC_MS);
+}
+
+/**
+ * Fiches intégrées (départements) disponibles dès l'ouverture, même hors ligne :
+ * elles ne dépendent que du compte. Différé : jamais de travail dans le gestionnaire d'authentification.
+ */
+function prepareBuiltInItems(userId: string) {
+  setTimeout(() => {
+    if (!signingOut) void runBuiltIn(userId);
+  }, 0);
+}
+
+/**
+ * File des travaux sur la base : synchronisations et création des fiches intégrées
+ * passent l'une après l'autre (leurs transactions portent sur les mêmes tables).
+ * Aucun travail n'attend un autre de lui-même : pas d'attente circulaire possible.
+ */
+let databaseQueue: Promise<unknown> = Promise.resolve();
+function enqueue<T>(job: () => Promise<T>): Promise<T> {
+  const result = databaseQueue.then(job, job);
+  databaseQueue = result.catch(() => {});
+  return result;
+}
+
+function runBuiltIn(userId: string): Promise<void> {
+  return enqueue(() => ensureBuiltInItems(userId)).catch((error) => console.warn("Fiches intégrées non créées", error));
+}
+
+/** Recrée les fiches intégrées manquantes (après une restauration, par exemple). */
+export function refreshBuiltInItems(): void {
+  const userId = storedSession()?.user?.id;
+  if (userId) prepareBuiltInItems(userId);
 }
 
 /* ---------- Connexion / déconnexion ---------- */

@@ -21,10 +21,14 @@
 .group {
   display: flex;
   flex-direction: column;
+  /* Beaucoup de choix (les régions) : la liste défile, « Annuler » reste visible. */
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 120px);
   border-radius: var(--radius-lg);
   background: var(--paper-raised);
   box-shadow: 0 8px 40px rgb(0 0 0 / 0.15);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .title {

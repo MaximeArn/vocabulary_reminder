@@ -1,5 +1,6 @@
 import type { Card } from "./card";
 import { isDue } from "./srs";
+import { addDays } from "./studyDay";
 import { shuffle, type Random } from "./random";
 
 /** Composition d'une session de révision, toutes catégories confondues. */
@@ -13,9 +14,50 @@ export interface SessionItem {
 }
 
 /**
+ * Nombre maximal de nouvelles fiches par jour pour une catégorie (`undefined` : pas
+ * de limite). Les catégories intégrées (101 départements disponibles d'office) font
+ * entrer leurs fiches peu à peu dans la révision du jour.
+ */
+export type NewPerDay = (kind: string) => number | undefined;
+const noLimit: NewPerDay = () => undefined;
+
+const byCreation = (a: Card, b: Card) => a.item.createdAt - b.item.createdAt || a.item.id.localeCompare(b.item.id);
+
+/** Nouvelles fiches (jamais révisées, ajoutées), en séparant celles admises aujourd'hui des autres. */
+function freshCards(cards: Card[], today: string, newPerDay: NewPerDay): { allowed: Card[]; waiting: Card[] } {
+  const introducedToday = new Map<string, number>();
+  for (const card of cards) {
+    if (card.progress.firstReviewDay === today) {
+      introducedToday.set(card.item.kind, (introducedToday.get(card.item.kind) ?? 0) + 1);
+    }
+  }
+  const allowed: Card[] = [];
+  const waiting: Card[] = [];
+  const taken = new Map<string, number>();
+  for (const card of cards.filter((c) => c.progress.box === 0 && isDue(c.progress, today)).sort(byCreation)) {
+    const kind = card.item.kind;
+    const limit = newPerDay(kind);
+    const count = taken.get(kind) ?? 0;
+    if (limit === undefined || count < limit - (introducedToday.get(kind) ?? 0)) {
+      allowed.push(card);
+      taken.set(kind, count + 1);
+    } else {
+      waiting.push(card);
+    }
+  }
+  return { allowed, waiting };
+}
+
+/** Fiches de la révision du jour : celles à revoir, puis les nouvelles admises aujourd'hui. */
+export function dailyCards(cards: Card[], today: string, newPerDay: NewPerDay = noLimit): Card[] {
+  const due = cards.filter((card) => isDue(card.progress, today) && card.progress.box > 0).sort(byUrgency);
+  return [...due, ...freshCards(cards, today, newPerDay).allowed];
+}
+
+/**
  * Choisit les cartes d'une session, par priorité :
  * 1. les cartes à réviser, de la plus en retard à la moins en retard (les plus fragiles d'abord) ;
- * 2. les nouvelles cartes, de la plus ancienne à la plus récente ;
+ * 2. les nouvelles cartes, de la plus ancienne à la plus récente (dans la limite du jour) ;
  * 3. si la session n'est pas pleine, de l'entraînement sur les prochaines cartes à réviser.
  * L'ordre des questions est ensuite mélangé.
  *
@@ -30,14 +72,11 @@ export function planSession(
   size: number,
   chooseExercise: ExerciseChooser,
   random: Random = Math.random,
+  newPerDay: NewPerDay = noLimit,
 ): SessionItem[] {
-  const due = cards.filter((card) => isDue(card.progress, today) && card.progress.box > 0).sort(byUrgency);
-  const fresh = cards
-    .filter((card) => card.progress.box === 0 && isDue(card.progress, today))
-    .sort((a, b) => a.item.createdAt - b.item.createdAt);
+  const daily = dailyCards(cards, today, newPerDay);
   const upcoming = cards.filter((card) => !isDue(card.progress, today)).sort(byUrgency);
-
-  return assignExercises(shuffle([...due, ...fresh, ...upcoming].slice(0, size), random), chooseExercise, random);
+  return assignExercises(shuffle([...daily, ...upcoming].slice(0, size), random), chooseExercise, random);
 }
 
 /** Associe à chaque carte son exercice ; l'alternance commence au hasard. */
@@ -55,13 +94,17 @@ function byUrgency(a: Card, b: Card): number {
   return a.progress.dueDay.localeCompare(b.progress.dueDay) || a.progress.box - b.progress.box;
 }
 
-/** Nombre de cartes à réviser aujourd'hui (nouvelles comprises). */
-export function countDue(cards: Card[], today: string): number {
-  return cards.filter((card) => isDue(card.progress, today)).length;
+/** Nombre de cartes de la révision du jour (nouvelles admises comprises). */
+export function countDue(cards: Card[], today: string, newPerDay: NewPerDay = noLimit): number {
+  return dailyCards(cards, today, newPerDay).length;
 }
 
-/** Prochain jour où des cartes seront à réviser, s'il n'y en a pas aujourd'hui. */
-export function nextDueDay(cards: Card[], today: string): string | undefined {
+/**
+ * Prochain jour où des cartes seront à réviser, s'il n'y en a pas aujourd'hui :
+ * demain si de nouvelles fiches attendent leur tour (limite du jour atteinte).
+ */
+export function nextDueDay(cards: Card[], today: string, newPerDay: NewPerDay = noLimit): string | undefined {
+  if (freshCards(cards, today, newPerDay).waiting.length > 0) return addDays(today, 1);
   return cards
     .map((card) => card.progress.dueDay)
     .filter((day) => day > today)

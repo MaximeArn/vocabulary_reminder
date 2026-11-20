@@ -36,6 +36,14 @@ export type MnemeDatabase = Dexie & {
 // Nom historique (premier nom de l'app) : le changer ferait perdre les données existantes.
 export const db = new Dexie("lexique") as MnemeDatabase;
 
+// Base supprimée ou mise à jour par une autre page (nouvelle version de l'app, effacement) :
+// cette page cesse de l'utiliser au lieu d'en rouvrir une en douce, ce qui laisserait des
+// transactions à moitié faites si la page est ensuite figée (cache de navigation de Safari).
+db.on("versionchange", () => {
+  db.close({ disableAutoOpen: true });
+  return false;
+});
+
 db.version(1).stores({
   words: "id, termKey, createdAt, dueDay, box, source",
   reviews: "id, wordId, answeredAt",

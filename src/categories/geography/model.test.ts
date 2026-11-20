@@ -96,3 +96,12 @@ describe("choix de l'exercice (géographie)", () => {
     expect(acquired.filter((id) => id !== "geography.department-on-map").every((id) => id?.endsWith("-typed"))).toBe(true);
   });
 });
+
+describe("tri par numéro", () => {
+  it("range la Corse entre le 19 et le 21, l'outre-mer à la fin", () => {
+    const key = (code: string) => geographyModel.referenceKey!({ type: "department", code });
+    const collator = new Intl.Collator("fr", { numeric: true });
+    const sorted = ["2B", "971", "21", "03", "2A", "19", "95"].sort((a, b) => collator.compare(key(a), key(b)));
+    expect(sorted).toEqual(["03", "19", "2A", "2B", "21", "95", "971"]);
+  });
+});

@@ -74,7 +74,9 @@ function describeStatus(state: SyncState, pending: number): { text: string; tone
       return { text: state.error ?? "Erreur de synchronisation", tone: "bad" };
     default:
       if (pending > 0) return { text: `${pending} modification(s) en attente` };
-      return { text: state.lastSyncedAt ? `À jour · ${formatSince(state.lastSyncedAt)}` : "À jour", tone: "good" };
+      // Jamais synchronisé sur cet appareil (juste après la connexion) : ce n'est pas encore « à jour ».
+      if (!state.lastSyncedAt) return { text: "Première synchronisation…" };
+      return { text: `À jour · ${formatSince(state.lastSyncedAt)}`, tone: "good" };
   }
 }
 

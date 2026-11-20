@@ -38,6 +38,8 @@ export interface Progress extends Schedule {
   correctCount: number;
   wrongCount: number;
   lastReviewedAt?: number;
+  /** Jour de la première réponse : la fiche n'est plus « nouvelle » depuis ce jour-là. */
+  firstReviewDay?: string;
 }
 
 /** La fiche doit-elle être révisée ce jour-là ? (Une nouvelle fiche l'est dès son ajout.) */
@@ -82,6 +84,7 @@ export function applyReview(progress: Progress, review: Pick<Review, "correct" |
     correctCount: progress.correctCount + (review.correct ? 1 : 0),
     wrongCount: progress.wrongCount + (review.correct ? 0 : 1),
     lastReviewedAt: review.answeredAt,
+    firstReviewDay: progress.firstReviewDay ?? review.studyDay,
   };
 }
 

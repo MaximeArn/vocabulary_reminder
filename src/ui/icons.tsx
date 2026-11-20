@@ -168,6 +168,15 @@ export function LaurelIcon(props: IconProps) {
   );
 }
 
+/** Une carte pliée : réviser une région. */
+export function MapIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3.5 6.5 9 4l6 2.5L20.5 4v13.5L15 20l-6-2.5-5.5 2.5zM9 4v13.5M15 6.5V20" />
+    </Svg>
+  );
+}
+
 /** Un sablier : le temps long, pour réviser par époque. */
 export function HourglassIcon(props: IconProps) {
   return (

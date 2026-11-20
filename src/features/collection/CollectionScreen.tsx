@@ -13,9 +13,17 @@ import styles from "./CollectionScreen.module.css";
 
 /**
  * Tris proposés, le premier étant celui par défaut : une catégorie datée se lit
- * dans l'ordre chronologique ; le vocabulaire, du plus récent au plus ancien.
+ * dans l’ordre chronologique ; le vocabulaire, du plus récent au plus ancien ; les
+ * départements, par numéro.
  */
 function sortOptionsFor(category: AnyCategory): { key: SortKey; direction: SortDirection }[] {
+  // Départements : par numéro, ou par nom (la date d'ajout n'a pas de sens, tout est là d'office).
+  if (category.referenceKey) {
+    return [
+      { key: "reference", direction: "asc" },
+      { key: "alphabetical", direction: "asc" },
+    ];
+  }
   return category.chronologicalKey
     ? [
         { key: "chronological", direction: "asc" },

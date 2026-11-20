@@ -114,6 +114,7 @@ describe("replayProgress", () => {
       correctCount: 2,
       wrongCount: 1,
       lastReviewedAt: history[0]!.answeredAt,
+      firstReviewDay: "2026-11-01",
     });
   });
 

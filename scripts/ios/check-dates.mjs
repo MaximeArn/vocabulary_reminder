@@ -235,7 +235,8 @@ try {
 
   await step("Aujourd’hui, filtre Dates : 10 dates à réviser", async () => {
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
-    await safari.waitForText("15 fiches à réviser");
+    // Tout : 5 mots, 10 dates et les 10 départements du jour.
+    await safari.waitForText("25 fiches à réviser");
     await chooseSegment(safari, "Réviser", "Dates");
     await safari.waitForText("10 dates à réviser");
   });

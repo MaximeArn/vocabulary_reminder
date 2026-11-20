@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countDue, nextDueDay, planPractice, planSession, practiceCandidates } from "./session";
+import { countDue, dailyCards, nextDueDay, planPractice, planSession, practiceCandidates } from "./session";
 import { seededRandom } from "./random";
 import { card } from "../test/factories";
 
@@ -91,5 +91,35 @@ describe("entraînements", () => {
     const plan = planPractice(pool, "forgotten", 2, now, rotate(["a", "b"]), seededRandom(1));
     expect(plan.map((item) => item.itemId).sort()).toEqual(["oublie-une-fois", "souvent-oublie"]);
     expect(plan[0]!.exercise).not.toBe(plan[1]!.exercise);
+  });
+});
+
+describe("nouvelles fiches limitées par jour (catégories intégrées)", () => {
+  const today = "2026-11-20";
+  const geo = (id: string, progress: Partial<import("./srs").Progress> = {}) => {
+    const base = card(id, { box: 0, dueDay: today, ...progress });
+    return { ...base, item: { ...base.item, kind: "geography" } };
+  };
+  const tenPerDay = (kind: string) => (kind === "geography" ? 10 : undefined);
+  const departments = Array.from({ length: 101 }, (_, index) => geo(`dep-${String(index).padStart(3, "0")}`));
+  const words = [card("mot-1", { box: 0, dueDay: today }), card("mot-2", { box: 2, dueDay: "2026-11-18" })];
+
+  it("n'admet que 10 nouveaux départements par jour, sans limiter les mots", () => {
+    const daily = dailyCards([...departments, ...words], today, tenPerDay);
+    expect(daily.filter((c) => c.item.kind === "geography")).toHaveLength(10);
+    expect(daily.map((c) => c.item.id)).toEqual(expect.arrayContaining(["mot-1", "mot-2"]));
+    expect(countDue([...departments, ...words], today, tenPerDay)).toBe(12);
+    expect(countDue([...departments, ...words], today)).toBe(103);
+  });
+
+  it("décompte ceux déjà vus aujourd'hui, et annonce la suite pour demain", () => {
+    const seen = Array.from({ length: 4 }, (_, index) => geo(`vu-${index}`, { box: 1, dueDay: "2026-11-21", firstReviewDay: today }));
+    expect(dailyCards([...seen, ...departments], today, tenPerDay)).toHaveLength(6);
+    expect(nextDueDay([...seen, ...departments], today, tenPerDay)).toBe("2026-11-21");
+  });
+
+  it("compose une session avec les nouveaux admis seulement", () => {
+    const plan = planSession(departments, today, 20, rotate(["e"]), seededRandom(3), tenPerDay);
+    expect(plan).toHaveLength(10);
   });
 });

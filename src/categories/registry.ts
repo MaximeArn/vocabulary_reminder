@@ -33,6 +33,7 @@ export const describeCard: Describer = {
   title: (card: Card) => findCategory(card.item.kind)?.title(card.item.content) ?? "",
   searchTexts: (card: Card) => findCategory(card.item.kind)?.searchTexts(card.item.content) ?? [],
   chronology: (card: Card) => findCategory(card.item.kind)?.chronologicalKey?.(card.item.content),
+  reference: (card: Card) => findCategory(card.item.kind)?.referenceKey?.(card.item.content),
 };
 
 /** Catégories qui ont au moins une fiche, dans l'ordre du registre. */

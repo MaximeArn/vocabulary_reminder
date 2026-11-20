@@ -1,6 +1,5 @@
 import type { Category } from "../views";
 import { FranceMap } from "./FranceMap";
-import { GeographyAddSheet } from "./GeographyAddSheet";
 import { geographyModel, type GeographyContent, type GeographyDraft } from "./model";
 import { findDepartment } from "./referential";
 import { GeographyDetail, GeographyExplanation, GeographyFields } from "./views";
@@ -10,7 +9,6 @@ export const geography: Category<GeographyContent, GeographyDraft> = {
   Fields: GeographyFields,
   Detail: GeographyDetail,
   Explanation: GeographyExplanation,
-  AddSheet: GeographyAddSheet,
   Map: FranceMap,
   describeZone: (zone) => findDepartment(zone)?.name ?? zone,
 };

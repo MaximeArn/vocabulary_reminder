@@ -99,3 +99,18 @@
 .control:active:not(:disabled) {
   background: var(--rule);
 }
+
+/* Plein écran : le cadre prend la place de son conteneur, la carte s'y centre */
+.fill {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.fill .map {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}

@@ -9,8 +9,6 @@ import type { Card } from "../../domain/card";
 import { formatCount, type Unit } from "../../categories/model";
 import { presentCategories, type AnyCategory } from "../../categories/registry";
 import { categoryBorder } from "../../ui/categoryBorder";
-import { CategoryFilter, chosenCategory } from "../revise/CategoryFilter";
-import { useReviewSettings } from "../review/useReviewSettings";
 import { TYPING_FROM_BOX } from "../../categories/exercisePlan";
 import { useCards } from "../collection/useCards";
 import { useReviews } from "../review/useReviews";
@@ -31,7 +29,6 @@ export function ProgressScreen() {
   const cards = useCards();
   const reviews = useReviews();
   const today = useToday();
-  const settings = useReviewSettings();
 
   if (cards === undefined || reviews === undefined) return <Screen title="Progrès" />;
 
@@ -43,29 +40,19 @@ export function ProgressScreen() {
     );
   }
 
-  // Même choix de catégorie que sur Réviser : l'activité et les niveaux de cette catégorie, ou de toutes.
   const categories = presentCategories(cards);
-  const { kind, category } = chosenCategory(categories, settings.categoryFilter);
-  const shown = category ? [category] : categories;
-  const shownItems = new Set(cards.filter((card) => card.item.kind === category?.kind).map((card) => card.item.id));
-  const shownReviews = category ? reviews.filter((review) => shownItems.has(review.itemId)) : reviews;
 
   return (
     <Screen title="Progrès">
-      <CategoryFilter label="Progrès" categories={categories} value={kind} onChange={settings.setCategoryFilter} />
-
       <section className={styles.section}>
         <h2 className={styles.heading}>{HISTORY_DAYS} derniers jours</h2>
-        <ActivityChart
-          activity={activityByDay(shownReviews, lastDays(today, HISTORY_DAYS))}
-          color={category?.color ?? "var(--ink)"}
-        />
+        <ActivityChart activity={activityByDay(reviews, lastDays(today, HISTORY_DAYS))} />
       </section>
 
       <section className={styles.section}>
         <h2 className={styles.heading}>Niveaux</h2>
         <div className={styles.levelCards}>
-          {shown.flatMap((shownCategory) => levelCards(shownCategory, cards.filter((card) => card.item.kind === shownCategory.kind)))}
+          {categories.flatMap((category) => levelCards(category, cards.filter((card) => card.item.kind === category.kind)))}
         </div>
       </section>
 
@@ -187,10 +174,10 @@ const shortDayFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", mon
 const longDayFormatter = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 
 /**
- * Réponses par jour. Une seule série, dans la couleur de la catégorie choisie (neutre pour « Tout »), sans légende.
+ * Réponses par jour, toutes catégories confondues : une seule série, sans légende.
  * Toucher une colonne affiche le détail du jour (aujourd'hui par défaut).
  */
-function ActivityChart({ activity, color }: { activity: DayActivity[]; color: string }) {
+function ActivityChart({ activity }: { activity: DayActivity[] }) {
   const [selectedDay, setSelectedDay] = useState(activity[activity.length - 1]?.day);
   const max = Math.max(...activity.map((day) => day.answered), 1);
   const selected = activity.find((day) => day.day === selectedDay);
@@ -198,7 +185,7 @@ function ActivityChart({ activity, color }: { activity: DayActivity[]; color: st
 
   return (
     <>
-      <div className={styles.chart} style={{ "--bar": color } as React.CSSProperties}>
+      <div className={styles.chart}>
         {activity.map((day) => (
           <button
             key={day.day}

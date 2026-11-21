@@ -3,7 +3,7 @@ import type { Category } from "../views";
 import { FranceMap } from "./FranceMap";
 import { GEOGRAPHY_TRACKS, geographyModel, type GeographyContent, type GeographyDraft } from "./model";
 import { findDepartment } from "./referential";
-import { GeographyDetail, GeographyExplanation, GeographyFields } from "./views";
+import { GeographyDetail, GeographyExplanation, GeographyExplorer, GeographyFields } from "./views";
 
 export const geography: Category<GeographyContent, GeographyDraft> = {
   ...geographyModel,
@@ -11,6 +11,7 @@ export const geography: Category<GeographyContent, GeographyDraft> = {
   Detail: GeographyDetail,
   Explanation: GeographyExplanation,
   Map: FranceMap,
+  Explorer: GeographyExplorer,
   describeZone: (zone) => findDepartment(zone)?.name ?? zone,
   trackIcons: {
     [GEOGRAPHY_TRACKS.map.id]: MapIcon,

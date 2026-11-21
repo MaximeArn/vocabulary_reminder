@@ -1,5 +1,5 @@
 // Vérifie la géographie dans le vrai Safari d'iOS (simulateur) : départements disponibles
-// d'office, fiche avec carte et progression par volet, révision du jour (10 nouvelles cartes
+// d'office sur une carte en plein écran, fiche avec carte et progression par volet, révision du jour (10 nouvelles cartes
 // par jour), puis la révision de chaque volet (carte, préfectures) avec ses seules questions.
 // Prérequis et usage : voir check-words.mjs. Le scénario efface les données de l'app.
 
@@ -98,11 +98,23 @@ async function answerCorrectly(seen) {
 try {
   await safari.start();
 
-  await step("Les 101 départements sont là d'office, sans rien ajouter, rangés par numéro", async () => {
+  await step("Les 101 départements sont là d'office, sur une carte en plein écran à parcourir", async () => {
     await startLocalSession(safari, appUrl, "#collection");
     await safari.waitFor("départements créés", async () => /101 lieux/i.test(await text()), 8000);
-    const titles = await safari.script(`return [...document.querySelectorAll("main li")].slice(0, 2).map((li) => li.innerText.replace(/\\s+/g, " "));`);
-    if (!titles[0]?.includes("Ain") || !titles[1]?.includes("Aisne")) throw new Error(`Ordre inattendu : ${titles}`);
+    await safari.waitFor("carte de la collection", async () =>
+      safari.script(`return new Set([...document.querySelectorAll("main path[data-code]")].map((p) => p.dataset.code)).size === 101;`), 8000);
+    // Pas de liste : la carte occupe l'écran, jusqu'à la barre d'onglets, sans défilement.
+    const layout = await safari.script(
+      `const svg = document.querySelector("main svg[aria-label='Carte des départements']");
+       // La carte et son bandeau (département touché) descendent jusqu'à la barre d'onglets.
+       const map = svg.parentElement.parentElement.getBoundingClientRect();
+       const bar = document.querySelector("nav").getBoundingClientRect();
+       const main = document.querySelector("main");
+       return { items: document.querySelectorAll("main li").length, gap: bar.top - map.bottom, scrolls: main.scrollHeight > main.clientHeight + 1, width: map.width, screen: innerWidth };`,
+    );
+    if (layout.items > 0) throw new Error("Liste des départements encore affichée");
+    if (Math.abs(layout.gap) > 2 || layout.scrolls || layout.width !== layout.screen) throw new Error(`Carte pas en plein écran : ${JSON.stringify(layout)}`);
+    if (!(await text()).includes("Touche un département")) throw new Error("Invitation à toucher un département absente");
     // Une seule catégorie dans la collection : pas de sélecteur de catégorie.
     if ((await text()).includes("Vocabulaire")) throw new Error("Sélecteur de catégorie affiché pour une seule catégorie");
     await safari.clickButton("Ajouter une fiche");
@@ -112,8 +124,12 @@ try {
     screenshot("geo-1-collection");
   });
 
-  await step("Fiche d'un département : carte, progression de chaque volet, sans « Modifier » ni « Supprimer »", async () => {
-    await safari.script(`[...document.querySelectorAll("button, a")].find((b) => b.textContent.includes("Cantal")).click();`);
+  await step("Toucher un département le montre ; toucher le bandeau ouvre sa fiche", async () => {
+    await safari.script(`document.querySelector("main path[data-code='15']").dispatchEvent(new MouseEvent("click", { bubbles: true }));`);
+    await safari.waitForText("Aurillac");
+    if (!(await safari.script(`return !!document.querySelector("main path[data-code='15'][class*=selected]");`))) throw new Error("Cantal non mis en évidence");
+    screenshot("geo-1b-carte-touchee");
+    await safari.script(`[...document.querySelectorAll("main button")].find((b) => b.textContent.includes("Cantal")).click();`);
     await safari.waitForText("Préfecture");
     await safari.waitFor("carte de la fiche", async () => safari.script(`return !!document.querySelector("path[data-code='15'][class*=highlight]");`), 8000);
     const page = await text();

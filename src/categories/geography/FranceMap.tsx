@@ -61,9 +61,37 @@ const TONE_CLASS: Record<ZoneTone, string> = {
   bad: styles.bad!,
 };
 
-export function FranceMap({ tones = {}, onSelect, label }: MapViewProps) {
+/**
+ * Taille du cadre, suivie en continu (mode `fill`) : la carte s'y ajuste quelles
+ * que soient ses proportions.
+ */
+function useFrameSize(enabled: boolean) {
+  const [frame, frameRef] = useState<HTMLDivElement | null>(null);
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  useEffect(() => {
+    if (!enabled || !frame) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry!.contentRect;
+      if (width > 0 && height > 0) setSize({ width, height });
+    });
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [enabled, frame]);
+  return { frameRef, size: enabled ? size : null };
+}
+
+/** Une dimension (x ou y) : le cadre visible [start, start + length] et la carte [0, content]. */
+function clampAxis(translate: number, scale: number, content: number, start: number, length: number): number {
+  const scaled = content * scale;
+  // Carte plus petite que le cadre : centrée. Sinon, elle le couvre toujours entièrement.
+  if (scaled <= length) return start + (length - scaled) / 2;
+  return Math.min(start, Math.max(start + length - scaled, translate));
+}
+
+export function FranceMap({ tones = {}, onSelect, label, fill = false }: MapViewProps) {
   const data = useMapData();
   const svgRef = useRef<SVGSVGElement>(null);
+  const { frameRef, size } = useFrameSize(fill);
   const [view, setView] = useState<View>(IDENTITY);
   const gesture = useRef({
     pointers: new Map<number, { x: number; y: number }>(),
@@ -81,33 +109,47 @@ export function FranceMap({ tones = {}, onSelect, label }: MapViewProps) {
     return () => svg.removeEventListener("gesturestart", prevent);
   }, [data]);
 
-  if (!data) return <div className={styles.loading} role="img" aria-label={`${label} (chargement)`} />;
+  if (!data) {
+    return (
+      <div ref={frameRef} className={`${styles.loading} ${fill ? styles.fill : ""}`} role="img" aria-label={`${label} (chargement)`} />
+    );
+  }
 
   const [, , width, height] = data.viewBox;
+  // Cadre visible, dans le repère de la carte : la carte elle-même, ou (mode `fill`)
+  // agrandi en largeur ou en hauteur pour épouser les proportions du cadre, carte centrée.
+  let frame = { x: 0, y: 0, width, height };
+  if (size) {
+    const ratio = size.height / size.width;
+    frame =
+      ratio > height / width
+        ? { x: 0, y: -(width * ratio - height) / 2, width, height: width * ratio }
+        : { x: -(height / ratio - width) / 2, y: 0, width: height / ratio, height };
+  }
 
+  /** Position d'un point de l'écran dans le repère du SVG (cadre visible, sans le zoom). */
+  const toSvg = (clientX: number, clientY: number): [number, number] => {
+    const rect = svgRef.current!.getBoundingClientRect();
+    const k = frame.width / rect.width;
+    return [frame.x + (clientX - rect.left) * k, frame.y + (clientY - rect.top) * k];
+  };
   /** Position d'un point de l'écran dans le repère de la carte (avant zoom). */
   const toMap = (clientX: number, clientY: number, current: View): [number, number] => {
-    const rect = svgRef.current!.getBoundingClientRect();
-    const k = width / rect.width;
-    return [((clientX - rect.left) * k - current.x) / current.scale, ((clientY - rect.top) * k - current.y) / current.scale];
+    const [x, y] = toSvg(clientX, clientY);
+    return [(x - current.x) / current.scale, (y - current.y) / current.scale];
   };
   /** Garde la carte dans son cadre. */
   const clamp = ({ scale, x, y }: View): View => {
     const s = Math.min(Math.max(scale, 1), MAX_SCALE);
     return {
       scale: s,
-      x: Math.min(0, Math.max(width - width * s, x)),
-      y: Math.min(0, Math.max(height - height * s, y)),
+      x: clampAxis(x, s, width, frame.x, frame.width),
+      y: clampAxis(y, s, height, frame.y, frame.height),
     };
   };
   /** Zoom de `scale`, en gardant le point `point` (repère de la carte) sous `screen` (repère du SVG). */
   const zoomAt = (scale: number, point: [number, number], screen: [number, number]): View =>
     clamp({ scale, x: screen[0] - point[0] * scale, y: screen[1] - point[1] * scale });
-  const toSvg = (clientX: number, clientY: number): [number, number] => {
-    const rect = svgRef.current!.getBoundingClientRect();
-    const k = width / rect.width;
-    return [(clientX - rect.left) * k, (clientY - rect.top) * k];
-  };
 
   const onPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
     const g = gesture.current;
@@ -140,7 +182,7 @@ export function FranceMap({ tones = {}, onSelect, label }: MapViewProps) {
     const dy = event.clientY - g.start.mid[1];
     if (Math.hypot(dx, dy) > TAP_SLOP) g.moved = true;
     if (g.start.view.scale > 1 && g.moved) {
-      const k = width / svgRef.current!.getBoundingClientRect().width;
+      const k = frame.width / svgRef.current!.getBoundingClientRect().width;
       setView(clamp({ ...g.start.view, x: g.start.view.x + dx * k, y: g.start.view.y + dy * k }));
     }
   };
@@ -172,7 +214,7 @@ export function FranceMap({ tones = {}, onSelect, label }: MapViewProps) {
 
   /** Zoom des boutons : autour du centre de la vue. */
   const zoomBy = (factor: number) => {
-    const center: [number, number] = [width / 2, height / 2];
+    const center: [number, number] = [frame.x + frame.width / 2, frame.y + frame.height / 2];
     const point: [number, number] = [(center[0] - view.x) / view.scale, (center[1] - view.y) / view.scale];
     setView(zoomAt(view.scale * factor, point, center));
   };
@@ -199,14 +241,15 @@ export function FranceMap({ tones = {}, onSelect, label }: MapViewProps) {
   );
 
   return (
-    <div className={styles.frame}>
+    <div ref={frameRef} className={`${styles.frame} ${fill ? styles.fill : ""}`}>
       <svg
         ref={svgRef}
         className={styles.map}
-        viewBox={data.viewBox.join(" ")}
+        viewBox={`${frame.x} ${frame.y} ${frame.width} ${frame.height}`}
         role="group"
         aria-label={label}
-        style={{ touchAction: view.scale > 1 ? "none" : "pan-y" }}
+        // En plein écran, la page ne défile pas : tous les gestes vont à la carte.
+        style={{ touchAction: fill || view.scale > 1 ? "none" : "pan-y" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}

@@ -53,3 +53,69 @@
 .answerMap {
   margin-top: var(--space-3);
 }
+
+/* Collection : la carte en plein écran, d'un bord à l'autre, jusqu'à la barre d'onglets */
+.explorer {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--rule);
+}
+
+/* Bandeau sous la carte, dans sa mer : le département touché, ou l'invitation à toucher */
+.explorerFooter {
+  padding: 0 var(--space-3) var(--space-3);
+  background: var(--map-water);
+}
+
+/* Le département touché : le toucher ouvre sa fiche */
+.explorerCard {
+  width: 100%;
+  min-height: 4.5rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--rule),
+    0 2px 10px rgb(0 0 0 / 0.12);
+  color: var(--ink-faint);
+  text-align: left;
+  animation: rise var(--duration-fast) var(--ease-out);
+}
+
+.explorerCard:active {
+  background: var(--paper);
+}
+
+.explorerText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--ink);
+}
+
+.explorerText .answerFacts {
+  margin-top: 2px;
+}
+
+/* Même hauteur que le bandeau d'un département : la carte garde sa taille */
+.explorerHint {
+  height: 4.5rem;
+  display: grid;
+  place-items: center;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

@@ -63,33 +63,49 @@ export function CollectionScreen() {
     );
   }
 
-  const sortOptions = sortOptionsFor(category);
-  const sort: CardSort = sorts[category.kind] ?? sortOptions[0]!;
   // Une ligne par fiche, même pour une fiche suivie en plusieurs volets (géographie).
   const ofKind = oneCardPerItem(cards.filter((card) => card.item.kind === category.kind));
+  const eyebrow = formatCardCount(ofKind.length, category.unit);
+  const toggle = categories.length > 1 && (
+    <CategoryToggle
+      label="Catégorie"
+      options={categories.map((candidate) => ({
+        value: candidate.kind,
+        label: candidate.label,
+        fill: candidate.fillColor,
+        onFill: candidate.onFillColor,
+      }))}
+      value={category.kind}
+      onChange={(kind) => {
+        setChosenKind(kind);
+        setQuery("");
+      }}
+    />
+  );
+  const opened = openedId && <CardDetailPage itemId={openedId} onClose={() => setOpenedId(null)} />;
+
+  // Géographie : la carte à parcourir, en plein écran, à la place de la liste.
+  if (category.Explorer) {
+    const Explorer = category.Explorer;
+    return (
+      <Screen eyebrow={eyebrow} title="Collection" fill>
+        {toggle && <div className={styles.explorerToggle}>{toggle}</div>}
+        <div className={styles.bleed}>
+          <Explorer items={ofKind.map((card) => card.item)} onOpen={setOpenedId} />
+        </div>
+        {opened}
+      </Screen>
+    );
+  }
+
+  const sortOptions = sortOptionsFor(category);
+  const sort: CardSort = sorts[category.kind] ?? sortOptions[0]!;
   const visibleCards = sortCards(searchCards(ofKind, query, describeCard), sort, describeCard);
 
   return (
-    <Screen eyebrow={formatCardCount(ofKind.length, category.unit)} title="Collection">
+    <Screen eyebrow={eyebrow} title="Collection">
       <div className={styles.tools}>
-        {categories.length > 1 && (
-          <div className={styles.categories}>
-            <CategoryToggle
-              label="Catégorie"
-              options={categories.map((candidate) => ({
-                value: candidate.kind,
-                label: candidate.label,
-                fill: candidate.fillColor,
-                onFill: candidate.onFillColor,
-              }))}
-              value={category.kind}
-              onChange={(kind) => {
-                setChosenKind(kind);
-                setQuery("");
-              }}
-            />
-          </div>
-        )}
+        {toggle && <div className={styles.categories}>{toggle}</div>}
         <SearchField value={query} onChange={setQuery} placeholder={category.searchPlaceholder} />
         <SortButtons options={sortOptions} value={sort} onChange={(next) => setSorts((current) => ({ ...current, [category.kind]: next }))} />
       </div>
@@ -99,7 +115,7 @@ export function CollectionScreen() {
         <CardList cards={visibleCards} onOpen={(card) => setOpenedId(card.item.id)} />
       )}
 
-      {openedId && <CardDetailPage itemId={openedId} onClose={() => setOpenedId(null)} />}
+      {opened}
     </Screen>
   );
 }

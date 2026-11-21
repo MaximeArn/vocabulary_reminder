@@ -33,7 +33,7 @@
   width: 100%;
   min-height: 2px;
   border-radius: 4px 4px 0 0;
-  background: var(--bar, var(--accent));
+  background: var(--accent);
   opacity: 0.55;
   transition: opacity var(--duration-fast) var(--ease-out);
 }

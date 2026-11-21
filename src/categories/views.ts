@@ -14,6 +14,8 @@ export interface MapViewProps {
   onSelect?: (zone: string) => void;
   /** Description pour les lecteurs d'écran. */
   label: string;
+  /** Occupe tout son conteneur (exploration libre), au lieu de garder ses proportions. */
+  fill?: boolean;
 }
 
 export interface FieldsProps<Content, Draft> {
@@ -24,6 +26,13 @@ export interface FieldsProps<Content, Draft> {
   items: Item<Content>[];
   /** Fiche en cours de modification, absente pour un ajout. */
   editedId?: string;
+}
+
+/** Exploration libre d'une catégorie, à la place de la liste de la collection. */
+export interface ExplorerProps<Content> {
+  items: Item<Content>[];
+  /** Ouvre la fiche détaillée. */
+  onOpen: (itemId: string) => void;
 }
 
 export interface CategoryViews<Content, Draft> {
@@ -39,6 +48,8 @@ export interface CategoryViews<Content, Draft> {
   /** Carte des questions de cette catégorie (géographie), et le nom de chaque zone. */
   Map?: ComponentType<MapViewProps>;
   describeZone?: (zone: string) => string;
+  /** Remplace la liste de la collection (géographie : la carte, à parcourir librement). */
+  Explorer?: ComponentType<ExplorerProps<Content>>;
   /** Icône de la révision de chaque volet (catégorie à volets), par identifiant de volet. */
   trackIcons?: Record<string, ComponentType<{ size?: number }>>;
 }

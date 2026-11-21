@@ -13,17 +13,21 @@ const item = (id: string, code: string, extra: Partial<Item> = {}): Item => ({
   ...extra,
 });
 
-describe("fiches intégrées (départements)", () => {
-  it("crée les 101 départements, avec un identifiant déterministe", () => {
+describe("fiches intégrées (départements, cours d'eau)", () => {
+  it("crée les 101 départements et les 20 cours d'eau, avec un identifiant déterministe", () => {
     const plan = planBuiltInItems(geographyModel, [], new Set(), idFor);
-    expect(plan.create).toHaveLength(101);
+    expect(plan.create).toHaveLength(121);
     expect(plan.create.find((entry) => entry.id === "id:department:15")?.content).toEqual({ type: "department", code: "15" });
+    expect(plan.create.find((entry) => entry.id === "id:river:loire")?.content).toEqual({ type: "river", id: "loire" });
     expect(plan.restore).toEqual([]);
     expect(plan.remove).toEqual([]);
   });
 
   it("ne fait rien quand tout est là, et garde une fiche ajoutée à la main (avec son historique)", () => {
-    const existing = geographyModel.builtIn!.entries().map((content) => item(idFor(geographyModel.builtIn!.key(content)), content.code));
+    const existing = geographyModel.builtIn!.entries().map((content) => ({
+      ...item(idFor(geographyModel.builtIn!.key(content)), ""),
+      content: content as unknown,
+    }));
     existing[0] = item("ajoutee-a-la-main", (existing[0]!.content as { code: string }).code);
     const plan = planBuiltInItems(geographyModel, existing, new Set(["ajoutee-a-la-main"]), idFor);
     expect(plan).toEqual({ create: [], restore: [], remove: [] });

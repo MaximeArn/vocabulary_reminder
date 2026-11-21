@@ -114,3 +114,47 @@
   inset: 0;
   height: 100%;
 }
+
+/* Départements en fond, sous les cours d'eau interrogés */
+.background {
+  stroke: color-mix(in srgb, var(--map-border) 55%, transparent);
+}
+
+/* Cours d'eau : un trait fin, d'épaisseur constante quel que soit le zoom */
+.river {
+  fill: none;
+  stroke: var(--map-river);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+  transition: stroke var(--duration-fast) var(--ease-out);
+}
+
+.riverHighlight {
+  stroke: var(--geography);
+  stroke-width: 4.5;
+}
+
+.riverGood {
+  stroke: var(--success);
+  stroke-width: 4.5;
+}
+
+.riverBad {
+  stroke: var(--error);
+  stroke-width: 4.5;
+}
+
+/* Zone de toucher invisible autour du trait : un doigt n'a pas la finesse d'une rivière */
+.riverHit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 20;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
+  cursor: pointer;
+}

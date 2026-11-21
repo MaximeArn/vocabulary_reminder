@@ -58,6 +58,7 @@ export function QuestionCard({ question, card, isRetry, outcome, isLast, onSubmi
         <div className={styles.map}>
           <category.Map
             tones={question.map.highlight ? { [question.map.highlight]: "highlight" } : {}}
+            layer={question.map.layer}
             label="Carte de France, une zone mise en évidence"
           />
         </div>

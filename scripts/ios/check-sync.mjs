@@ -90,7 +90,7 @@ async function localItemCount() {
 }
 
 /** Textes des fiches de la collection, toutes catégories (elles s'affichent une à la fois). */
-/** Départements actifs dans la base de l'appareil (101 attendus, sans doublon). */
+/** Lieux actifs dans la base de l'appareil (121 attendus : 101 départements et 20 cours d'eau, sans doublon). */
 function geographyCount() {
   return safari.scriptAsync(`const r = indexedDB.open("lexique");
     r.onsuccess = () => {
@@ -192,8 +192,8 @@ try {
       if (shown.length !== 4) throw new Error(`Fiches en trop : ${shown}`);
       // Mêmes identifiants sur les deux appareils : les départements ne sont pas en double.
       await waitSynced();
-      const departments = await geographyCount();
-      if (departments !== 101) throw new Error(`${departments} départements au lieu de 101`);
+      const places = await geographyCount();
+      if (places !== 121) throw new Error(`${places} lieux au lieu de 121`);
       await safari.open(`${appUrl}?t=${Date.now()}#progres`);
       await safari.waitForText("NIVEAUX");
       if ((await text()) !== progressOnFirstDevice) throw new Error("La progression diffère d’un appareil à l’autre");

@@ -47,6 +47,7 @@
   --map-water: #d9e5e8;
   --map-border: #a3998a;
   --map-border-strong: #5f574b;
+  --map-river: #3d7fb3;
   /*
    * Niveaux de maîtrise : du rouge (nouveau) au vert (maîtrisé), pour lire la
    * progression d'un coup d'œil. Le rouge est plus sombre que le vert : les
@@ -127,6 +128,7 @@
     --map-water: #161d20;
     --map-border: #7a7162;
     --map-border-strong: #b3aa9a;
+    --map-river: #5f9fd0;
     --level-new: #c9463e;
     --level-learning: #e2802f;
     --level-progressing: #e6c450;

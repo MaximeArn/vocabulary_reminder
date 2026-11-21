@@ -80,7 +80,7 @@ function levelCards(category: AnyCategory, cards: Card[]) {
         name={track.label}
         icon={Icon && <Icon size={24} />}
         color={category.color}
-        unit={category.unit}
+        unit={track.unit ?? category.unit}
         cards={cards.filter((card) => card.track === track.id)}
       />
     );

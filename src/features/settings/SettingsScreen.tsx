@@ -36,6 +36,7 @@ export function SettingsScreen() {
               { label: "Publiée le", value: buildDateFormatter.format(new Date(__BUILD_TIME__)) },
               // Licence Ouverte Etalab 2.0 : la source doit être citée.
               { label: "Cartes", value: "IGN Admin Express et geo.api.gouv.fr (Licence Ouverte)" },
+              { label: "Cours d’eau", value: "BD TOPAGE, IGN et OFB, via le Sandre (Licence Ouverte)" },
             ]}
           />
         </SettingsCard>

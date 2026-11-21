@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildCards, keyOfCard, oneCardPerItem, type Tracks } from "./card";
 import type { Item, Review } from "./types";
 
-const item = (id: string, kind: string): Item => ({ id, kind, content: {}, createdAt: 0, updatedAt: 0 });
+const item = (id: string, kind: string, content: object = {}): Item => ({ id, kind, content, createdAt: 0, updatedAt: 0 });
 let counter = 0;
 const review = (itemId: string, exercise: string, studyDay: string, correct = true): Review => ({
   id: `r${++counter}`,
@@ -13,9 +13,10 @@ const review = (itemId: string, exercise: string, studyDay: string, correct = tr
   correct,
 });
 
+// Un lieu « river » n'a que le volet de la carte.
 const placeTracks: Tracks = {
-  ids: ["map", "number"],
-  of: (exercise) => ({ "place.on-map": "map", "place.number": "number" })[exercise],
+  of: (place) => ((place.content as { river?: boolean }).river ? ["map"] : ["map", "number"]),
+  forExercise: (exercise) => ({ "place.on-map": "map", "place.number": "number" })[exercise],
 };
 const tracksOf = (kind: string) => (kind === "place" ? placeTracks : undefined);
 
@@ -30,6 +31,12 @@ describe("cartes à volets", () => {
     expect(cards.map(keyOfCard)).toEqual(["p#map", "p#number"]);
     expect(cards.find((card) => card.track === "map")!.progress.box).toBe(2);
     expect(cards.find((card) => card.track === "number")!.progress).toMatchObject({ box: 1, lapses: 1 });
+  });
+
+  it("seulement les volets qui concernent la fiche", () => {
+    const cards = buildCards([item("r", "place", { river: true })], [review("r", "place.on-map", "2026-11-01")], tracksOf);
+    expect(cards.map(keyOfCard)).toEqual(["r#map"]);
+    expect(cards[0]!.progress.box).toBe(1);
   });
 
   it("ignore une réponse dont l'exercice n'appartient à aucun volet", () => {

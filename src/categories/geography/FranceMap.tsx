@@ -8,7 +8,11 @@ import styles from "./FranceMap.module.css";
  * connexion). Les tracés sont chargés à la première carte affichée, puis restent
  * en cache (service worker).
  *
- * Gestes : toucher un département le choisit ; pincer zoome ; une fois zoomé, un
+ * Couches : les départements, et les cours d'eau (dessinés par-dessus, seulement
+ * quand on les demande). Un cours d'eau se touche dans une bande large autour de son
+ * trait, plus fin que le doigt.
+ *
+ * Gestes : toucher un département (ou un cours d'eau) le choisit ; pincer zoome ; une fois zoomé, un
  * doigt déplace la carte ; un double toucher zoome sur l'endroit touché. Les
  * boutons +, − et « recentrer », en haut à droite (dans une bande de mer réservée,
  * au-dessus de la métropole), font de même sans geste.
@@ -19,6 +23,8 @@ interface MapData {
   insets: { id: string; title: string; box: [number, number, number, number] }[];
   /** Tracés par département : sur la carte, puis (Paris et environs) dans l'encart agrandi. */
   paths: Record<string, string[]>;
+  /** Tracés par cours d'eau, de même (la Seine et la Marne traversent l'encart de Paris). */
+  rivers: Record<string, string[]>;
 }
 
 let cached: MapData | null = null;
@@ -61,6 +67,13 @@ const TONE_CLASS: Record<ZoneTone, string> = {
   bad: styles.bad!,
 };
 
+const RIVER_TONE_CLASS: Record<ZoneTone, string> = {
+  highlight: styles.riverHighlight!,
+  selected: styles.riverHighlight!,
+  good: styles.riverGood!,
+  bad: styles.riverBad!,
+};
+
 /**
  * Taille du cadre, suivie en continu (mode `fill`) : la carte s'y ajuste quelles
  * que soient ses proportions.
@@ -88,7 +101,7 @@ function clampAxis(translate: number, scale: number, content: number, start: num
   return Math.min(start, Math.max(start + length - scaled, translate));
 }
 
-export function FranceMap({ tones = {}, onSelect, label, fill = false }: MapViewProps) {
+export function FranceMap({ tones = {}, onSelect, label, fill = false, layer = "departments" }: MapViewProps) {
   const data = useMapData();
   const svgRef = useRef<SVGSVGElement>(null);
   const { frameRef, size } = useFrameSize(fill);
@@ -225,19 +238,28 @@ export function FranceMap({ tones = {}, onSelect, label, fill = false }: MapView
     onSelect(code);
   };
 
-  const codes = Object.keys(data.paths);
-  // Les départements mis en évidence sont dessinés en dernier : leur contour reste visible.
-  const ordered = [...codes.filter((code) => !tones[code]), ...codes.filter((code) => tones[code])];
+  // Les zones mises en évidence sont dessinées en dernier : leur contour reste visible.
+  const highlightedLast = (ids: string[]) => [...ids.filter((id) => !tones[id]), ...ids.filter((id) => tones[id])];
+  const ordered = highlightedLast(Object.keys(data.paths));
+  const rivers = layer === "departments" ? [] : highlightedLast(Object.keys(data.rivers));
   const idf = data.insets.find((inset) => inset.id === "idf")!.box;
+  // Questions sur les cours d'eau : les départements ne sont qu'un fond, on ne les touche pas.
+  const departmentsSelectable = Boolean(onSelect) && layer !== "rivers";
 
   const zone = (code: string, d: string, key: string) => (
     <path
       key={key}
       d={d}
       data-code={code}
-      className={`${styles.zone} ${tones[code] ? TONE_CLASS[tones[code]] : ""} ${onSelect ? styles.selectable : ""}`}
-      onClick={() => select(code)}
+      className={`${styles.zone} ${tones[code] ? TONE_CLASS[tones[code]] : ""} ${departmentsSelectable ? styles.selectable : ""} ${layer === "rivers" ? styles.background : ""}`}
+      onClick={departmentsSelectable ? () => select(code) : undefined}
     />
+  );
+  const river = (id: string, d: string, key: string) => (
+    <g key={key}>
+      <path d={d} data-river={id} className={`${styles.river} ${tones[id] ? RIVER_TONE_CLASS[tones[id]] : ""}`} />
+      {onSelect && <path d={d} className={styles.riverHit} onClick={() => select(id)} />}
+    </g>
   );
 
   return (
@@ -262,11 +284,13 @@ export function FranceMap({ tones = {}, onSelect, label, fill = false }: MapView
         </defs>
         <g transform={`translate(${view.x} ${view.y}) scale(${view.scale})`}>
           {ordered.map((code) => zone(code, data.paths[code]![0]!, code))}
+          {rivers.map((id) => river(id, data.rivers[id]![0]!, id))}
           {data.insets.map((inset) => (
             <rect key={inset.id} className={styles.inset} x={inset.box[0]} y={inset.box[1]} width={inset.box[2]} height={inset.box[3]} rx={12} />
           ))}
           <g clipPath="url(#encart-paris)">
             {ordered.filter((code) => data.paths[code]![1]).map((code) => zone(code, data.paths[code]![1]!, `${code}-encart`))}
+            {rivers.filter((id) => data.rivers[id]![1]).map((id) => river(id, data.rivers[id]![1]!, `${id}-encart`))}
           </g>
         </g>
       </svg>

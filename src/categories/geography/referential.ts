@@ -1,8 +1,9 @@
 import data from "./data/departements.json";
+import riverData from "./data/cours-eau.json";
 
 /**
  * Référentiel géographique embarqué dans l'app (généré par scripts/geo/build-france.mjs
- * à partir de données IGN et geo.api.gouv.fr, Licence Ouverte Etalab).
+ * à partir de données IGN, geo.api.gouv.fr et BD TOPAGE, Licence Ouverte Etalab).
  * Les fiches n'en gardent qu'une référence (« département 15 ») : rien à saisir.
  */
 
@@ -56,4 +57,37 @@ export function nearestDepartments(code: string, count: number): Department[] {
   return DEPARTMENTS.filter((department) => department.code !== code)
     .sort((a, b) => distance(a) - distance(b))
     .slice(0, count);
+}
+
+/* ---------- Cours d'eau ---------- */
+
+export interface River {
+  /** Identifiant stable (« loire ») : la fiche n'en garde que cette référence. */
+  id: string;
+  name: string;
+  /** « la », « le », « l’ ». */
+  article: string;
+  /** Un fleuve se jette dans la mer ; une rivière, dans un autre cours d'eau. */
+  kind: "fleuve" | "rivière";
+  /** Où il se jette : « l’océan Atlantique », « la Seine »… */
+  outlet: string;
+}
+
+/** Fleuves et grandes rivières de France (BD TOPAGE, liste choisie à la main). */
+export const RIVERS: River[] = riverData as River[];
+
+const riverById = new Map(RIVERS.map((river) => [river.id, river]));
+
+export function findRiver(id: string): River | undefined {
+  return riverById.get(id);
+}
+
+/** « la Loire », « l’Isère ». */
+export function riverWithArticle(river: River): string {
+  return river.article.endsWith("’") ? `${river.article}${river.name}` : `${river.article} ${river.name}`;
+}
+
+/** « Fleuve · se jette dans la Manche ». */
+export function describeRiver(river: River): string {
+  return `${river.kind === "fleuve" ? "Fleuve" : "Rivière"} · se jette dans ${river.outlet}`;
 }

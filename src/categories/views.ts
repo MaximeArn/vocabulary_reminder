@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { Item } from "../domain/types";
+import type { MapLayer } from "../domain/quiz";
 import type { CategoryModel, DraftErrors } from "./model";
 
 /** Contrat d'une catégorie, partie affichage (composants React). */
@@ -16,6 +17,11 @@ export interface MapViewProps {
   label: string;
   /** Occupe tout son conteneur (exploration libre), au lieu de garder ses proportions. */
   fill?: boolean;
+  /**
+   * Ce que montre la carte et ce qu'on y touche : les départements (par défaut), les
+   * cours d'eau (départements en fond), ou les deux (exploration libre).
+   */
+  layer?: MapLayer | "all";
 }
 
 export interface FieldsProps<Content, Draft> {

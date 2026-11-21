@@ -2,11 +2,21 @@ import { buildCards as buildCardsWithTracks, type Card, type Tracks } from "../d
 import type { Item, Review } from "../domain/types";
 import { CATEGORY_MODELS, findCategoryModel } from "./models";
 
-/** Volets de chaque catégorie qui en a (géographie), calculés une fois. */
+/**
+ * Volets de chaque catégorie qui en a (géographie), calculés une fois. Une fiche a les
+ * volets dont au moins un exercice l'accepte (un cours d'eau n'a ni numéro ni préfecture).
+ */
 const TRACKS = new Map<string, Tracks>(
   CATEGORY_MODELS.filter((model) => model.tracks).map((model) => {
     const trackByExercise = new Map(model.exercises.map((exercise) => [exercise.id, exercise.track]));
-    return [model.kind, { ids: model.tracks!.map((track) => track.id), of: (exercise: string) => trackByExercise.get(exercise) }];
+    const tracks: Tracks = {
+      of: (item) =>
+        model.tracks!
+          .map((track) => track.id)
+          .filter((track) => model.exercises.some((exercise) => exercise.track === track && (exercise.accepts?.(item as never) ?? true))),
+      forExercise: (exercise) => trackByExercise.get(exercise),
+    };
+    return [model.kind, tracks];
   }),
 );
 

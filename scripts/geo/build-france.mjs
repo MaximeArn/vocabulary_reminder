@@ -1,4 +1,4 @@
-// Prépare la carte de France de l'app (départements, préfectures, encarts) à partir
+// Prépare la carte de France de l'app (départements, préfectures, cours d'eau, encarts) à partir
 // de données publiques, une fois pour toutes : l'app embarque le résultat et
 // l'affiche hors ligne, sans bibliothèque de cartographie.
 //
@@ -6,7 +6,8 @@
 //
 // Sources (Licence Ouverte Etalab 2.0, à citer dans « À propos ») :
 // - tracés des départements : IGN Admin Express, via github.com/gregoiredavid/france-geojson ;
-// - départements, régions, communes (préfectures) : geo.api.gouv.fr.
+// - départements, régions, communes (préfectures) : geo.api.gouv.fr ;
+// - cours d'eau : BD TOPAGE (IGN, OFB), service du Sandre ; la liste (rivers.json) est choisie à la main.
 // Les fichiers sources sont téléchargés dans scripts/geo/source/ (non versionné).
 //
 // Projection : Lambert-93 (projection officielle des cartes de France) pour la
@@ -25,6 +26,7 @@ const sourceDir = join(here, "source");
 // tracés de la carte (chargés à la première carte affichée, puis mis en cache).
 const dataDir = join(root, "src/categories/geography/data");
 const listFile = join(dataDir, "departements.json");
+const riversFile = join(dataDir, "cours-eau.json");
 const mapFile = join(dataDir, "carte-france.json");
 
 const SOURCES = {
@@ -48,6 +50,26 @@ for (const [file, url] of Object.entries(SOURCES)) {
 }
 const readJson = (file) => JSON.parse(readFileSync(join(sourceDir, file), "utf8"));
 
+// Cours d'eau : chacun par son identifiant BD TOPAGE (code hydrographique), en WGS 84.
+const RIVERS = JSON.parse(readFileSync(join(here, "rivers.json"), "utf8"));
+const riverSource = join(sourceDir, "cours-eau.geojson");
+if (!existsSync(riverSource)) {
+  const features = [];
+  for (const river of RIVERS) {
+    console.log(`Téléchargement du tracé : ${river.name}…`);
+    const url = new URL("https://services.sandre.eaufrance.fr/geo/topage");
+    const filter = `<Filter xmlns="http://www.opengis.net/fes/2.0"><PropertyIsEqualTo><ValueReference>CdOH</ValueReference><Literal>${river.topage}</Literal></PropertyIsEqualTo></Filter>`;
+    const params = { service: "WFS", request: "GetFeature", version: "2.0.0", typeNames: "sa:CoursEau_FXX", outputFormat: "application/json; subtype=geojson", srsName: "EPSG:4326", FILTER: filter };
+    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${river.name} : ${response.status}`);
+    const found = (await response.json()).features;
+    if (found.length !== 1) throw new Error(`${river.name} : ${found.length} tracés trouvés`);
+    features.push({ type: "Feature", properties: { id: river.id }, geometry: found[0].geometry });
+  }
+  writeFileSync(riverSource, JSON.stringify({ type: "FeatureCollection", features }));
+}
+
 /* ---------- Simplification (mapshaper) ---------- */
 
 // Les frontières communes restent jointives (mapshaper travaille sur la topologie).
@@ -60,6 +82,60 @@ execFileSync(mapshaper, [
   "-filter-islands", "min-area=3km2", "remove-empty",
   "-simplify", "interval=900", "keep-shapes",
   "-o", "format=geojson", "precision=0.00001", simplified,
+], { stdio: "inherit" });
+/** Longueur approximative d'une ligne en kilomètres (assez précis pour trier des morceaux). */
+function lengthKm(line) {
+  let km = 0;
+  for (let index = 1; index < line.length; index++) {
+    const [a, b] = [line[index - 1], line[index]];
+    km += Math.hypot((b[0] - a[0]) * 111 * Math.cos((a[1] * Math.PI) / 180), (b[1] - a[1]) * 111);
+  }
+  return km;
+}
+
+/** Bras secondaires plus courts que cela : invisibles à l'échelle de la carte, retirés. */
+const MIN_BRANCH_KM = 3;
+
+/**
+ * Recolle bout à bout les morceaux d'un cours d'eau (la BD TOPAGE le découpe à chaque
+ * confluence et autour de chaque île) : à une bifurcation, le trait suit le plus long des
+ * bras. Il en résulte un trait continu, plus léger et plus régulier une fois simplifié ;
+ * les bras restants, s'ils sont courts, sont retirés.
+ */
+function joinLines(parts) {
+  const key = (point) => point.join(",");
+  const lines = parts.map((line) => [...line]);
+  let joined = true;
+  while (joined) {
+    joined = false;
+    const starts = new Map();
+    lines.forEach((line, index) => starts.set(key(line[0]), [...(starts.get(key(line[0])) ?? []), index]));
+    for (let index = 0; index < lines.length && !joined; index++) {
+      const line = lines[index];
+      const candidates = (starts.get(key(line[line.length - 1])) ?? []).filter((other) => other !== index);
+      if (candidates.length === 0) continue;
+      const next = candidates.reduce((best, other) => (lengthKm(lines[other]) > lengthKm(lines[best]) ? other : best));
+      line.push(...lines[next].slice(1));
+      lines.splice(next, 1);
+      joined = true;
+    }
+  }
+  const longest = Math.max(...lines.map(lengthKm));
+  return lines.filter((line) => lengthKm(line) === longest || lengthKm(line) >= MIN_BRANCH_KM);
+}
+const riverJoined = join(sourceDir, "cours-eau-joints.geojson");
+const riverFeatures = JSON.parse(readFileSync(riverSource, "utf8")).features.map((feature) => {
+  const parts = feature.geometry.type === "LineString" ? [feature.geometry.coordinates] : feature.geometry.coordinates;
+  return { ...feature, geometry: { type: "MultiLineString", coordinates: joinLines(parts) } };
+});
+writeFileSync(riverJoined, JSON.stringify({ type: "FeatureCollection", features: riverFeatures }));
+
+// Cours d'eau : même précision que les départements ; les bras se fondent dans le trait.
+const riversSimplified = join(sourceDir, "cours-eau-simplifies.geojson");
+execFileSync(mapshaper, [
+  riverJoined,
+  "-simplify", "interval=900",
+  "-o", "format=geojson", "precision=0.00001", riversSimplified,
 ], { stdio: "inherit" });
 // Point intérieur de chaque département (là où placer un repère ou une étiquette).
 execFileSync(mapshaper, [simplified, "-points", "inner", "-o", "format=geojson", points], { stdio: "inherit" });
@@ -125,6 +201,27 @@ function toPath(ringsList, transform) {
         previous = point;
       }
       return `${d}${moves.join(" ").replace(/ -/g, "-")}z`;
+    })
+    .join("");
+}
+
+/** Chemin SVG d'une ligne (non fermée), comme `toPath`. Les morceaux réduits à un point disparaissent. */
+function toLine(lines, transform) {
+  const round = (value) => Math.round(value * 10) / 10;
+  const format = (value) => String(value).replace(/^(-?)0\./, "$1.");
+  return lines
+    .map((line) => {
+      const pts = line.map((p) => transform(p)).map(([px, py]) => [round(px), round(py)]);
+      const moves = [];
+      let previous = pts[0];
+      for (const point of pts.slice(1)) {
+        const dx = round(point[0] - previous[0]);
+        const dy = round(point[1] - previous[1]);
+        if (dx === 0 && dy === 0) continue;
+        moves.push(`${format(dx)} ${format(dy)}`);
+        previous = point;
+      }
+      return moves.length === 0 ? "" : `M${format(pts[0][0])} ${format(pts[0][1])}l${moves.join(" ").replace(/ -/g, "-")}`;
     })
     .join("");
 }
@@ -250,6 +347,22 @@ const departments = shapes
   })
   .sort((a, b) => a.code.localeCompare(b.code, "fr", { numeric: true }));
 
+// Cours d'eau : tous en métropole (hors Corse). Ceux qui traversent la petite couronne
+// (Seine, Marne) y sont aussi dessinés, dans l'encart de Paris.
+const lines = (geometry) => (geometry.type === "LineString" ? [geometry.coordinates] : geometry.coordinates);
+const [idfLeft, idfTop, idfWidth, idfHeight] = parisBox;
+const inParisInset = ([x, y]) => x >= idfLeft && x <= idfLeft + idfWidth && y >= idfTop && y <= idfTop + idfHeight;
+const riverShapes = new Map(readJson("cours-eau-simplifies.geojson").features.map((f) => [f.properties.id, f.geometry]));
+const riverPaths = Object.fromEntries(
+  RIVERS.map((river) => {
+    const geometry = riverShapes.get(river.id);
+    if (!geometry) throw new Error(`Tracé manquant : ${river.name}`);
+    const path = toLine(lines(geometry), (p) => mainlandTransform(lambert93(p)));
+    const insetPoints = lines(geometry).flat().map((p) => idfTransform(lambert93(p)));
+    return [river.id, insetPoints.some(inParisInset) ? [path, toLine(lines(geometry), (p) => idfTransform(lambert93(p)))] : [path]];
+  }),
+);
+
 mkdirSync(dataDir, { recursive: true });
 // Généré par scripts/geo/build-france.mjs : ne pas modifier à la main.
 const list = {
@@ -261,11 +374,14 @@ const map = {
   viewBox: [0, 0, WIDTH, HEIGHT],
   insets: Object.entries(insetBoxes).map(([id, box]) => ({ id, title: INSET_TITLES[id], box: roundBox(box) })),
   paths: Object.fromEntries(departments.map((d) => [d.code, d.insetPath ? [d.path, d.insetPath] : [d.path]])),
+  rivers: riverPaths,
 };
 writeFileSync(listFile, JSON.stringify(list, null, 1));
 writeFileSync(mapFile, JSON.stringify(map));
+writeFileSync(riversFile, JSON.stringify(RIVERS.map(({ topage, ...river }) => river), null, 1));
 const kilobytes = (file) => Math.round(readFileSync(file).length / 1024);
 console.log(`${departments.length} départements, ${regions.length} régions`);
 console.log(`→ ${listFile} (${kilobytes(listFile)} Ko)`);
 console.log(`→ ${mapFile} (${kilobytes(mapFile)} Ko)`);
+console.log(`→ ${riversFile} (${RIVERS.length} cours d'eau, ${Object.values(riverPaths).filter((paths) => paths[1]).length} dans l'encart de Paris)`);
 console.log(`Régions représentées : ${[...new Set(departments.map((d) => regionName.get(d.region)))].length}`);

@@ -57,6 +57,8 @@ export interface Track {
   shortLabel: string;
   /** Ce que l'on révise : « Les reconnaître et les placer ». */
   hint: string;
+  /** Ce que l'on compte dans ce volet (« départements ») ; sinon, l'unité de la catégorie. */
+  unit?: Unit;
 }
 
 /** Erreurs de saisie, par champ du formulaire. */

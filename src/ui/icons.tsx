@@ -257,3 +257,12 @@ export function ShuffleIcon(props: IconProps) {
     </Svg>
   );
 }
+
+/** Cours d'eau : trois vagues. */
+export function WavesIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 7c1.5-1.3 3-1.3 4.5 0s3 1.3 4.5 0 3-1.3 4.5 0 3 1.3 4.5 0M3 12c1.5-1.3 3-1.3 4.5 0s3 1.3 4.5 0 3-1.3 4.5 0 3 1.3 4.5 0M3 17c1.5-1.3 3-1.3 4.5 0s3 1.3 4.5 0 3-1.3 4.5 0 3 1.3 4.5 0" />
+    </Svg>
+  );
+}

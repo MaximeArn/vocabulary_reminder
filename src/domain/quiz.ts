@@ -23,9 +23,14 @@ export interface Choice {
 }
 
 /** Carte affichée avec la question (géographie) : la zone mise en évidence. */
+/** Ce que montre et interroge une carte : les départements, ou les cours d'eau. */
+export type MapLayer = "departments" | "rivers";
+
 export interface MapDisplay {
-  /** Identifiant de la zone à mettre en évidence (« 15 » pour le Cantal). */
+  /** Identifiant de la zone à mettre en évidence (« 15 » pour le Cantal, « loire »). */
   highlight?: string;
+  /** Couche interrogée ; les départements par défaut. */
+  layer?: MapLayer;
 }
 
 interface QuestionBase {

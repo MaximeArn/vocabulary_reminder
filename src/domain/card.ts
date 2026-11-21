@@ -7,7 +7,7 @@ import type { Item, Review } from "./types";
  *
  * Une catégorie peut suivre plusieurs volets d'une même fiche séparément
  * (géographie : placer un département, son numéro, sa préfecture) : la fiche
- * donne alors une carte par volet, chacune avec sa propre progression.
+ * donne alors une carte par volet qui la concerne, chacune avec sa propre progression.
  */
 export interface Card<Content = unknown> {
   item: Item<Content>;
@@ -16,10 +16,11 @@ export interface Card<Content = unknown> {
   track?: string;
 }
 
-/** Volets d'une catégorie, et le volet auquel appartient chaque exercice. */
+/** Volets d'une catégorie : ceux de chaque fiche, et celui auquel appartient chaque exercice. */
 export interface Tracks {
-  ids: readonly string[];
-  of(exercise: string): string | undefined;
+  /** Volets d'une fiche (un cours d'eau n'a pas de numéro à apprendre). */
+  of(item: Item): readonly string[];
+  forExercise(exercise: string): string | undefined;
 }
 
 export type TracksOf = (kind: string) => Tracks | undefined;
@@ -45,7 +46,7 @@ export function buildCards(items: Item[], reviews: Review[], tracksOf: TracksOf 
     const kind = kindById.get(review.itemId);
     if (kind === undefined) continue;
     const tracks = tracksOf(kind);
-    const track = tracks?.of(review.exercise);
+    const track = tracks?.forExercise(review.exercise);
     if (tracks && track === undefined) continue;
     const key = cardKey(review.itemId, track);
     const list = reviewsByKey.get(key);
@@ -59,7 +60,7 @@ export function buildCards(items: Item[], reviews: Review[], tracksOf: TracksOf 
     };
     const tracks = tracksOf(item.kind);
     if (!tracks) return [{ item, progress: progressOf() }];
-    return tracks.ids.map((track) => ({ item, track, progress: progressOf(track) }));
+    return tracks.of(item).map((track) => ({ item, track, progress: progressOf(track) }));
   });
 }
 

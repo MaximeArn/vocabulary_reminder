@@ -5,12 +5,20 @@ import { initialProgress } from "../../domain/srs";
 import type { Item } from "../../domain/types";
 import { chooseExercise, TYPING_FROM_BOX } from "../exercisePlan";
 import { geographyModel, gradeTypedCode, type GeographyContent } from "./model";
-import { DEPARTMENTS, nearestDepartments } from "./referential";
+import { DEPARTMENTS, RIVERS, nearestDepartments } from "./referential";
+import { tracksOf } from "../cards";
 
 const item = (code: string): Item<GeographyContent> => ({
   id: `dep-${code}`,
   kind: "geography",
   content: { type: "department", code },
+  createdAt: 0,
+  updatedAt: 0,
+});
+const river = (id: string): Item<GeographyContent> => ({
+  id: `river-${id}`,
+  kind: "geography",
+  content: { type: "river", id },
   createdAt: 0,
   updatedAt: 0,
 });
@@ -34,7 +42,9 @@ describe("référentiel des départements", () => {
 });
 
 describe("questions sur les départements", () => {
-  const choiceIds = geographyModel.exercises.filter((candidate) => candidate.mode === "choice").map((candidate) => candidate.id);
+  const choiceIds = geographyModel.exercises
+    .filter((candidate) => candidate.mode === "choice" && candidate.track !== "rivers")
+    .map((candidate) => candidate.id);
 
   it("proposent 4 choix distincts dont la bonne réponse, pour chaque département", () => {
     for (const department of DEPARTMENTS) {
@@ -83,6 +93,49 @@ describe("questions sur les départements", () => {
   });
 });
 
+describe("cours d'eau", () => {
+  it("20 cours d'eau, noms distincts, fleuves d'abord", () => {
+    expect(RIVERS).toHaveLength(20);
+    expect(new Set(RIVERS.map((candidate) => candidate.name)).size).toBe(20);
+    expect(RIVERS.find((candidate) => candidate.id === "saone")).toMatchObject({ name: "Saône", kind: "rivière", outlet: "le Rhône" });
+  });
+
+  it("n'ont que le volet des cours d'eau ; un département garde ses trois volets", () => {
+    expect(tracksOf("geography")!.of(river("loire"))).toEqual(["rivers"]);
+    expect(tracksOf("geography")!.of(item("15"))).toEqual(["map", "number", "prefecture"]);
+  });
+
+  it("se reconnaissent sur la carte : 4 noms distincts, la carte des cours d'eau", () => {
+    for (const candidate of RIVERS) {
+      const question = exercise("geography.map-to-river").build(river(candidate.id), [], seededRandom(3)) as ChoiceQuestion;
+      expect(question.map).toEqual({ highlight: candidate.id, layer: "rivers" });
+      expect(new Set(question.choices.map((choice) => choice.label)).size).toBe(4);
+      expect(question.correctChoiceId).toBe(candidate.id);
+    }
+  });
+
+  it("se tapent avec ou sans article, avec une petite faute, jamais un autre cours d'eau", () => {
+    const question = exercise("geography.map-to-river-typed").build(river("isere"), []) as TypedQuestion;
+    expect(question.grade("Isère")).toEqual({ correct: true, exact: true });
+    expect(question.grade("l'isere").correct).toBe(true);
+    expect(question.grade("Isre").correct).toBe(true);
+    expect(question.grade("Oise").correct).toBe(false);
+  });
+
+  it("se placent sur la carte : « la Loire », sur la carte des cours d'eau", () => {
+    const question = exercise("geography.river-on-map").build(river("loire"), []) as LocateQuestion;
+    expect(question.prompt).toBe("la Loire");
+    expect(question.map).toEqual({ layer: "rivers" });
+    expect(gradeResponse(question, { type: "locate", zone: "loire" }).correct).toBe(true);
+    expect(gradeResponse(question, { type: "locate", zone: "allier" }).correct).toBe(false);
+  });
+
+  it("valident leur contenu", () => {
+    expect(geographyModel.validateContent({ type: "river", id: "loire" })).toEqual({ type: "river", id: "loire" });
+    expect(() => geographyModel.validateContent({ type: "river", id: "amazone" })).toThrow();
+  });
+});
+
 describe("choix de l'exercice (géographie)", () => {
   const card = (box: number, track: string) => ({ item: item("15"), track, progress: { ...initialProgress(0), box } });
   const never = () => 0.99;
@@ -94,6 +147,13 @@ describe("choix de l'exercice (géographie)", () => {
     expect(new Set(choose(TYPING_FROM_BOX, "map"))).toEqual(
       new Set(["geography.map-to-department-typed", "geography.department-on-map"]),
     );
+  });
+
+  it("cours d'eau : reconnaître et placer, puis taper le nom", () => {
+    const riverCard = (box: number) => ({ item: river("loire"), track: "rivers", progress: { ...initialProgress(0), box } });
+    const chooseRiver = (box: number) => [0, 1, 2, 3].map((rotation) => chooseExercise(riverCard(box), rotation, "mixed", never));
+    expect(new Set(chooseRiver(1))).toEqual(new Set(["geography.map-to-river", "geography.river-on-map"]));
+    expect(new Set(chooseRiver(TYPING_FROM_BOX))).toEqual(new Set(["geography.map-to-river-typed", "geography.river-on-map"]));
   });
 
   it("chaque volet reste dans ses exercices", () => {

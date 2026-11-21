@@ -36,9 +36,9 @@ try {
   const capabilities = await safari.start();
   console.log(`Safari ${capabilities.browserVersion} sur ${capabilities["safari:deviceName"]} (iOS ${capabilities["safari:platformVersion"]})\n`);
 
-  await step("Données de test et cache effacés ; les départements sont là d'office", async () => {
+  await step("Données de test et cache effacés ; les lieux (départements, cours d'eau) sont là d'office", async () => {
     await startLocalSession(safari, appUrl, "#collection");
-    await safari.waitFor("départements créés", async () => /101 lieux/i.test(await safari.bodyText()), 8000);
+    await safari.waitFor("lieux créés", async () => /121 lieux/i.test(await safari.bodyText()), 8000);
   });
 
   await step("Formulaire ouvert sans défilement, focus sur le mot", async () => {
@@ -112,7 +112,7 @@ try {
     await safari.acceptAlert();
     await safari.waitForText("« alacrité » supprimé");
     // Plus aucun mot : seuls restent les départements (intégrés à l'app).
-    await safari.waitFor("plus de mots", async () => /101 lieux/i.test(await safari.bodyText()) && !(await safari.bodyText()).includes("Vivacité joyeuse."));
+    await safari.waitFor("plus de mots", async () => /121 lieux/i.test(await safari.bodyText()) && !(await safari.bodyText()).includes("Vivacité joyeuse."));
     await safari.clickButton("Annuler");
     await safari.waitForText("Vivacité joyeuse.");
   });
@@ -138,9 +138,9 @@ try {
     await safari.waitFor("JSON prêt", async () => {
       const json = await safari.value("[role=dialog] textarea");
       if (!json?.includes('"app": "lexique"')) return false;
-      // Les 3 mots restaurés, et les 101 départements, gardés par la restauration.
+      // Les 3 mots restaurés, et les 121 lieux (départements, cours d’eau), gardés par la restauration.
       const kinds = JSON.parse(json).items.map((item) => item.kind);
-      return kinds.filter((kind) => kind === "vocabulary").length === 3 && kinds.filter((kind) => kind === "geography").length === 101;
+      return kinds.filter((kind) => kind === "vocabulary").length === 3 && kinds.filter((kind) => kind === "geography").length === 121;
     });
     await safari.clickButton("Copier");
     // Sans vrai toucher (limite du simulateur), Safari refuse le presse-papiers :

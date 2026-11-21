@@ -1,5 +1,5 @@
 // Vérifie la géographie dans le vrai Safari d'iOS (simulateur) : départements disponibles
-// d'office sur une carte en plein écran, fiche avec carte et progression par volet, révision du jour (10 nouvelles cartes
+// d'office (départements et cours d'eau) sur une carte en plein écran, fiche avec carte et progression par volet, révision du jour (10 nouvelles cartes
 // par jour), puis la révision de chaque volet (carte, préfectures) avec ses seules questions.
 // Prérequis et usage : voir check-words.mjs. Le scénario efface les données de l'app.
 
@@ -19,6 +19,11 @@ const { departments } = JSON.parse(
 const byName = new Map(departments.map((d) => [d.name, d]));
 const byCode = new Map(departments.map((d) => [d.code, d]));
 const byPrefecture = new Map(departments.map((d) => [d.prefecture, d]));
+const rivers = JSON.parse(readFileSync(new URL("../../src/categories/geography/data/cours-eau.json", import.meta.url), "utf8"));
+const riverById = new Map(rivers.map((r) => [r.id, r]));
+/** « la Loire », « l’Isère » : l'énoncé d'une question « placer ce cours d'eau ». */
+const withArticle = (r) => (r.article.endsWith("’") ? r.article + r.name : `${r.article} ${r.name}`);
+const riverByPrompt = new Map(rivers.map((r) => [withArticle(r), r]));
 
 /** Question affichée : consigne, énoncé, zone mise en évidence, type de réponse. */
 function readQuestion() {
@@ -28,6 +33,7 @@ function readQuestion() {
       instruction: card.querySelector("p").textContent,
       prompt: card.querySelector("h2")?.textContent ?? "",
       highlight: card.querySelector("path[class*=highlight]")?.getAttribute("data-code") ?? null,
+      river: card.querySelector("path[data-river][class*=riverHighlight]")?.getAttribute("data-river") ?? null,
       choices: [...card.querySelectorAll("[role=group][aria-label=Propositions] button")].map((b) => b.textContent),
       typed: !!card.querySelector("form input"),
       locate: card.innerText.includes("Pince la carte"),
@@ -36,6 +42,7 @@ function readQuestion() {
 
 /** Bonne réponse attendue pour une question (hors carte à toucher). */
 function expected(question) {
+  if (question.river) return riverById.get(question.river).name;
   const fromPrefecture = /De quel département/.test(question.instruction);
   const target = question.highlight
     ? byCode.get(question.highlight)
@@ -51,6 +58,8 @@ function expected(question) {
 
 /** Type d'une question, d'après sa consigne. */
 const kindOf = (question) =>
+  question.locate && riverByPrompt.has(question.prompt) ? "cours d’eau à toucher" :
+  question.river ? "cours d’eau à lire" :
   question.locate ? "carte à toucher" : question.highlight ? "carte à lire" : /préfecture/i.test(question.instruction) ? "préfecture" : "numéro / nom";
 
 /** Répond juste à la question affichée ; renvoie son type. */
@@ -65,7 +74,18 @@ async function answerCorrectly(seen) {
   );
   const question = await readQuestion();
   seen.add(kindOf(question));
-  if (question.locate) {
+  if (question.locate && riverByPrompt.has(question.prompt)) {
+    // Le trait est fin : on touche sa zone de toucher, dessinée juste après lui.
+    await safari.script(
+      `document.querySelector("[role=dialog] path[data-river='" + arguments[0] + "'] + path").dispatchEvent(new MouseEvent("click", { bubbles: true }));`,
+      [riverByPrompt.get(question.prompt).id],
+    );
+    if (!seen.has("capture cours d’eau")) {
+      seen.add("capture cours d’eau");
+      screenshot("geo-7-cours-eau-toucher");
+    }
+    await safari.clickButton("Valider");
+  } else if (question.locate) {
     const target = byName.get(question.prompt);
     if (!target) throw new Error(`Département inconnu : ${question.prompt}`);
     await safari.script(
@@ -86,6 +106,10 @@ async function answerCorrectly(seen) {
       seen.add("capture lire");
       screenshot("geo-4-lire");
     }
+    if (question.river && !seen.has("capture cours d’eau lire")) {
+      seen.add("capture cours d’eau lire");
+      screenshot("geo-9-cours-eau-lire");
+    }
     await safari.script(
       `[...document.querySelectorAll("[role=group][aria-label=Propositions] button")].find((b) => b.textContent === arguments[0]).click();`,
       [answer],
@@ -98,14 +122,14 @@ async function answerCorrectly(seen) {
 try {
   await safari.start();
 
-  await step("Les 101 départements sont là d'office, sur une carte en plein écran à parcourir", async () => {
+  await step("Les 101 départements et 20 cours d'eau sont là d'office, sur une carte en plein écran à parcourir", async () => {
     await startLocalSession(safari, appUrl, "#collection");
-    await safari.waitFor("départements créés", async () => /101 lieux/i.test(await text()), 8000);
+    await safari.waitFor("départements et cours d'eau créés", async () => /121 lieux/i.test(await text()), 8000);
     await safari.waitFor("carte de la collection", async () =>
       safari.script(`return new Set([...document.querySelectorAll("main path[data-code]")].map((p) => p.dataset.code)).size === 101;`), 8000);
     // Pas de liste : la carte occupe l'écran, jusqu'à la barre d'onglets, sans défilement.
     const layout = await safari.script(
-      `const svg = document.querySelector("main svg[aria-label='Carte des départements']");
+      `const svg = document.querySelector("main svg[aria-label^='Carte des départements']");
        // La carte et son bandeau (département touché) descendent jusqu'à la barre d'onglets.
        const map = svg.parentElement.parentElement.getBoundingClientRect();
        const bar = document.querySelector("nav").getBoundingClientRect();
@@ -114,7 +138,9 @@ try {
     );
     if (layout.items > 0) throw new Error("Liste des départements encore affichée");
     if (Math.abs(layout.gap) > 2 || layout.scrolls || layout.width !== layout.screen) throw new Error(`Carte pas en plein écran : ${JSON.stringify(layout)}`);
-    if (!(await text()).includes("Touche un département")) throw new Error("Invitation à toucher un département absente");
+    if (!(await text()).includes("Touche un département ou un cours d’eau")) throw new Error("Invitation à toucher un lieu absente");
+    const riverCount = await safari.script(`return document.querySelectorAll("main path[data-river]").length;`);
+    if (riverCount < 20) throw new Error(`${riverCount} cours d'eau dessinés`);
     // Une seule catégorie dans la collection : pas de sélecteur de catégorie.
     if ((await text()).includes("Vocabulaire")) throw new Error("Sélecteur de catégorie affiché pour une seule catégorie");
     await safari.clickButton("Ajouter une fiche");
@@ -124,11 +150,18 @@ try {
     screenshot("geo-1-collection");
   });
 
-  await step("Toucher un département le montre ; toucher le bandeau ouvre sa fiche", async () => {
+  await step("Toucher un département ou un cours d'eau le montre ; toucher le bandeau ouvre sa fiche", async () => {
     await safari.script(`document.querySelector("main path[data-code='15']").dispatchEvent(new MouseEvent("click", { bubbles: true }));`);
     await safari.waitForText("Aurillac");
     if (!(await safari.script(`return !!document.querySelector("main path[data-code='15'][class*=selected]");`))) throw new Error("Cantal non mis en évidence");
     screenshot("geo-1b-carte-touchee");
+    // Un cours d'eau se touche aussi, près de son trait.
+    await safari.script(`document.querySelector("main path[data-river='loire'] + path").dispatchEvent(new MouseEvent("click", { bubbles: true }));`);
+    await safari.waitForText("se jette dans l’océan Atlantique");
+    if (!(await safari.script(`return !!document.querySelector("main path[data-river='loire'][class*=riverHighlight]");`))) throw new Error("Loire non mise en évidence");
+    screenshot("geo-1c-cours-eau-touche");
+    await safari.script(`document.querySelector("main path[data-code='15']").dispatchEvent(new MouseEvent("click", { bubbles: true }));`);
+    await safari.waitForText("Aurillac");
     await safari.script(`[...document.querySelectorAll("main button")].find((b) => b.textContent.includes("Cantal")).click();`);
     await safari.waitForText("Préfecture");
     await safari.waitFor("carte de la fiche", async () => safari.script(`return !!document.querySelector("path[data-code='15'][class*=highlight]");`), 8000);
@@ -143,7 +176,7 @@ try {
     await safari.open(`${appUrl}?t=${Date.now()}#reviser`);
     await safari.waitForText("10 fiches à réviser");
     const page = await text();
-    for (const row of ["Départements sur la carte", "Numéros des départements", "Préfectures"]) {
+    for (const row of ["Départements sur la carte", "Numéros des départements", "Préfectures", "Fleuves et rivières"]) {
       if (!page.includes(row)) throw new Error(`Révision « ${row} » absente`);
     }
     for (const row of ["Oubliées", "Nouveautés", "En vrac", "Par région"]) {
@@ -175,6 +208,7 @@ try {
   for (const [row, kinds] of [
     ["Départements sur la carte", ["carte à lire", "carte à toucher"]],
     ["Préfectures", ["préfecture"]],
+    ["Fleuves et rivières", ["cours d’eau à lire", "cours d’eau à toucher"]],
   ]) {
     await step(`« ${row} » : uniquement des questions de ce volet`, async () => {
       await safari.clickButton(row);
@@ -187,6 +221,7 @@ try {
       for (const kind of kinds) if (!seen.has(kind)) throw new Error(`Aucune question « ${kind} » (vu : ${[...seen].join(", ")})`);
       await safari.waitForText("Encore une session");
       if (row === "Préfectures") screenshot("geo-6-bilan-volet");
+      if (row === "Fleuves et rivières") screenshot("geo-8-bilan-cours-eau");
       await safari.clickButton("Terminer");
       await safari.waitForText("Révision du jour");
     });

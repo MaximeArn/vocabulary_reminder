@@ -1,0 +1,22 @@
+[
+  { "id": "loire", "name": "Loire", "article": "la", "kind": "fleuve", "outlet": "l’océan Atlantique", "topage": "04C0000002000808543" },
+  { "id": "seine", "name": "Seine", "article": "la", "kind": "fleuve", "outlet": "la Manche", "topage": "03C0000002000844903" },
+  { "id": "rhone", "name": "Rhône", "article": "le", "kind": "fleuve", "outlet": "la mer Méditerranée", "topage": "06C0000002000804457" },
+  { "id": "garonne", "name": "Garonne", "article": "la", "kind": "fleuve", "outlet": "l’océan Atlantique, par l’estuaire de la Gironde", "topage": "05C0000002000894629" },
+  { "id": "rhin", "name": "Rhin", "article": "le", "kind": "fleuve", "outlet": "la mer du Nord", "topage": "02C0000002000786588" },
+  { "id": "meuse", "name": "Meuse", "article": "la", "kind": "fleuve", "outlet": "la mer du Nord", "topage": "02C0000002000797618" },
+  { "id": "dordogne", "name": "Dordogne", "article": "la", "kind": "fleuve", "outlet": "l’océan Atlantique, par l’estuaire de la Gironde", "topage": "05C0000002000831663" },
+  { "id": "charente", "name": "Charente", "article": "la", "kind": "fleuve", "outlet": "l’océan Atlantique", "topage": "05C0000002000863964" },
+  { "id": "adour", "name": "Adour", "article": "l’", "kind": "fleuve", "outlet": "l’océan Atlantique", "topage": "05C0000002000898951" },
+  { "id": "marne", "name": "Marne", "article": "la", "kind": "rivière", "outlet": "la Seine", "topage": "03C0000002000815787" },
+  { "id": "oise", "name": "Oise", "article": "l’", "kind": "rivière", "outlet": "la Seine", "topage": "03C0000002000807131" },
+  { "id": "allier", "name": "Allier", "article": "l’", "kind": "rivière", "outlet": "la Loire", "topage": "04C0000002000820586" },
+  { "id": "cher", "name": "Cher", "article": "le", "kind": "rivière", "outlet": "la Loire", "topage": "04C0000002000831254" },
+  { "id": "vienne", "name": "Vienne", "article": "la", "kind": "rivière", "outlet": "la Loire", "topage": "04C0000002000863855" },
+  { "id": "lot", "name": "Lot", "article": "le", "kind": "rivière", "outlet": "la Garonne", "topage": "05C0000002000835176" },
+  { "id": "tarn", "name": "Tarn", "article": "le", "kind": "rivière", "outlet": "la Garonne", "topage": "05C0000002000815043" },
+  { "id": "saone", "name": "Saône", "article": "la", "kind": "rivière", "outlet": "le Rhône", "topage": "06C0000002000794279" },
+  { "id": "isere", "name": "Isère", "article": "l’", "kind": "rivière", "outlet": "le Rhône", "topage": "06C0000002000788975" },
+  { "id": "durance", "name": "Durance", "article": "la", "kind": "rivière", "outlet": "le Rhône", "topage": "06C0000002000789104" },
+  { "id": "moselle", "name": "Moselle", "article": "la", "kind": "rivière", "outlet": "le Rhin", "topage": "02C0000002000793398" }
+]

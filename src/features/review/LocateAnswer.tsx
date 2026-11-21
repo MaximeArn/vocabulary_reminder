@@ -12,7 +12,7 @@ interface LocateAnswerProps {
 }
 
 /**
- * « Touche ce département » : on choisit une zone sur la carte (zoom possible),
+ * « Touche ce département » (ou ce cours d'eau) : on choisit une zone sur la carte (zoom possible),
  * puis on valide. Après la réponse, la bonne zone est en vert, la mauvaise en rouge.
  */
 export function LocateAnswer({ question, Map, outcome, onSubmit }: LocateAnswerProps) {
@@ -33,6 +33,7 @@ export function LocateAnswer({ question, Map, outcome, onSubmit }: LocateAnswerP
         <Map
           tones={tones}
           onSelect={outcome ? undefined : setSelected}
+          layer={question.map?.layer}
           label="Carte de France : touche la zone demandée"
         />
       </div>
@@ -41,7 +42,11 @@ export function LocateAnswer({ question, Map, outcome, onSubmit }: LocateAnswerP
           <Button fullWidth disabled={selected === null} onClick={() => selected && onSubmit({ type: "locate", zone: selected })}>
             Valider
           </Button>
-          <p className={styles.hint}>Pince la carte ou utilise + et − pour zoomer ; Paris et l’outre-mer sont en encarts.</p>
+          <p className={styles.hint}>
+            {question.map?.layer === "rivers"
+              ? "Pince la carte ou utilise + et − pour zoomer ; touche le trait du cours d’eau."
+              : "Pince la carte ou utilise + et − pour zoomer ; Paris et l’outre-mer sont en encarts."}
+          </p>
         </div>
       )}
     </>

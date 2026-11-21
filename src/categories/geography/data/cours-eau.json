@@ -1,0 +1,142 @@
+[
+ {
+  "id": "loire",
+  "name": "Loire",
+  "article": "la",
+  "kind": "fleuve",
+  "outlet": "l’océan Atlantique"
+ },
+ {
+  "id": "seine",
+  "name": "Seine",
+  "article": "la",
+  "kind": "fleuve",
+  "outlet": "la Manche"
+ },
+ {
+  "id": "rhone",
+  "name": "Rhône",
+  "article": "le",
+  "kind": "fleuve",
+  "outlet": "la mer Méditerranée"
+ },
+ {
+  "id": "garonne",
+  "name": "Garonne",
+  "article": "la",
+  "kind": "fleuve",
+  "outlet": "l’océan Atlantique, par l’estuaire de la Gironde"
+ },
+ {
+  "id": "rhin",
+  "name": "Rhin",
+  "article": "le",
+  "kind": "fleuve",
+  "outlet": "la mer du Nord"
+ },
+ {
+  "id": "meuse",
+  "name": "Meuse",
+  "article": "la",
+  "kind": "fleuve",
+  "outlet": "la mer du Nord"
+ },
+ {
+  "id": "dordogne",
+  "name": "Dordogne",
+  "article": "la",
+  "kind": "fleuve",
+  "outlet": "l’océan Atlantique, par l’estuaire de la Gironde"
+ },
+ {
+  "id": "charente",
+  "name": "Charente",
+  "article": "la",
+  "kind": "fleuve",
+  "outlet": "l’océan Atlantique"
+ },
+ {
+  "id": "adour",
+  "name": "Adour",
+  "article": "l’",
+  "kind": "fleuve",
+  "outlet": "l’océan Atlantique"
+ },
+ {
+  "id": "marne",
+  "name": "Marne",
+  "article": "la",
+  "kind": "rivière",
+  "outlet": "la Seine"
+ },
+ {
+  "id": "oise",
+  "name": "Oise",
+  "article": "l’",
+  "kind": "rivière",
+  "outlet": "la Seine"
+ },
+ {
+  "id": "allier",
+  "name": "Allier",
+  "article": "l’",
+  "kind": "rivière",
+  "outlet": "la Loire"
+ },
+ {
+  "id": "cher",
+  "name": "Cher",
+  "article": "le",
+  "kind": "rivière",
+  "outlet": "la Loire"
+ },
+ {
+  "id": "vienne",
+  "name": "Vienne",
+  "article": "la",
+  "kind": "rivière",
+  "outlet": "la Loire"
+ },
+ {
+  "id": "lot",
+  "name": "Lot",
+  "article": "le",
+  "kind": "rivière",
+  "outlet": "la Garonne"
+ },
+ {
+  "id": "tarn",
+  "name": "Tarn",
+  "article": "le",
+  "kind": "rivière",
+  "outlet": "la Garonne"
+ },
+ {
+  "id": "saone",
+  "name": "Saône",
+  "article": "la",
+  "kind": "rivière",
+  "outlet": "le Rhône"
+ },
+ {
+  "id": "isere",
+  "name": "Isère",
+  "article": "l’",
+  "kind": "rivière",
+  "outlet": "le Rhône"
+ },
+ {
+  "id": "durance",
+  "name": "Durance",
+  "article": "la",
+  "kind": "rivière",
+  "outlet": "le Rhône"
+ },
+ {
+  "id": "moselle",
+  "name": "Moselle",
+  "article": "la",
+  "kind": "rivière",
+  "outlet": "le Rhin"
+ }
+]
